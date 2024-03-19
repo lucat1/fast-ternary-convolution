@@ -32,3 +32,10 @@ build*
 
 # For OSX users:
 .DS_Store
+
+# CLang
+.cache
+compile_commands.json
+
+# Project specific
+tnn
