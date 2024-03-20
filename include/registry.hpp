@@ -2,18 +2,17 @@
 #define _REGISTRY_HPP
 
 #include <cstddef>
-#include <vector>
+#include <map>
+#include <utility>
 
 namespace registry {
 
-typedef void (*func_t)(double *, double *, double *, size_t);
-typedef struct entry {
-  const char *name;
-  func_t f;
-} entry_t;
+typedef void (*func_t)(double const *, double const *, double *, size_t);
+typedef const char *name_t;
 
-void def(const char *name, func_t f);
-std::vector<entry_t *> &all();
+void define(std::map<name_t, func_t> entries);
+std::map<name_t, func_t>::iterator begin();
+std::map<name_t, func_t>::iterator end();
 
 } // namespace registry
 

@@ -16,7 +16,18 @@ typedef struct test_env {
   std::mt19937 rd;
 } env_t;
 
-double *rand_vec(env_t &e, size_t n);
+typedef struct data {
+  double *x;
+  double *y;
+  double *d;
+  size_t n;
+} data_t;
+
+double *rand_vec(env_t &env, size_t n);
+
+data_t *random_data(env_t &env);
+
+void free_data(data_t *data);
 
 bool compare(registry::func_t a, registry::func_t b);
 
@@ -27,4 +38,3 @@ void all();
 } // namespace test
 
 #endif // _TEST_HPP
-//

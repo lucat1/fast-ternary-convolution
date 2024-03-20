@@ -5,7 +5,7 @@
 
 namespace baseline {
 
-void mul(double *x, double *y, double *d, size_t n);
+void mul(double const *x, double const *y, double *d, size_t n);
 
 }
 

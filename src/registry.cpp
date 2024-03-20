@@ -2,21 +2,15 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <vector>
+#include <map>
 
 namespace registry {
 
-std::vector<entry_t *> entries;
+std::map<name_t, func_t> entries;
 
-void def(const char *name, func_t f) {
-  entry_t *e = (entry_t *)malloc(sizeof(entry_t));
-  assert(e != nullptr);
-  e->name = name;
-  e->f = f;
+void define(std::map<name_t, func_t> map) { entries = map; }
 
-  entries.push_back(e);
-}
-
-std::vector<entry_t *> &all() { return entries; }
+std::map<name_t, func_t>::iterator begin() { return begin(entries); }
+std::map<name_t, func_t>::iterator end() { return end(entries); }
 
 } // namespace registry
