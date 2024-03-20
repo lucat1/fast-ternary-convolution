@@ -1,13 +1,24 @@
 #include <iostream>
+#include <random>
 
-#include "baseline.hpp"
-#include "vectorized.hpp"
+#include "impl/baseline.hpp"
+#include "impl/vectorized.hpp"
 
-#define N 1024
+#include "registry.hpp"
+#include "test.hpp"
 
 int main(int argc, char *argv[]) {
-  double x[N], y[N], d[N];
-  baseline::mul(x, y, d, N);
-  vectorized::mul(x, y, d, N);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+  registry::def("baseline", baseline::mul);
+  registry::def("vectorized", vectorized::mul);
+
+  test::add_env(
+      test::env_t{.n = 1024,
+                  .dist = std::uniform_real_distribution<double>(0, 1),
+                  .rd = gen});
+  test::all();
+
   return 0;
 }
