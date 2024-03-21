@@ -1,6 +1,7 @@
 #ifndef _REGISTRY_HPP
 #define _REGISTRY_HPP
 
+#include <cassert>
 #include <cstddef>
 #include <map>
 #include <random>
@@ -26,15 +27,24 @@ typedef struct data {
   size_t n;
 } data_t;
 
+template <typename T> T *alloc(size_t n) {
+  T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
+  assert(arr != nullptr);
+  return arr;
+}
+
 double *rand_vec(env_t &env, size_t n);
 
 data_t *random_data(env_t &env);
 
 void free_data(data_t *data);
 
+constexpr const char *BASELINE_NAME = "baseline";
+
 namespace functions {
 
 void set(std::map<name_t, func_t> entries);
+func_t get(name_t name);
 std::map<name_t, func_t>::iterator begin();
 std::map<name_t, func_t>::iterator end();
 
@@ -43,6 +53,7 @@ std::map<name_t, func_t>::iterator end();
 namespace environments {
 
 void set(std::map<name_t, env_t> entries);
+env_t get(name_t name);
 std::map<name_t, env_t>::iterator begin();
 std::map<name_t, env_t>::iterator end();
 

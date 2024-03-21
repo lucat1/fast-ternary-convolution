@@ -1,16 +1,9 @@
 #include "registry.hpp"
 
-#include <cassert>
 #include <cstdlib>
 #include <map>
 
 namespace registry {
-
-template <typename T> T *alloc(size_t n) {
-  T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
-  assert(arr != nullptr);
-  return arr;
-}
 
 double *rand_vec(env_t &env, size_t n) {
   double *arr = alloc<double>(n);
@@ -43,7 +36,7 @@ namespace functions {
 std::map<name_t, func_t> entries;
 
 void set(std::map<name_t, func_t> map) { entries = map; }
-
+func_t get(name_t name) { return entries[name]; }
 std::map<name_t, func_t>::iterator begin() { return begin(entries); }
 std::map<name_t, func_t>::iterator end() { return end(entries); }
 
@@ -54,7 +47,7 @@ namespace environments {
 std::map<name_t, env_t> entries;
 
 void set(std::map<name_t, env_t> map) { entries = map; }
-
+env_t get(name_t name) { return entries[name]; }
 std::map<name_t, env_t>::iterator begin() { return begin(entries); }
 std::map<name_t, env_t>::iterator end() { return end(entries); }
 

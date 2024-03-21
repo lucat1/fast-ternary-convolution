@@ -6,7 +6,7 @@
 
 namespace bench {
 
-double measure(registry::name_t name, registry::func_t f, registry::env_t &env);
+double measure(registry::func_t f, registry::env_t &env);
 
 void all();
 

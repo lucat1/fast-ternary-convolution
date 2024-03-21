@@ -1,7 +1,9 @@
 #include "bench.hpp"
+#include "registry.hpp"
 #include "table.hpp"
 #include "tsc.hpp"
 
+#include <format>
 #include <iostream>
 #include <list>
 #include <map>
@@ -12,8 +14,7 @@
 
 namespace bench {
 
-double measure(registry::name_t name, registry::func_t f,
-               registry::env_t &env) {
+double measure(registry::func_t f, registry::env_t &env) {
   double cycles = 0.;
   size_t num_runs = 100;
   double multiplier = 1;
@@ -69,37 +70,33 @@ void all() {
   table::hsep();
   table::row({"impl", "cycles", "env", "speedup"}, {});
 
-  auto baseline = functions::begin();
-  std::map<name_t, uint64_t> baseline_cycles_by_env;
   for (auto env = environments::begin(); env != environments::end();
        env = next(env)) {
-    uint64_t cycles = measure(baseline->first, baseline->second, env->second);
-    baseline_cycles_by_env[env->first] = cycles;
+    auto baseline = functions::get(BASELINE_NAME);
+    uint64_t baseline_cycles = measure(baseline, env->second);
 
-    table::row(
-        {baseline->first, std::to_string(cycles).c_str(), env->first, "1x"},
-        {});
-  }
+    table::row({BASELINE_NAME, std::to_string(baseline_cycles).c_str(),
+                env->first, "1x"},
+               {});
 
-  auto func = next(baseline);
-  for (auto env = environments::begin(); env != environments::end();
-       env = next(env)) {
-    uint64_t baseline_cycles = baseline_cycles_by_env[env->first];
-    for (; func != functions::end(); func = next(func)) {
-      uint64_t cycles = measure(func->first, func->second, env->second);
+    for (auto func = functions::begin(); func != functions::end();
+         func = next(func)) {
+      // skip the baseline
+      if (func->second == baseline)
+        continue;
+      uint64_t cycles = measure(func->second, env->second);
       float speedup = (float)baseline_cycles / (float)cycles;
       table::row(
           {
               func->first,
               std::to_string(cycles).c_str(),
               env->first,
-              std::to_string(speedup).c_str(),
+              (std::format("{:.2f}", speedup) + "x").c_str(),
           },
           {});
     }
+    table::hsep();
   }
-
-  table::hsep();
 }
 
 } // namespace bench

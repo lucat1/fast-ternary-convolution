@@ -12,7 +12,7 @@ std::random_device rd;
 std::mt19937 gen(rd());
 
 static const std::map<registry::name_t, registry::func_t> functions = {
-    {"baseline", baseline::mul}, {"vectorized", vectorized::mul}};
+    {registry::BASELINE_NAME, baseline::mul}, {"vectorized", vectorized::mul}};
 static const std::map<registry::name_t, registry::env_t> environments = {
     {"xs", registry::env_t{.n = 1024 * 256,
                            .dist = std::uniform_real_distribution<double>(0, 1),
