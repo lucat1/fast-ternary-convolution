@@ -7,7 +7,7 @@
 namespace registry {
 
 template <typename T> T *alloc(size_t n) {
-  T *arr = (T *)aligned_alloc(256, n * sizeof(T));
+  T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
   assert(arr != nullptr);
   return arr;
 }

@@ -1,8 +1,10 @@
 #include "bench.hpp"
+#include "table.hpp"
 #include "tsc.hpp"
 
 #include <iostream>
 #include <list>
+#include <map>
 
 #define NR 32
 #define CYCLES_REQUIRED 1e8
@@ -62,15 +64,42 @@ double measure(registry::name_t name, registry::func_t f,
 void all() {
   using namespace registry;
 
-  for (auto func = functions::begin(); func != functions::end();
-       func = next(func)) {
-    for (auto env = environments::begin(); env != environments::end();
-         env = next(env)) {
+  table::hsep();
+  table::htitle("Benchmarks");
+  table::hsep();
+  table::row({"impl", "cycles", "env", "speedup"}, {});
+
+  auto baseline = functions::begin();
+  std::map<name_t, uint64_t> baseline_cycles_by_env;
+  for (auto env = environments::begin(); env != environments::end();
+       env = next(env)) {
+    uint64_t cycles = measure(baseline->first, baseline->second, env->second);
+    baseline_cycles_by_env[env->first] = cycles;
+
+    table::row(
+        {baseline->first, std::to_string(cycles).c_str(), env->first, "1x"},
+        {});
+  }
+
+  auto func = next(baseline);
+  for (auto env = environments::begin(); env != environments::end();
+       env = next(env)) {
+    uint64_t baseline_cycles = baseline_cycles_by_env[env->first];
+    for (; func != functions::end(); func = next(func)) {
       uint64_t cycles = measure(func->first, func->second, env->second);
-      std::cout << "impl " << func->first << " took " << cycles
-                << " cycles in env " << env->first << std::endl;
+      float speedup = (float)baseline_cycles / (float)cycles;
+      table::row(
+          {
+              func->first,
+              std::to_string(cycles).c_str(),
+              env->first,
+              std::to_string(speedup).c_str(),
+          },
+          {});
     }
   }
+
+  table::hsep();
 }
 
 } // namespace bench
