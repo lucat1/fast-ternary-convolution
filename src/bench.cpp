@@ -1,23 +1,23 @@
 #include "bench.hpp"
-#include "test.hpp"
 #include "tsc.hpp"
 
+#include <iostream>
 #include <list>
 
 #define NR 32
 #define CYCLES_REQUIRED 1e8
 #define REP 30
-#define EPS (1e-3)
 
 namespace bench {
 
-double measure(registry::name_t name, registry::func_t f, test::env_t env) {
+double measure(registry::name_t name, registry::func_t f,
+               registry::env_t &env) {
   double cycles = 0.;
   size_t num_runs = 100;
   double multiplier = 1;
   uint64_t start, end;
 
-  test::data_t *data = test::random_data(env);
+  registry::data_t *data = registry::random_data(env);
 
   // Warm-up phase: we determine a number of executions that allows
   // the code to be executed for at least CYCLES_REQUIRED cycles.
@@ -57,6 +57,20 @@ double measure(registry::name_t name, registry::func_t f, test::env_t env) {
 
   cycles = total_cycles;
   return cycles;
+}
+
+void all() {
+  using namespace registry;
+
+  for (auto func = functions::begin(); func != functions::end();
+       func = next(func)) {
+    for (auto env = environments::begin(); env != environments::end();
+         env = next(env)) {
+      uint64_t cycles = measure(func->first, func->second, env->second);
+      std::cout << "impl " << func->first << " took " << cycles
+                << " cycles in env " << env->first << std::endl;
+    }
+  }
 }
 
 } // namespace bench
