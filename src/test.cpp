@@ -12,17 +12,31 @@ namespace test {
 #define EPS (1e-3)
 
 bool compare(registry::func_t a, registry::func_t b, registry::env_t &env) {
-  double *d0 = registry::alloc<double>(env.n);
-  double *d1 = registry::alloc<double>(env.n);
+  size_t output_size = registry::output_size(env);
+  std::cout << output_size << std::endl;
+
+  float *output0 = registry::rand_real_vec(env, output_size);
+  float *output1 = registry::rand_real_vec(env, output_size);
   registry::data_t *data = registry::random_data(env);
-  memcpy(d0, data->d, data->n);
-  memcpy(d1, data->d, data->n);
 
-  a(data->x, data->y, d0, env.n);
-  b(data->x, data->y, d1, env.n);
+  memcpy(output0, data->output, output_size);
+  memcpy(output1, data->output, output_size);
 
-  for (size_t i = 0; i < env.n; ++i) {
-    if (abs(d0[i] - d1[i]) > EPS) {
+  a(env.type, data->btn_cnt1, data->input, data->input_height,
+    data->input_width, data->padding_height, data->padding_width,
+    data->quant_threshold, data->num_channels, data->quant_weights,
+    data->batch_size, data->stride_height, data->stride_width,
+    data->kernel_number, data->kernel_height, data->kernel_width,
+    data->relu_alpha, data->output);
+  b(env.type, data->btn_cnt1, data->input, data->input_height,
+    data->input_width, data->padding_height, data->padding_width,
+    data->quant_threshold, data->num_channels, data->quant_weights,
+    data->batch_size, data->stride_height, data->stride_width,
+    data->kernel_number, data->kernel_height, data->kernel_width,
+    data->relu_alpha, data->output);
+
+  for (size_t i = 0; i < output_size; ++i) {
+    if (abs(output0[i] - output1[i]) > EPS) {
       free_data(data);
       return false;
     }

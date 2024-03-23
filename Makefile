@@ -29,7 +29,8 @@ run: $(TARGET)
 	@./$(TARGET)
 
 debug: CXXFLAGS += -ggdb
-debug: run
+debug:
+	@gdb $(TARGET)
 
 clean:
 	@echo -e "RMRF\tbuild $(TARGET)"

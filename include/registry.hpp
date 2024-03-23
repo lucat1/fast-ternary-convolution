@@ -1,55 +1,77 @@
 #ifndef _REGISTRY_HPP
 #define _REGISTRY_HPP
 
+#include "common.hpp"
+
 #include <cassert>
 #include <cstddef>
+#include <exception>
 #include <map>
 #include <random>
 #include <utility>
 
 namespace registry {
 
-typedef void (*func_t)(double const *, double const *, double *, size_t);
-typedef const char *name_t;
-typedef struct env {
-  // problem parameters
-  size_t n;
-
-  // random generators for the problem inputs
-  std::uniform_real_distribution<double> dist;
-  std::mt19937 rd;
-} env_t;
-
-typedef enum cont_type {
+typedef enum conv_type {
   TNN = 0,
   TBN = 1,
   BTN = 2,
   BNN = 3,
-  Conv_Types = 4
+  CONV_TYPES = 4
 } conv_type_t;
+
+typedef void (*func_t)(registry::conv_type_t, int *, float *, uint32_t,
+                       uint32_t, uint32_t, uint32_t, float *, int, int64_t *,
+                       uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
+                       uint32_t, float, float *);
+typedef const char *name_t;
+
+typedef struct env {
+  // problem parameters
+  uint32_t input_size;
+  uint32_t batch_size;
+
+  conv_type_t type;
+  uint32_t num_channels;
+  uint32_t kernel_number;
+  uint32_t kernel_height;
+  uint32_t kernel_width;
+  uint32_t padding_size;
+  uint32_t stride_size;
+
+  // random generators for the problem inputs
+  std::uniform_real_distribution<float> real_dist;
+  std::uniform_int_distribution<int64_t> int_dist;
+  std::mt19937 rd;
+} env_t;
+
+size_t input_size(env_t &env);
+size_t output_size(env_t &env);
 
 typedef struct data {
   // network type
   conv_type_t type;
   int *btn_cnt1;
 
-  double *x;
-  int padding_h;
-  int padding_w;
-  double *q_threshold;
-  int c;
-  int h;
-  int w;
+  float *input;
+  uint32_t input_height;
+  uint32_t input_width;
+  uint32_t padding_height;
+  uint32_t padding_width;
 
-  int64_t *q_weights;
-  int batch_size;
-  int stride_h;
-  int string_w;
-  int kn;
-  int kh;
-  int kw;
+  uint32_t num_channels;
+  float *quant_threshold;
+  int64_t *quant_weights;
 
-  double *dest;
+  uint32_t batch_size;
+  uint32_t stride_height;
+  uint32_t stride_width;
+  uint32_t kernel_number;
+  uint32_t kernel_height;
+  uint32_t kernel_width;
+
+  float relu_alpha;
+  float *output;
 } data_t;
 
 template <typename T> T *alloc(size_t n) {
@@ -58,7 +80,9 @@ template <typename T> T *alloc(size_t n) {
   return arr;
 }
 
-double *rand_vec(env_t &env, size_t n);
+float *rand_real_vec(env_t &env, size_t n);
+int64_t *rand_int_vec(env_t &env, size_t n);
+float *const_vec(env_t &env, size_t n, float val);
 
 data_t *random_data(env_t &env);
 

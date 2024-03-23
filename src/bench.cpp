@@ -16,7 +16,7 @@ namespace bench {
 
 double measure(registry::func_t f, registry::env_t &env) {
   double cycles = 0.;
-  size_t num_runs = 100;
+  size_t num_runs = 2;
   double multiplier = 1;
   uint64_t start, end;
 
@@ -29,7 +29,12 @@ double measure(registry::func_t f, registry::env_t &env) {
     num_runs = num_runs * multiplier;
     start = start_tsc();
     for (size_t i = 0; i < num_runs; i++) {
-      f(data->x, data->y, data->d, data->n);
+      f(env.type, data->btn_cnt1, data->input, data->input_height,
+        data->input_width, data->padding_height, data->padding_width,
+        data->quant_threshold, data->num_channels, data->quant_weights,
+        data->batch_size, data->stride_height, data->stride_width,
+        data->kernel_number, data->kernel_height, data->kernel_width,
+        data->relu_alpha, data->output);
     }
     end = stop_tsc(start);
 
@@ -47,7 +52,12 @@ double measure(registry::func_t f, registry::env_t &env) {
 
     start = start_tsc();
     for (size_t i = 0; i < num_runs; ++i) {
-      f(data->x, data->y, data->d, data->n);
+      f(env.type, data->btn_cnt1, data->input, data->input_height,
+        data->input_width, data->padding_height, data->padding_width,
+        data->quant_threshold, data->num_channels, data->quant_weights,
+        data->batch_size, data->stride_height, data->stride_width,
+        data->kernel_number, data->kernel_height, data->kernel_width,
+        data->relu_alpha, data->output);
     }
     end = stop_tsc(start);
 
@@ -87,7 +97,7 @@ void all() {
       uint64_t cycles = measure(func->second, env->second);
       float speedup = (float)baseline_cycles / (float)cycles;
       char speedup_str[5];
-      sprintf(speedup_str, "%.2f", speedup);
+      snprintf(speedup_str, 5, "%.2f", speedup);
       table::row({func->first, std::to_string(cycles).c_str(), env->first,
                   speedup_str},
                  {});
