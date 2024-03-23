@@ -7,10 +7,13 @@
 
 namespace baseline {
 
-void conv(registry::conv_type_t type, int *btn_cnt1, double *x, int padding_h,
-          int padding_w, double *q_threshold, int c, int h, int w,
-          int64_t *q_weights, int batch_size, int stride_h, int string_w,
-          int kn, int kh, int kw, float *dest);
+void conv(registry::conv_type_t type, int *btn_cnt1, double *x,
+          uint32_t padding_height, uint32_t padding_width, double *q_threshold,
+          int c, int64_t *q_weights, uint32_t batch_size,
+          uint32_t stride_height, uint32_t string_width, uint32_t kernel_number,
+          uint32_t kernel_height, uint32_t kernel_width, float *output,
+          uint32_t output_height, uint32_t output_width);
+
 
 }
 
