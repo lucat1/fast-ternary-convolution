@@ -1,7 +1,9 @@
 #ifndef _TABLE_HPP
 #define _TABLE_HPP
 
+#include <cstdint>
 #include <vector>
+
 namespace table {
 
 // print an horizontal line

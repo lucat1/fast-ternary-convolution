@@ -3,7 +3,7 @@
 #include "table.hpp"
 #include "tsc.hpp"
 
-#include <format>
+#include <cstdio>
 #include <iostream>
 #include <list>
 #include <map>
@@ -86,14 +86,11 @@ void all() {
         continue;
       uint64_t cycles = measure(func->second, env->second);
       float speedup = (float)baseline_cycles / (float)cycles;
-      table::row(
-          {
-              func->first,
-              std::to_string(cycles).c_str(),
-              env->first,
-              (std::format("{:.2f}", speedup) + "x").c_str(),
-          },
-          {});
+      char speedup_str[5];
+      sprintf(speedup_str, "%.2f", speedup);
+      table::row({func->first, std::to_string(cycles).c_str(), env->first,
+                  speedup_str},
+                 {});
     }
     table::hsep();
   }
