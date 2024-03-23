@@ -28,6 +28,8 @@ run: $(TARGET)
 	@echo -e "RUN\t$(TARGET)"
 	@./$(TARGET)
 
+compile: $(TARGET)
+
 debug: CXXFLAGS += -ggdb
 debug:
 	@gdb $(TARGET)
