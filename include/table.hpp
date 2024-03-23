@@ -1,7 +1,6 @@
 #ifndef _TABLE_HPP
 #define _TABLE_HPP
 
-#include <cstdint>
 #include <vector>
 #include <cstddef>
 
