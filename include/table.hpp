@@ -1,8 +1,8 @@
 #ifndef _TABLE_HPP
 #define _TABLE_HPP
 
-#include <vector>
 #include <cstddef>
+#include <vector>
 
 namespace table {
 

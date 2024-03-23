@@ -20,11 +20,36 @@ typedef struct env {
   std::mt19937 rd;
 } env_t;
 
+typedef enum cont_type {
+  TNN = 0,
+  TBN = 1,
+  BTN = 2,
+  BNN = 3,
+  Conv_Types = 4
+} conv_type_t;
+
 typedef struct data {
+  // network type
+  conv_type_t type;
+  int *btn_cnt1;
+
   double *x;
-  double *y;
-  double *d;
-  size_t n;
+  int padding_h;
+  int padding_w;
+  double *q_threshold;
+  int c;
+  int h;
+  int w;
+
+  int64_t *q_weights;
+  int batch_size;
+  int stride_h;
+  int string_w;
+  int kn;
+  int kh;
+  int kw;
+
+  double *dest;
 } data_t;
 
 template <typename T> T *alloc(size_t n) {
