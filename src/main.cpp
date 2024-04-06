@@ -8,6 +8,7 @@
 #include "bench.hpp"
 #include "registry.hpp"
 #include "test.hpp"
+#include "verify.hpp"
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -85,6 +86,7 @@ int main(void) {
   registry::environments::set(environments);
 
   test::all();
+  verify::verify();
   bench::all();
 
   return 0;
