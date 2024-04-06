@@ -33,9 +33,10 @@ int verify() {
     std::vector<float> BX = generate_array(16 * 64 * 224 * 224, false); // Binary X : size = 51,380,224
     std::vector<float> TW = generate_array(1024 * 1024 * 3 * 3, true);  // Ternary Weights: size = 51,380,224
     std::vector<float> BW = generate_array(1024 * 1024 * 3 * 3, false); // Binary Weights : size = 51,380,224
-    std::vector<int64_t> QW; // Quantized Weights
     std::vector<float> Q_Threshold = std::vector<float>(1024, 0.5); // Quantization threshold for ternarization
-
+    float* output;
+    int64_t* QW;
+    int* BTN_CNT;
     // Iterate on layer configurations
     for (int icase = 0; icase < CaseN; icase++) {
         // config the layer shape and relevant sizes
@@ -47,7 +48,12 @@ int verify() {
         test_env->padding_size = TestCases[icase][6];
         test_env->stride_size = TestCases[icase][7];
         size_t output_size = registry::output_size(*test_env);
-        float* output = registry::alloc<float>(output_size);
+        output = registry::alloc<float>(output_size);
+        const int priChannel = test_env->num_channels / CNTBITS;
+        const int packed_channels = (test_env->num_channels % CNTBITS) ? (priChannel + 1) : priChannel;
+        const int packed_height = test_env->input_size + 2 * test_env->padding_size;
+        const int packed_width = test_env->input_size + 2 * test_env->padding_size;
+        QW = registry::alloc<int64_t>(test_env->batch_size*packed_height*packed_width*packed_channels);
 
         // iterate on conv types
         std::vector< std::string> ConvNames = {"TAB_TNN","TAB_TBN","TAB_BTN","TAB_BNN"};
@@ -55,53 +61,47 @@ int verify() {
             // Get ref input x and weights w 
             float* ref_x = NULL;
             float* ref_w = NULL;
-            /*
-            #pragma once
-            std::vector<float> TAB_Conv(float* X, float* Q_Threshold, int64_t* QWeights,
-            int* BTN_CNT1, ConvType TYPE, int PaddingH, int PaddingW, int StrideH,
-            int StrideW, int Batch_Size, int C, int H, int W, int KN, int KH, int KW,
-            float ReLU_alpha);
-            */
             if (iconv == registry::conv_type::TNN) {
                 ref_x = TX.data();
                 ref_w = TW.data();
-                QW = ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
-                 test_env->kernel_number, test_env->num_channels, test_env->kernel_height,test_env->kernel_width);
+                ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
+                 test_env->kernel_number, test_env->num_channels, test_env->kernel_height,test_env->kernel_width,QW);
                 baseline::conv(registry::conv_type::TNN,nullptr,TX.data(),test_env->input_size,test_env->input_size,
                     test_env->padding_size,test_env->padding_size,Q_Threshold.data(),test_env->num_channels,
-                    QW.data(),Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
+                    QW,Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
                     test_env->kernel_height,test_env->kernel_width,ReLU_alpha,output);
             }
             if (iconv == registry::conv_type::TBN) {
                 ref_x = TX.data();
                 ref_w = BW.data();
-                QW = binarize_NCHW_to_NHWC(BW.data(), 0, 0, test_env->kernel_number,
-                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width);
+                binarize_NCHW_to_NHWC(BW.data(), 0, 0, test_env->kernel_number,
+                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width,QW);
                 baseline::conv(registry::conv_type::TBN,nullptr,TX.data(),test_env->input_size,test_env->input_size,
                     test_env->padding_size,test_env->padding_size,Q_Threshold.data(),test_env->num_channels,
-                    QW.data(),Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
+                    QW,Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
                     test_env->kernel_height,test_env->kernel_width,ReLU_alpha,output);
             }
             if (iconv == registry::conv_type::BTN) {
                 ref_x = BX.data();
                 ref_w = TW.data();
-                QW = ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(), test_env->kernel_number,
-                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width);
-                std::vector<int> BTN_CNT = btn_cnt_w2(QW.data(), test_env->kernel_number,
-                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width);
-                baseline::conv(registry::conv_type::BTN,BTN_CNT.data(),TX.data(),test_env->input_size,test_env->input_size,
+                ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(), test_env->kernel_number,
+                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width,QW);
+                BTN_CNT = registry::alloc<int>(test_env->kernel_number);
+                btn_cnt_w2(QW, test_env->num_channels,test_env->kernel_number, test_env->kernel_height,test_env->kernel_width,BTN_CNT);
+                baseline::conv(registry::conv_type::BTN,BTN_CNT,TX.data(),test_env->input_size,test_env->input_size,
                     test_env->padding_size,test_env->padding_size,Q_Threshold.data(),test_env->num_channels,
-                    QW.data(),Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
+                    QW,Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
                     test_env->kernel_height,test_env->kernel_width,ReLU_alpha,output);
+                free(BTN_CNT);
             }
             if (iconv == registry::conv_type::BNN) {
                 ref_x = BX.data();
                 ref_w = BW.data();
-                QW = binarize_NCHW_to_NHWC(BW.data(), 0, 0,test_env->kernel_number,
-                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width);
+                binarize_NCHW_to_NHWC(BW.data(), 0, 0,test_env->kernel_number,
+                 test_env->num_channels, test_env->kernel_height,test_env->kernel_width,QW);
                 baseline::conv(registry::conv_type::BNN,nullptr,TX.data(),test_env->input_size,test_env->input_size,
                     test_env->padding_size,test_env->padding_size,Q_Threshold.data(),test_env->num_channels,
-                    QW.data(),Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
+                    QW,Batch_Size,test_env->stride_size,test_env->stride_size,test_env->kernel_number,
                     test_env->kernel_height,test_env->kernel_width,ReLU_alpha,output);
             }
 
@@ -133,6 +133,7 @@ int verify() {
                 std::cout << "Test Case " << icase << " kernel: " << test_env->kernel_width << "X" << test_env->kernel_height << " " << ConvNames[iconv] << " Failed!" << std::endl;
         }
         free(output);
+        free(QW);
     }
     return 0;
 }
