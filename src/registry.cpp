@@ -60,10 +60,13 @@ data_t *random_data(env_t &env) {
   d->num_channels = env.num_channels;
   // TODO: why 1024? should be parameterized?
   d->quant_threshold = const_vec(1024, 0.5);
-  d->quant_weights = rand_int_vec(env, env.kernel_number * env.num_channels *
-                                           env.kernel_width *
-                                           env.kernel_height * BITS / CNTBITS);
 
+  int packed_channels = (env.num_channels % CNTBITS) ? ((env.num_channels / CNTBITS) + 1)
+    : (env.num_channels / CNTBITS);
+  
+  d->quant_weights = rand_int_vec(env, BITS * env.kernel_number * packed_channels
+				  * env.kernel_height * env.kernel_width);
+  
   d->batch_size = env.batch_size;
   d->stride_height = env.stride_size;
   d->stride_width = env.stride_size;

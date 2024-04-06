@@ -59,9 +59,11 @@ int main(void) {
       assert(name != nullptr);
       snprintf(name, 128, "%d-%d (%dx%d)", batch_size, c.c, c.w, c.h);
 
+      // TODO Is this a fair assumption?
+      assert(c.w == c.h);
       environments.insert(
           {name, registry::env_t{
-                     .input_size = 224, // common image size
+                     .input_size = c.w, // common image size
                      .batch_size = batch_size,
                      .type = registry::TNN,
                      .num_channels = c.c,

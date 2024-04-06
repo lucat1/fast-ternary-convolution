@@ -69,6 +69,8 @@ double measure(registry::func_t f, registry::env_t &env) {
   total_cycles /= REP;
 
   cycles = total_cycles;
+
+  free_data(data);
   return cycles;
 }
 
