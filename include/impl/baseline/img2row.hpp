@@ -1,22 +1,19 @@
 #ifndef _BASELINE_IMG2ROW_HPP
 #define _BASELINE_IMG2ROW_HPP
 
-#include <vector>
-
 #include "common.hpp"
 
+// y: pointer to batch_size * fused_height * fused_width elements of type T
 template <typename T>
-std::vector<T>
-img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
+void img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
                               int input_height, int input_width,
                               int kernel_height, int kernel_width,
-                              int stride_height, int stride_width) {
+				   int stride_height, int stride_width, T *y) {
 
   const int output_height = (input_height - kernel_height + 1) / stride_height;
   const int output_width = (input_width - kernel_width + 1) / stride_width;
   const int fused_height = output_height * output_width;
   const int fused_width = kernel_height * kernel_width * num_channels;
-  std::vector<T> y = std::vector<T>(batch_size * fused_height * fused_width);
 
   for (int n = 0; n < batch_size; n++) {
     for (int oh = 0; oh < output_height; oh++) {
@@ -37,8 +34,6 @@ img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
       }
     }
   }
-
-  return y;
 }
 
 #endif // _BASELINE_IMG2ROW_HPP

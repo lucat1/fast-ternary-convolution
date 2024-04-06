@@ -9,6 +9,7 @@
 #include <map>
 #include <random>
 #include <utility>
+#include <cstring> // memset
 
 namespace registry {
 
@@ -74,15 +75,24 @@ typedef struct data {
   float *output;
 } data_t;
 
-template <typename T> T *alloc(size_t n) {
+template <typename T>
+T *alloc(size_t n) {
   T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
   assert(arr != nullptr);
   return arr;
 }
 
+template <typename T>
+T *calloc(size_t n) {
+  void *arr = aligned_alloc(32, n * sizeof(T));
+  assert(arr != nullptr);
+  memset(arr, 0, n * sizeof(T));
+  return static_cast<T *>(arr);
+}
+
 float *rand_real_vec(env_t &env, size_t n);
 int64_t *rand_int_vec(env_t &env, size_t n);
-float *const_vec(env_t &env, size_t n, float val);
+float *const_vec(size_t n, float val);
 
 data_t *random_data(env_t &env);
 

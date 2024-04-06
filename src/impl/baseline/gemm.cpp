@@ -7,9 +7,11 @@
 // a is activation  in MK: N * OH * OW, KH * kW * C * BITS. (This C has been
 // quantized) b is weights     in NK: KN,          KH * KW * C * BITS y is conv
 // result in MN: N * OH * OW, KN (the same as N, OH, OW, KN)
-std::vector<int> tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
-                                   int k) {
-  std::vector<int> y = std::vector<int>(m * n, 0);
+// TODO: Verify whether it really needs to be initialized to 0
+// y: pointer to m * n ints initialized to 0
+// result is stored in y
+void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
+                       int k, int *y) {
   const int k_bits = k * BITS;
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
@@ -27,13 +29,13 @@ std::vector<int> tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
       y[output_height * n + output_width] = cntp1 - cntp2 - cntp2;
     }
   }
-  return y;
 }
 
 // In M-K, N-K order, TBN, Ternary-Activation Binary-Weight
-std::vector<int> tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
-                                   int k) {
-  std::vector<int> y = std::vector<int>(m * n);
+// y: pointer to m * n ints
+// result is stored in y
+void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
+		       int k, int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
@@ -49,13 +51,13 @@ std::vector<int> tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
       y[output_height * n + output_width] = cntp1 - cntp2 - cntp2;
     }
   }
-  return y;
 }
 
 // In M-K, N-K order, BTN, Binary-Activation Ternary-Weight
-std::vector<int> btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m,
-                                   int n, int k) {
-  std::vector<int> y = std::vector<int>(m * n);
+// y: pointer to m * n ints
+// result is stored in y
+void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m,
+                                   int n, int k, int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp2 = 0;
@@ -68,13 +70,13 @@ std::vector<int> btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m,
       y[output_height * n + output_width] = cnt1[output_width] - cntp2 - cntp2;
     }
   }
-  return y;
 }
 
 // In M-K, N-K order, BNN, Binary-Activation Binary-Weight
-std::vector<int> bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k,
-                                   int NUM) {
-  std::vector<int> y = std::vector<int>(m * n);
+// y: pointer to m * n ints
+// result is stored in y
+void bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k,
+                                   int NUM, int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
@@ -86,5 +88,4 @@ std::vector<int> bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k,
       y[output_height * n + output_width] = NUM - cntp1 - cntp1;
     }
   }
-  return y;
 }

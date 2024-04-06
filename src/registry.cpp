@@ -21,7 +21,7 @@ int64_t *rand_int_vec(env_t &env, size_t n) {
   return arr;
 };
 
-float *const_vec(env_t &env, size_t n, float val) {
+float *const_vec(size_t n, float val) {
   float *arr = alloc<float>(n);
   for (size_t i = 0; i < n; ++i) {
     arr[i] = val;
@@ -41,7 +41,7 @@ size_t output_size(env_t &env) {
   uint32_t output_width =
       (packed_width - env.kernel_width + 1) / env.stride_size;
 
-  return env.batch_size * env.num_channels * output_width * output_height;
+  return env.batch_size * env.kernel_number * output_width * output_height;
 }
 
 data_t *random_data(env_t &env) {
@@ -59,7 +59,7 @@ data_t *random_data(env_t &env) {
 
   d->num_channels = env.num_channels;
   // TODO: why 1024? should be parameterized?
-  d->quant_threshold = const_vec(env, 1024, 0.5);
+  d->quant_threshold = const_vec(1024, 0.5);
   d->quant_weights = rand_int_vec(env, env.kernel_number * env.num_channels *
                                            env.kernel_width *
                                            env.kernel_height * BITS / CNTBITS);

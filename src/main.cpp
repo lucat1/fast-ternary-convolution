@@ -48,7 +48,7 @@ struct test_case cases[] = {
     {8000, 1, 1, 16000, 1, 1, 0, 1}, {16000, 1, 1, 32000, 1, 1, 0, 1},
 };
 
-int main(int argc, char *argv[]) {
+int main(void) {
   std::map<registry::name_t, registry::env_t> environments;
   for (uint32_t batch_size = 1; batch_size < 16; ++batch_size) {
     for (size_t icase = 0; icase < sizeof(cases) / sizeof(struct test_case);

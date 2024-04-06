@@ -9,7 +9,8 @@ CXX = g++
 ##  obj file has been compiled)
 ## -MT specifies the dependency target (path qualified obj file name)
 OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20
-WARNFLAGS = -Wall -Werror
+# TODO: Add more warn flags?
+WARNFLAGS = -Wall -Wextra -Werror
 CXXFLAGS = -Iinclude -MT $@ -MMD -MP -MF $(@:.o=.d) $(OPTFLAGS) $(WARNFLAGS)
 
 CPP_FILES := $(wildcard $(SRC_DIR)/**/**/*.cpp) $(wildcard $(SRC_DIR)/**/*.cpp) $(wildcard $(SRC_DIR)/*.cpp)
@@ -30,8 +31,9 @@ run: $(TARGET)
 	@echo -e "RUN\t$(TARGET)"
 	@./$(TARGET)
 
-debug: CXXFLAGS += -ggdb
-debug:
+debug: CXXFLAGS += -ggdb -fsanitize=address -fno-omit-frame-pointer
+debug: LDFLAGS += -fsanitize=address
+debug: compile
 	@gdb $(TARGET)
 
 clean:
