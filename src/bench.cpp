@@ -85,8 +85,8 @@ void all() {
     auto baseline = functions::get(BASELINE_NAME);
     uint64_t baseline_cycles = measure(baseline, env->second);
 
-    table::row({BASELINE_NAME, std::to_string(baseline_cycles).c_str(),
-                env->first, "1x"},
+    table::row({BASELINE_NAME.c_str(), std::to_string(baseline_cycles).c_str(),
+                env->first.c_str(), "1x"},
                {});
 
     for (auto func = functions::begin(); func != functions::end();
@@ -98,8 +98,8 @@ void all() {
       float speedup = (float)baseline_cycles / (float)cycles;
       char speedup_str[5];
       snprintf(speedup_str, 5, "%.2f", speedup);
-      table::row({func->first, std::to_string(cycles).c_str(), env->first,
-                  speedup_str},
+      table::row({func->first.c_str(), std::to_string(cycles).c_str(),
+                  env->first.c_str(), speedup_str},
                  {});
     }
     table::hsep();

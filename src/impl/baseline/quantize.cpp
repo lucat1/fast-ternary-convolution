@@ -8,13 +8,15 @@
 //   padding2: the padding around Width
 //   ths: the threshold values of each filter or input image or activation
 //   N: batch size or filter number, C: Channel, H: Height, W: Width
-//   qx: pointer to batch_size * packed_height * packed_width * packed_channels * BITS
+//   qx: pointer to batch_size * packed_height * packed_width * packed_channels
+//   * BITS
 //       int64_t initialized to 0.
 // Output:
 //   qx: the quantized x, using N, H, W, C, B format
-void ternarize_NCHW_to_NHWCB(float *input, int padding_height, int padding_width,
-                        float *quant_threshold, int batch_size, int C,
-			     int input_height, int input_width, int64_t *qx) {
+void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
+                             int padding_width, float *quant_threshold,
+                             int batch_size, int C, int input_height,
+                             int input_width, int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -56,18 +58,18 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height, int padding_width
             }
           }
           // Store the ternarized and packed data in N_H_W_C_B format
-          qx[(((in * packed_height + ih + padding_height) * packed_width +
-                  iw + padding_width) *
-                     packed_channels +
-                 ic) *
-                    BITS +
-                0] = p1;
-          qx[(((in * packed_height + ih + padding_height) * packed_width +
-                  iw + padding_width) *
-                     packed_channels +
-                 ic) *
-                    BITS +
-                1] = p2;
+          qx[(((in * packed_height + ih + padding_height) * packed_width + iw +
+               padding_width) *
+                  packed_channels +
+              ic) *
+                 BITS +
+             0] = p1;
+          qx[(((in * packed_height + ih + padding_height) * packed_width + iw +
+               padding_width) *
+                  packed_channels +
+              ic) *
+                 BITS +
+             1] = p2;
         }
 
         // Pack the second part: priChannel*CNTBITS ~ C
@@ -97,18 +99,18 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height, int padding_width
           // p2;
 
           // Store packed data into new NHWCB format
-          qx[(((in * packed_height + ih + padding_height) * packed_width +
-                  iw + padding_width) *
-                     packed_channels +
-                 priChannel) *
-                    BITS +
-                0] = p1;
-          qx[(((in * packed_height + ih + padding_height) * packed_width +
-                  iw + padding_width) *
-                     packed_channels +
-                 priChannel) *
-                    BITS +
-                1] = p2;
+          qx[(((in * packed_height + ih + padding_height) * packed_width + iw +
+               padding_width) *
+                  packed_channels +
+              priChannel) *
+                 BITS +
+             0] = p1;
+          qx[(((in * packed_height + ih + padding_height) * packed_width + iw +
+               padding_width) *
+                  packed_channels +
+              priChannel) *
+                 BITS +
+             1] = p2;
         }
       }
     }
@@ -126,9 +128,10 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height, int padding_width
 //       int64_t initialized to 0.
 // Output:
 //   qx: the quantized x, using N, H, W, C format
-void Binarize_NCHW_to_NHWC(const float *input, int padding_height, int padding_width,
-                      float *quant_threshold, int batch_size, int C,
-			   int input_height, int input_width, int64_t *qx) {
+void Binarize_NCHW_to_NHWC(const float *input, int padding_height,
+                           int padding_width, float *quant_threshold,
+                           int batch_size, int C, int input_height,
+                           int input_width, int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -167,10 +170,10 @@ void Binarize_NCHW_to_NHWC(const float *input, int padding_height, int padding_w
             }
           }
           // Store the binarized and packed data in N_H_W_C format
-          qx[((in * packed_height + ih + padding_height) * packed_width +
-                 iw + padding_width) *
-                    packed_channels +
-                ic] = p1;
+          qx[((in * packed_height + ih + padding_height) * packed_width + iw +
+              padding_width) *
+                 packed_channels +
+             ic] = p1;
         }
 
         // Pack the second part: priChannel*CNTBITS ~ C
@@ -185,10 +188,10 @@ void Binarize_NCHW_to_NHWC(const float *input, int padding_height, int padding_w
               p1 = p1 | onebit[bit];
             }
           }
-          qx[((in * packed_height + ih + padding_height) * packed_width +
-                 iw + padding_width) *
-                    packed_channels +
-                priChannel] = p1;
+          qx[((in * packed_height + ih + padding_height) * packed_width + iw +
+              padding_width) *
+                 packed_channels +
+             priChannel] = p1;
         }
       }
     }
@@ -196,13 +199,12 @@ void Binarize_NCHW_to_NHWC(const float *input, int padding_height, int padding_w
 }
 
 // This Binarization use ths=0
-// qx: pointer to batch_size * packed_height * packed_width * packed_channels int64_t
+// qx: pointer to batch_size * packed_height * packed_width * packed_channels
+// int64_t
 //     initialized to 0
-void binarize_NCHW_to_NHWC(const float *input,
-                                           int padding_height,
-                                           int padding_width, int batch_size,
-                                           int num_channels, int input_height,
-                                           int input_width, int64_t *qx) {
+void binarize_NCHW_to_NHWC(const float *input, int padding_height,
+                           int padding_width, int batch_size, int num_channels,
+                           int input_height, int input_width, int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -244,10 +246,10 @@ void binarize_NCHW_to_NHWC(const float *input,
             }
           }
           // Store the binarized and packed data in N_H_W_C format
-          qx[((in * packed_height + ih + padding_height) * packed_width +
-                 iw + padding_width) *
-                    packed_channels +
-                ic] = p1;
+          qx[((in * packed_height + ih + padding_height) * packed_width + iw +
+              padding_width) *
+                 packed_channels +
+             ic] = p1;
         }
 
         // Pack the second part: priChannel*CNTBITS ~ C
@@ -263,10 +265,10 @@ void binarize_NCHW_to_NHWC(const float *input,
               p1 = p1 | onebit[bit];
             }
           }
-          qx[((in * packed_height + ih + padding_height) * packed_width +
-                 iw + padding_width) *
-                    packed_channels +
-                priChannel] = p1;
+          qx[((in * packed_height + ih + padding_height) * packed_width + iw +
+              padding_width) *
+                 packed_channels +
+             priChannel] = p1;
         }
       }
     }
@@ -274,9 +276,8 @@ void binarize_NCHW_to_NHWC(const float *input,
 }
 
 // y: pointer to kernel_number ints initialized to 0
-void btn_cnt_w2(int64_t *quantized_weights, int num_channels,
-                            int kernel_number, int kernel_height,
-		int kernel_width, int *y) {
+void btn_cnt_w2(int64_t *quantized_weights, int num_channels, int kernel_number,
+                int kernel_height, int kernel_width, int *y) {
   int num_packed_channels = (num_channels % CNTBITS)
                                 ? (num_channels / CNTBITS + 1)
                                 : (num_channels / CNTBITS);

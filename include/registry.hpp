@@ -5,11 +5,12 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstring> // memset
 #include <exception>
 #include <map>
 #include <random>
+#include <string>
 #include <utility>
-#include <cstring> // memset
 
 namespace registry {
 
@@ -25,7 +26,7 @@ typedef void (*func_t)(registry::conv_type_t, int *, float *, uint32_t,
                        uint32_t, uint32_t, uint32_t, float *, int, int64_t *,
                        uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
                        uint32_t, float, float *);
-typedef const char *name_t;
+typedef const std::string name_t;
 
 typedef struct env {
   // problem parameters
@@ -75,15 +76,13 @@ typedef struct data {
   float *output;
 } data_t;
 
-template <typename T>
-T *alloc(size_t n) {
+template <typename T> T *alloc(size_t n) {
   T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
   assert(arr != nullptr);
   return arr;
 }
 
-template <typename T>
-T *calloc(size_t n) {
+template <typename T> T *calloc(size_t n) {
   void *arr = aligned_alloc(32, n * sizeof(T));
   assert(arr != nullptr);
   memset(arr, 0, n * sizeof(T));
@@ -98,7 +97,7 @@ data_t *random_data(env_t &env);
 
 void free_data(data_t *data);
 
-constexpr const char *BASELINE_NAME = "baseline";
+constexpr std::string BASELINE_NAME = "baseline";
 
 namespace functions {
 

@@ -10,8 +10,7 @@
 // TODO: Verify whether it really needs to be initialized to 0
 // y: pointer to m * n ints initialized to 0
 // result is stored in y
-void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
-                       int k, int *y) {
+void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
   const int k_bits = k * BITS;
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
@@ -34,8 +33,7 @@ void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
 // In M-K, N-K order, TBN, Ternary-Activation Binary-Weight
 // y: pointer to m * n ints
 // result is stored in y
-void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
-		       int k, int *y) {
+void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
@@ -56,8 +54,8 @@ void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n,
 // In M-K, N-K order, BTN, Binary-Activation Ternary-Weight
 // y: pointer to m * n ints
 // result is stored in y
-void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m,
-                                   int n, int k, int *y) {
+void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m, int n, int k,
+                       int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp2 = 0;
@@ -75,8 +73,8 @@ void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m,
 // In M-K, N-K order, BNN, Binary-Activation Binary-Weight
 // y: pointer to m * n ints
 // result is stored in y
-void bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k,
-                                   int NUM, int *y) {
+void bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int NUM,
+                       int *y) {
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
