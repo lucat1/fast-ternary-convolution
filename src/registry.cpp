@@ -68,8 +68,10 @@ data_t *random_data(env_t &env) {
   d->padding_width = env.padding_size;
 
   d->num_channels = env.num_channels;
-  // TODO: why 1024? should be parameterized?
-  d->quant_threshold = const_vec(1024, 0.5);
+  // TODO: in the baseline impl, 1024 and 4000 are used. It appears to us that
+  // batch_size should be enough.
+  // d->quant_threshold = const_vec(1024, 0.5);
+  d->quant_threshold = const_vec(env.batch_size, 0.5);
   d->quant_weights =
       rand_int_vec(env, BITS * env.kernel_number * packed_channels *
                             env.kernel_height * env.kernel_width);

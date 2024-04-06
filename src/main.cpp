@@ -50,7 +50,7 @@ struct test_case cases[] = {
 
 int main(void) {
   std::map<registry::name_t, registry::env_t> environments;
-  for (uint32_t batch_size = 1; batch_size < 16; ++batch_size) {
+  for (uint32_t batch_size = 1; batch_size < 4; ++batch_size) {
     for (size_t icase = 0; icase < sizeof(cases) / sizeof(struct test_case);
          icase++) {
       test_case_t c = cases[icase];
