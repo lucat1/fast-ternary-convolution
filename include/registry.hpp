@@ -5,9 +5,11 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstring> // memset
 #include <exception>
 #include <map>
 #include <random>
+#include <string>
 #include <utility>
 
 namespace registry {
@@ -24,7 +26,7 @@ typedef void (*func_t)(registry::conv_type_t, int *, float *, uint32_t,
                        uint32_t, uint32_t, uint32_t, float *, int, int64_t *,
                        uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
                        uint32_t, float, float *);
-typedef const char *name_t;
+typedef const std::string name_t;
 
 typedef struct env {
   // problem parameters
@@ -74,21 +76,34 @@ typedef struct data {
   float *output;
 } data_t;
 
+constexpr size_t ALIGNMENT = 32;
+
+size_t __make32(size_t needed_size, size_t alignment);
+
 template <typename T> T *alloc(size_t n) {
-  T *arr = static_cast<T *>(aligned_alloc(32, n * sizeof(T)));
+  T *arr = static_cast<T *>(
+      aligned_alloc(ALIGNMENT, __make32(n * sizeof(T), ALIGNMENT)));
   assert(arr != nullptr);
   return arr;
 }
 
+template <typename T> T *calloc(size_t n) {
+  T *arr = static_cast<T *>(
+      aligned_alloc(ALIGNMENT, __make32(n * sizeof(T), ALIGNMENT)));
+  assert(arr != nullptr);
+  memset(arr, 0, n * sizeof(T));
+  return static_cast<T *>(arr);
+}
+
 float *rand_real_vec(env_t &env, size_t n);
 int64_t *rand_int_vec(env_t &env, size_t n);
-float *const_vec(env_t &env, size_t n, float val);
+float *const_vec(size_t n, float val);
 
 data_t *random_data(env_t &env);
 
 void free_data(data_t *data);
 
-constexpr const char *BASELINE_NAME = "baseline";
+constexpr std::string BASELINE_NAME = "baseline";
 
 namespace functions {
 
