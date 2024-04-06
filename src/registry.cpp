@@ -5,6 +5,13 @@
 
 namespace registry {
 
+size_t __make32(size_t needed_size, size_t alignment) {
+  double number_of_blocks = needed_size / (double)alignment;
+  size_t alloc_size = ceil(number_of_blocks) * alignment;
+  assert(alloc_size >= needed_size);
+  return alloc_size;
+}
+
 float *rand_real_vec(env_t &env, size_t n) {
   float *arr = alloc<float>(n);
   for (size_t i = 0; i < n; ++i) {
@@ -47,6 +54,9 @@ size_t output_size(env_t &env) {
 data_t *random_data(env_t &env) {
   data_t *d = (data_t *)malloc(sizeof(data_t));
   assert(d != nullptr);
+  size_t packed_channels = (env.num_channels % CNTBITS)
+                               ? ((env.num_channels / CNTBITS) + 1)
+                               : (env.num_channels / CNTBITS);
 
   d->type = env.type;
   d->btn_cnt1 = nullptr; // TODO: when we implement binary convolutions
@@ -60,13 +70,10 @@ data_t *random_data(env_t &env) {
   d->num_channels = env.num_channels;
   // TODO: why 1024? should be parameterized?
   d->quant_threshold = const_vec(1024, 0.5);
+  d->quant_weights =
+      rand_int_vec(env, BITS * env.kernel_number * packed_channels *
+                            env.kernel_height * env.kernel_width);
 
-  int packed_channels = (env.num_channels % CNTBITS) ? ((env.num_channels / CNTBITS) + 1)
-    : (env.num_channels / CNTBITS);
-  
-  d->quant_weights = rand_int_vec(env, BITS * env.kernel_number * packed_channels
-				  * env.kernel_height * env.kernel_width);
-  
   d->batch_size = env.batch_size;
   d->stride_height = env.stride_size;
   d->stride_width = env.stride_size;
