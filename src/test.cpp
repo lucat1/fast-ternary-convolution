@@ -27,13 +27,13 @@ bool compare(registry::func_t a, registry::func_t b, registry::env_t &env) {
     data->quant_threshold, data->num_channels, data->quant_weights,
     data->batch_size, data->stride_height, data->stride_width,
     data->kernel_number, data->kernel_height, data->kernel_width,
-    data->relu_alpha, data->output);
+    data->relu_alpha, output1);
   b(env.type, data->btn_cnt1, data->input, data->input_height,
     data->input_width, data->padding_height, data->padding_width,
     data->quant_threshold, data->num_channels, data->quant_weights,
     data->batch_size, data->stride_height, data->stride_width,
     data->kernel_number, data->kernel_height, data->kernel_width,
-    data->relu_alpha, data->output);
+    data->relu_alpha, output0);
 
   for (size_t i = 0; i < output_size; ++i) {
     if (abs(output0[i] - output1[i]) > EPS) {
