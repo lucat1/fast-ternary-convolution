@@ -12,6 +12,12 @@
 // result is stored in y
 void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
   const int k_bits = k * BITS;
+
+  // DEBUG
+  size_t max_acc_b = (n - 1) * k_bits + (k_bits - 1) + 1;
+  std::cout << "max access (b) in tnn_gemm " << max_acc_b << std::endl;
+  // DEBUG
+
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;

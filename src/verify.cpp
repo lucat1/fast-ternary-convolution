@@ -50,13 +50,18 @@ int verify() {
     test_env->stride_size = TestCases[icase][7];
     size_t output_size = registry::output_size(*test_env);
     output = registry::alloc<float>(output_size);
-    const int priChannel = test_env->num_channels / CNTBITS;
-    const int packed_channels =
-        (test_env->num_channels % CNTBITS) ? (priChannel + 1) : priChannel;
+    // const int pri_channel = test_env->num_channels / CNTBITS;
     const int packed_height = test_env->input_size + 2 * test_env->padding_size;
     const int packed_width = test_env->input_size + 2 * test_env->padding_size;
+    const int packed_channels = (test_env->num_channels % CNTBITS)
+                                    ? ((test_env->num_channels / CNTBITS) + 1)
+                                    : (test_env->num_channels / CNTBITS);
     QW = registry::alloc<int64_t>(test_env->batch_size * packed_height *
-                                  packed_width * packed_channels);
+                                  packed_width * packed_channels * BITS);
+    std::cout << "alloc size "
+              << test_env->batch_size * packed_height * packed_width *
+                     packed_channels * BITS
+              << std::endl;
 
     // iterate on conv types
     std::vector<std::string> ConvNames = {"TAB_TNN", "TAB_TBN", "TAB_BTN",
@@ -69,9 +74,8 @@ int verify() {
         ref_x = TX.data();
         ref_w = TW.data();
         ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
-                                test_env->kernel_number, test_env->num_channels,
-                                test_env->kernel_height, test_env->kernel_width,
-                                QW);
+                                test_env->batch_size, test_env->num_channels,
+                                test_env->input_size, test_env->input_size, QW);
         baseline::conv(registry::conv_type::TNN, nullptr, TX.data(),
                        test_env->input_size, test_env->input_size,
                        test_env->padding_size, test_env->padding_size,
@@ -98,9 +102,8 @@ int verify() {
         ref_x = BX.data();
         ref_w = TW.data();
         ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
-                                test_env->kernel_number, test_env->num_channels,
-                                test_env->kernel_height, test_env->kernel_width,
-                                QW);
+                                test_env->batch_size, test_env->num_channels,
+                                test_env->input_size, test_env->input_size, QW);
         BTN_CNT = registry::alloc<int>(test_env->kernel_number);
         btn_cnt_w2(QW, test_env->num_channels, test_env->kernel_number,
                    test_env->kernel_height, test_env->kernel_width, BTN_CNT);
