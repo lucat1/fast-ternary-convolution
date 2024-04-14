@@ -39,12 +39,12 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
       (type == registry::conv_type_t::TBN)) {
     qx = registry::calloc<int64_t>(batch_size * packed_height * packed_width *
                                    packed_channels * BITS);
-    i2rqx = registry::alloc<int64_t>(batch_size * fused_height * fused_width);
-
+    i2rqx = registry::alloc<int64_t>(batch_size * fused_height * fused_width *
+                                     BITS);
     ternarize_NCHW_to_NHWCB(input, padding_height, padding_width,
                             quant_threshold, batch_size, num_channels,
                             input_height, input_width, qx);
-    img2row_NHWCB_to_N_OHOW_KHKWC(
+    img2row_NHWCB_to_N_OHOW_KHKWC<int64_t>(
         qx, batch_size, packed_channels * BITS, packed_height, packed_width,
         kernel_height, kernel_width, stride_height, stride_width, i2rqx);
   } else {
@@ -54,7 +54,7 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
 
     binarize_NCHW_to_NHWC(input, padding_height, padding_width, batch_size,
                           num_channels, input_height, input_width, qx);
-    img2row_NHWCB_to_N_OHOW_KHKWC(
+    img2row_NHWCB_to_N_OHOW_KHKWC<int64_t>(
         qx, batch_size, packed_channels, packed_height, packed_width,
         kernel_height, kernel_width, stride_height, stride_width, i2rqx);
   }
