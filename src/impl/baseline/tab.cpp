@@ -52,8 +52,9 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
                                    packed_channels);
     i2rqx = registry::alloc<int64_t>(batch_size * fused_height * fused_width);
 
-    binarize_NCHW_to_NHWC(input, padding_height, padding_width, batch_size,
-                          num_channels, input_height, input_width, qx);
+    binarize_NCHW_to_NHWC(input, padding_height, padding_width, quant_threshold,
+                          batch_size, num_channels, input_height, input_width,
+                          qx);
     img2row_NHWCB_to_N_OHOW_KHKWC<int64_t>(
         qx, batch_size, packed_channels, packed_height, packed_width,
         kernel_height, kernel_width, stride_height, stride_width, i2rqx);

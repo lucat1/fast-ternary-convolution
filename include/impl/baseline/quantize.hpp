@@ -8,7 +8,7 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
                              int padding_width, float *quant_threshold,
                              int batch_size, int C, int input_height,
                              int input_width, int64_t *qx);
-void Binarize_NCHW_to_NHWC(const float *input, int padding_height,
+void binarize_NCHW_to_NHWC(const float *input, int padding_height,
                            int padding_width, float *quant_threshold,
                            int batch_size, int C, int input_height,
                            int input_width, int64_t *qx);

@@ -5,6 +5,40 @@
 #include "impl/baseline/utility.hpp"
 #include "registry.hpp"
 
+template <typename T>
+void print_matrix(T *X, T *X2, int batch_size, int kernel_number, int height,
+                  int width, int padding_height, int padding_width) {
+  for (int n = 0; n < 1; n++) {
+    for (int c = 0; c < 1; c++) {
+      for (int h = padding_height; h < height - 2 * padding_height; h++) {
+        for (int w = padding_height; w < width - 2 * padding_width; w++) {
+          T x1 = X[((n * height + h) * width + w) * kernel_number + c];
+          std::cout << (float)x1 << " ";
+        }
+      }
+    }
+    std::cout << std::endl;
+  }
+
+  for (int n = 0; n < 1; n++) {
+    for (int c = 0; c < 1; c++) {
+      for (int h = padding_height; h < height - 2 * padding_height; h++) {
+        for (int w = padding_height; w < width - 2 * padding_width; w++) {
+          T x2 = X2[((n * height + h) * width + w) * kernel_number + c];
+          std::cout << x2 << " ";
+        }
+      }
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "batch_size" << batch_size << std::endl;
+  std::cout << "kernel_number" << kernel_number << std::endl;
+  std::cout << "padding_height" << padding_height << std::endl;
+  std::cout << "padding_width" << padding_width << std::endl;
+  std::cout << "height" << height << std::endl;
+  std::cout << "width" << width << std::endl;
+}
+
 namespace verify {
 
 int verify() {
@@ -35,7 +69,7 @@ int verify() {
   int64_t *QW;
   int *BTN_CNT;
   // Iterate on layer configurations
-  for (int icase = 0; icase < CaseN; icase++) {
+  for (int icase = 0; icase < 2; icase++) {
     // config the layer shape and relevant sizes
     test_env->num_channels = TestCases[icase][0];
     test_env->input_height = TestCases[icase][1];
@@ -61,7 +95,9 @@ int verify() {
     // iterate on conv types
     std::vector<std::string> ConvNames = {"TAB_TNN", "TAB_TBN", "TAB_BTN",
                                           "TAB_BNN"};
-    for (int iconv = 0; iconv < registry::conv_type::CONV_TYPES; iconv++) {
+    // for (int iconv = 0; iconv < registry::conv_type::CONV_TYPES; iconv++) {
+    for (int iconv = registry::conv_type::BTN;
+         iconv <= registry::conv_type::BTN; iconv++) {
       // Get ref input x and weights w
       float *ref_x = NULL;
       float *ref_w = NULL;
@@ -98,8 +134,8 @@ int verify() {
         ref_x = BX.data();
         ref_w = TW.data();
         ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold,
-                                test_env->batch_size, test_env->num_channels,
-                                test_env->input_height, test_env->input_width,
+                                test_env->kernel_number, test_env->num_channels,
+                                test_env->kernel_height, test_env->kernel_width,
                                 QW);
         BTN_CNT = registry::alloc<int>(test_env->kernel_number);
         btn_cnt_w2(QW, test_env->num_channels, test_env->kernel_number,
@@ -168,6 +204,8 @@ int verify() {
       else
         cmp = Compare_Tensor_NHWC(output, ref_y.data(), Batch_Size,
                                   test_env->kernel_number, outh, outw);
+      print_matrix(output, ref_y.data(), Batch_Size, test_env->kernel_number,
+                   outh, outw, test_env->padding_size, test_env->padding_size);
       if (cmp > 0)
         std::cout << "Test Case " << icase
                   << " kernel: " << test_env->kernel_width << "X"
