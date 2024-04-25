@@ -6,7 +6,7 @@
 #include "registry.hpp"
 
 template <typename T>
-void print_matrix(T *X, T *X2, int batch_size, int kernel_number, int height,
+void print_matrix(T *X, /* int batch_size,  */ int kernel_number, int height,
                   int width, int padding_height, int padding_width) {
   for (int n = 0; n < 1; n++) {
     for (int c = 0; c < 1; c++) {
@@ -19,24 +19,12 @@ void print_matrix(T *X, T *X2, int batch_size, int kernel_number, int height,
     }
     std::cout << std::endl;
   }
-
-  for (int n = 0; n < 1; n++) {
-    for (int c = 0; c < 1; c++) {
-      for (int h = padding_height; h < height - 2 * padding_height; h++) {
-        for (int w = padding_height; w < width - 2 * padding_width; w++) {
-          T x2 = X2[((n * height + h) * width + w) * kernel_number + c];
-          std::cout << x2 << " ";
-        }
-      }
-    }
-    std::cout << std::endl;
-  }
-  std::cout << "batch_size" << batch_size << std::endl;
-  std::cout << "kernel_number" << kernel_number << std::endl;
-  std::cout << "padding_height" << padding_height << std::endl;
-  std::cout << "padding_width" << padding_width << std::endl;
-  std::cout << "height" << height << std::endl;
-  std::cout << "width" << width << std::endl;
+  // std::cout << "batch_size" << batch_size << std::endl;
+  // std::cout << "kernel_number" << kernel_number << std::endl;
+  // std::cout << "padding_height" << padding_height << std::endl;
+  // std::cout << "padding_width" << padding_width << std::endl;
+  // std::cout << "height" << height << std::endl;
+  // std::cout << "width" << width << std::endl;
 }
 
 namespace verify {
@@ -54,7 +42,7 @@ int verify() {
       {32, 1, 1, 120, 1, 1, 0, 1},    {512, 1, 1, 1024, 1, 1, 0, 1},
       {1024, 1, 1, 1640, 1, 1, 2, 3},
   };
-  registry::env *test_env = new registry::env();
+  registry::env_t *test_env = new registry::env();
   test_env->batch_size = 2;
   // Get the reference matrix
   std::vector<float> TX =
@@ -79,8 +67,13 @@ int verify() {
     test_env->kernel_width = TestCases[icase][5];
     test_env->padding_size = TestCases[icase][6];
     test_env->stride_size = TestCases[icase][7];
+    auto out_dims = registry::output_dimentions(*test_env);
     size_t output_size = registry::output_size(*test_env);
+    size_t output_height = std::get<0>(out_dims),
+           output_width = std::get<1>(out_dims);
     output = registry::alloc<float>(output_size);
+    print_matrix(output, test_env->kernel_number, output_height, output_width,
+                 test_env->padding_size, test_env->padding_size);
     // const int pri_channel = test_env->num_channels / CNTBITS;
     const int packed_height =
         test_env->input_height + 2 * test_env->padding_size;
@@ -90,7 +83,7 @@ int verify() {
                                     : (test_env->num_channels / CNTBITS);
     QW = registry::alloc<int64_t>(test_env->kernel_number * packed_height *
                                   packed_width * packed_channels * BITS);
-    Q_Threshold = registry::const_vec(test_env->kernel_number, 0.5);
+    Q_Threshold = registry::const_vec<float>(test_env->kernel_number, 0.5);
 
     // iterate on conv types
     std::vector<std::string> ConvNames = {"TAB_TNN", "TAB_TBN", "TAB_BTN",
@@ -133,11 +126,11 @@ int verify() {
       if (iconv == registry::conv_type::BTN) {
         ref_x = BX.data();
         ref_w = TW.data();
-        ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold,
+        ternarize_NCHW_to_NHWCB(ref_w, 0, 0, Q_Threshold,
                                 test_env->kernel_number, test_env->num_channels,
                                 test_env->kernel_height, test_env->kernel_width,
                                 QW);
-        BTN_CNT = registry::alloc<int>(test_env->kernel_number);
+        BTN_CNT = registry::const_vec<int>(test_env->kernel_number, 0);
         btn_cnt_w2(QW, test_env->num_channels, test_env->kernel_number,
                    test_env->kernel_height, test_env->kernel_width, BTN_CNT);
         baseline::conv(registry::conv_type::BTN, BTN_CNT, TX.data(),
@@ -186,26 +179,25 @@ int verify() {
       // Compare the conv results to ensure the functions are correct
 
       int cmp;
-      int outh = (test_env->input_height + 2 * test_env->padding_size -
-                  test_env->kernel_height + 1) /
-                 test_env->stride_size; // The output height of y
-      int outw = (test_env->input_width + 2 * test_env->padding_size -
-                  test_env->kernel_width + 1) /
-                 test_env->stride_size; // The output width  of y
       if ((test_env->padding_size > 0) &&
           ((iconv == registry::conv_type::BTN) ||
            (iconv == registry::conv_type::BNN)))
         // BTN and BNN regard the padded zeros as 1s because binary quantization
         // only has (+1, -1) no zeros. So we only compare the central part of
         // conv results here, excluding the zero padding part.
-        cmp = Compare_Tensor_BNN_Padding(
-            output, ref_y.data(), Batch_Size, test_env->kernel_number, outh,
-            outw, test_env->padding_size, test_env->padding_size);
+        cmp = Compare_Tensor_BNN_Padding(output, ref_y.data(), Batch_Size,
+                                         test_env->kernel_number, output_height,
+                                         output_width, test_env->padding_size,
+                                         test_env->padding_size);
       else
         cmp = Compare_Tensor_NHWC(output, ref_y.data(), Batch_Size,
-                                  test_env->kernel_number, outh, outw);
-      print_matrix(output, ref_y.data(), Batch_Size, test_env->kernel_number,
-                   outh, outw, test_env->padding_size, test_env->padding_size);
+                                  test_env->kernel_number, output_height,
+                                  output_width);
+      print_matrix(output, test_env->kernel_number, output_height, output_width,
+                   test_env->padding_size, test_env->padding_size);
+      print_matrix(ref_y.data(), test_env->kernel_number, output_height,
+                   output_width, test_env->padding_size,
+                   test_env->padding_size);
       if (cmp > 0)
         std::cout << "Test Case " << icase
                   << " kernel: " << test_env->kernel_width << "X"

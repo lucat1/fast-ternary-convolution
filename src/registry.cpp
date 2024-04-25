@@ -28,19 +28,11 @@ int64_t *rand_int_vec(env_t &env, size_t n) {
   return arr;
 };
 
-float *const_vec(size_t n, float val) {
-  float *arr = alloc<float>(n);
-  for (size_t i = 0; i < n; ++i) {
-    arr[i] = val;
-  }
-  return arr;
-};
-
 size_t input_size(env_t &env) {
   return env.batch_size * env.num_channels * env.input_height * env.input_width;
 }
 
-size_t output_size(env_t &env) {
+std::tuple<size_t, size_t> output_dimentions(env_t &env) {
   uint32_t packed_height = env.input_height + 2 * env.padding_size;
   uint32_t packed_width = env.input_width + 2 * env.padding_size;
   uint32_t output_height =
@@ -48,6 +40,12 @@ size_t output_size(env_t &env) {
   uint32_t output_width =
       (packed_width - env.kernel_width + 1) / env.stride_size;
 
+  return {output_height, output_width};
+}
+
+size_t output_size(env_t &env) {
+  auto dims = output_dimentions(env);
+  uint32_t output_height = std::get<0>(dims), output_width = std::get<1>(dims);
   return env.batch_size * env.kernel_number * output_width * output_height;
 }
 
@@ -71,7 +69,7 @@ data_t *random_data(env_t &env) {
   // TODO: in the baseline impl, 1024 and 4000 are used. It appears to us that
   // batch_size should be enough.
   // d->quant_threshold = const_vec(1024, 0.5);
-  d->quant_threshold = const_vec(env.batch_size, 0.5);
+  d->quant_threshold = const_vec<float>(env.batch_size, 0.5);
   d->quant_weights =
       rand_int_vec(env, BITS * env.kernel_number * packed_channels *
                             env.kernel_height * env.kernel_width);

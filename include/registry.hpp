@@ -49,6 +49,7 @@ typedef struct env {
 } env_t;
 
 size_t input_size(env_t &env);
+std::tuple<size_t, size_t> output_dimentions(env_t &env);
 size_t output_size(env_t &env);
 
 typedef struct data {
@@ -96,9 +97,16 @@ template <typename T> T *calloc(size_t n) {
   return static_cast<T *>(arr);
 }
 
+template <typename T> T *const_vec(size_t n, T val) {
+  T *arr = alloc<T>(n);
+  for (size_t i = 0; i < n; ++i) {
+    arr[i] = val;
+  }
+  return arr;
+};
+
 float *rand_real_vec(env_t &env, size_t n);
 int64_t *rand_int_vec(env_t &env, size_t n);
-float *const_vec(size_t n, float val);
 
 data_t *random_data(env_t &env);
 

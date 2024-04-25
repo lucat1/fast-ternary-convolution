@@ -2,7 +2,6 @@
 #define _BENCH_HPP
 
 #include "registry.hpp"
-#include "test.hpp"
 
 namespace bench {
 
