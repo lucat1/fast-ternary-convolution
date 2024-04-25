@@ -42,7 +42,8 @@ int verify() {
   for (int icase = 0; icase < CaseN; icase++) {
     // config the layer shape and relevant sizes
     test_env->num_channels = TestCases[icase][0];
-    test_env->input_size = TestCases[icase][1];
+    test_env->input_height = TestCases[icase][1];
+    test_env->input_width = TestCases[icase][2];
     test_env->kernel_number = TestCases[icase][3];
     test_env->kernel_height = TestCases[icase][4];
     test_env->kernel_width = TestCases[icase][5];
@@ -51,8 +52,8 @@ int verify() {
     size_t output_size = registry::output_size(*test_env);
     output = registry::alloc<float>(output_size);
     // const int pri_channel = test_env->num_channels / CNTBITS;
-    const int packed_height = test_env->input_size + 2 * test_env->padding_size;
-    const int packed_width = test_env->input_size + 2 * test_env->padding_size;
+    const int packed_height = test_env->input_height + 2 * test_env->padding_size;
+    const int packed_width = test_env->input_width + 2 * test_env->padding_size;
     const int packed_channels = (test_env->num_channels % CNTBITS)
                                     ? ((test_env->num_channels / CNTBITS) + 1)
                                     : (test_env->num_channels / CNTBITS);
@@ -74,10 +75,10 @@ int verify() {
         ref_x = TX.data();
         ref_w = TW.data();
         ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
-                                test_env->batch_size, test_env->num_channels,
-                                test_env->input_size, test_env->input_size, QW);
-        baseline::conv(registry::conv_type::TNN, nullptr, TX.data(),
-                       test_env->input_size, test_env->input_size,
+                                test_env->kernel_number, test_env->num_channels,
+                                test_env->input_height, test_env->input_width, QW);
+        baseline::conv(registry::conv_type::TNN, NULL, TX.data(),
+                       test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
                        Q_Threshold.data(), test_env->num_channels, QW,
                        Batch_Size, test_env->stride_size, test_env->stride_size,
@@ -91,7 +92,7 @@ int verify() {
                               test_env->num_channels, test_env->kernel_height,
                               test_env->kernel_width, QW);
         baseline::conv(registry::conv_type::TBN, nullptr, TX.data(),
-                       test_env->input_size, test_env->input_size,
+                       test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
                        Q_Threshold.data(), test_env->num_channels, QW,
                        Batch_Size, test_env->stride_size, test_env->stride_size,
@@ -103,12 +104,12 @@ int verify() {
         ref_w = TW.data();
         ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
                                 test_env->batch_size, test_env->num_channels,
-                                test_env->input_size, test_env->input_size, QW);
+                                test_env->input_height, test_env->input_width, QW);
         BTN_CNT = registry::alloc<int>(test_env->kernel_number);
         btn_cnt_w2(QW, test_env->num_channels, test_env->kernel_number,
                    test_env->kernel_height, test_env->kernel_width, BTN_CNT);
         baseline::conv(registry::conv_type::BTN, BTN_CNT, TX.data(),
-                       test_env->input_size, test_env->input_size,
+                       test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
                        Q_Threshold.data(), test_env->num_channels, QW,
                        Batch_Size, test_env->stride_size, test_env->stride_size,
@@ -123,7 +124,7 @@ int verify() {
                               test_env->num_channels, test_env->kernel_height,
                               test_env->kernel_width, QW);
         baseline::conv(registry::conv_type::BNN, nullptr, TX.data(),
-                       test_env->input_size, test_env->input_size,
+                       test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
                        Q_Threshold.data(), test_env->num_channels, QW,
                        Batch_Size, test_env->stride_size, test_env->stride_size,
@@ -135,13 +136,13 @@ int verify() {
 
       std::vector<float> px = DirectPad(
           ref_x, test_env->padding_size, test_env->padding_size, Batch_Size,
-          test_env->num_channels, test_env->input_size, test_env->input_size);
+          test_env->num_channels, test_env->input_height, test_env->input_width);
       // std::vector<float> DirectConv2d_FP32(float* x, float* w, int stride1,
       // int stride2, int N, int C, int paddedH, int paddedW, int KN, int KH,
       // int KW)
-      int paddedh = test_env->input_size +
+      int paddedh = test_env->input_height +
                     2 * test_env->padding_size; // height after zero padding
-      int paddedw = test_env->input_size +
+      int paddedw = test_env->input_width +
                     2 * test_env->padding_size; // width  after zero padding
       std::vector<float> ref_y = DirectConv2d_FP32(
           px.data(), ref_w, test_env->stride_size, test_env->stride_size,
@@ -152,10 +153,10 @@ int verify() {
       // Compare the conv results to ensure the functions are correct
 
       int cmp;
-      int outh = (test_env->input_size + 2 * test_env->padding_size -
+      int outh = (test_env->input_height + 2 * test_env->padding_size -
                   test_env->kernel_height + 1) /
                  test_env->stride_size; // The output height of y
-      int outw = (test_env->input_size + 2 * test_env->padding_size -
+      int outw = (test_env->input_width + 2 * test_env->padding_size -
                   test_env->kernel_width + 1) /
                  test_env->stride_size; // The output width  of y
       if ((test_env->padding_size > 0) &&

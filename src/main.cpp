@@ -64,7 +64,8 @@ int main(void) {
       assert(c.w == c.h);
       environments.insert(
           {name, registry::env_t{
-                     .input_size = c.w, // common image size
+                     .input_height = c.h,
+                     .input_width = c.w, // common image size
                      .batch_size = batch_size,
                      .type = registry::TNN,
                      .num_channels = c.c,

@@ -30,7 +30,8 @@ typedef const std::string name_t;
 
 typedef struct env {
   // problem parameters
-  uint32_t input_size;
+  uint32_t input_height;
+  uint32_t input_width;
   uint32_t batch_size;
 
   conv_type_t type;

@@ -37,12 +37,12 @@ float *const_vec(size_t n, float val) {
 };
 
 size_t input_size(env_t &env) {
-  return env.batch_size * env.num_channels * env.input_size * env.input_size;
+  return env.batch_size * env.num_channels * env.input_height * env.input_width;
 }
 
 size_t output_size(env_t &env) {
-  uint32_t packed_height = env.input_size + 2 * env.padding_size;
-  uint32_t packed_width = env.input_size + 2 * env.padding_size;
+  uint32_t packed_height = env.input_height + 2 * env.padding_size;
+  uint32_t packed_width = env.input_width + 2 * env.padding_size;
   uint32_t output_height =
       (packed_height - env.kernel_height + 1) / env.stride_size;
   uint32_t output_width =
@@ -62,8 +62,8 @@ data_t *random_data(env_t &env) {
   d->btn_cnt1 = nullptr; // TODO: when we implement binary convolutions
 
   d->input = rand_real_vec(env, input_size(env));
-  d->input_width = env.input_size;
-  d->input_height = env.input_size;
+  d->input_width = env.input_width;
+  d->input_height = env.input_height;
   d->padding_height = env.padding_size;
   d->padding_width = env.padding_size;
 
