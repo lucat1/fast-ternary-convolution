@@ -4,8 +4,6 @@
 #include "impl/baseline/tab.hpp"
 #include "impl/baseline/utility.hpp"
 #include "registry.hpp"
-#include <chrono>
-#include <numeric>
 
 namespace verify {
 
@@ -33,9 +31,7 @@ int verify() {
       1024 * 1024 * 3 * 3, true); // Ternary Weights: size = 51,380,224
   std::vector<float> BW = generate_array(
       1024 * 1024 * 3 * 3, false); // Binary Weights : size = 51,380,224
-  std::vector<float> Q_Threshold =
-      std::vector<float>(1024, 0.5); // Quantization threshold for ternarization
-  float *output;
+  float *output, *Q_Threshold;
   int64_t *QW;
   int *BTN_CNT;
   // Iterate on layer configurations
@@ -52,17 +48,15 @@ int verify() {
     size_t output_size = registry::output_size(*test_env);
     output = registry::alloc<float>(output_size);
     // const int pri_channel = test_env->num_channels / CNTBITS;
-    const int packed_height = test_env->input_height + 2 * test_env->padding_size;
+    const int packed_height =
+        test_env->input_height + 2 * test_env->padding_size;
     const int packed_width = test_env->input_width + 2 * test_env->padding_size;
     const int packed_channels = (test_env->num_channels % CNTBITS)
                                     ? ((test_env->num_channels / CNTBITS) + 1)
                                     : (test_env->num_channels / CNTBITS);
-    QW = registry::alloc<int64_t>(test_env->batch_size * packed_height *
+    QW = registry::alloc<int64_t>(test_env->kernel_number * packed_height *
                                   packed_width * packed_channels * BITS);
-    std::cout << "alloc size "
-              << test_env->batch_size * packed_height * packed_width *
-                     packed_channels * BITS
-              << std::endl;
+    Q_Threshold = registry::const_vec(test_env->kernel_number, 0.5);
 
     // iterate on conv types
     std::vector<std::string> ConvNames = {"TAB_TNN", "TAB_TBN", "TAB_BTN",
@@ -74,14 +68,15 @@ int verify() {
       if (iconv == registry::conv_type::TNN) {
         ref_x = TX.data();
         ref_w = TW.data();
-        ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
+        ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold,
                                 test_env->kernel_number, test_env->num_channels,
-                                test_env->input_height, test_env->input_width, QW);
+                                test_env->kernel_width, test_env->kernel_width,
+                                QW);
         baseline::conv(registry::conv_type::TNN, NULL, TX.data(),
                        test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
-                       Q_Threshold.data(), test_env->num_channels, QW,
-                       Batch_Size, test_env->stride_size, test_env->stride_size,
+                       Q_Threshold, test_env->num_channels, QW, Batch_Size,
+                       test_env->stride_size, test_env->stride_size,
                        test_env->kernel_number, test_env->kernel_height,
                        test_env->kernel_width, ReLU_alpha, output);
       }
@@ -94,25 +89,26 @@ int verify() {
         baseline::conv(registry::conv_type::TBN, nullptr, TX.data(),
                        test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
-                       Q_Threshold.data(), test_env->num_channels, QW,
-                       Batch_Size, test_env->stride_size, test_env->stride_size,
+                       Q_Threshold, test_env->num_channels, QW, Batch_Size,
+                       test_env->stride_size, test_env->stride_size,
                        test_env->kernel_number, test_env->kernel_height,
                        test_env->kernel_width, ReLU_alpha, output);
       }
       if (iconv == registry::conv_type::BTN) {
         ref_x = BX.data();
         ref_w = TW.data();
-        ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold.data(),
+        ternarize_NCHW_to_NHWCB(TW.data(), 0, 0, Q_Threshold,
                                 test_env->batch_size, test_env->num_channels,
-                                test_env->input_height, test_env->input_width, QW);
+                                test_env->input_height, test_env->input_width,
+                                QW);
         BTN_CNT = registry::alloc<int>(test_env->kernel_number);
         btn_cnt_w2(QW, test_env->num_channels, test_env->kernel_number,
                    test_env->kernel_height, test_env->kernel_width, BTN_CNT);
         baseline::conv(registry::conv_type::BTN, BTN_CNT, TX.data(),
                        test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
-                       Q_Threshold.data(), test_env->num_channels, QW,
-                       Batch_Size, test_env->stride_size, test_env->stride_size,
+                       Q_Threshold, test_env->num_channels, QW, Batch_Size,
+                       test_env->stride_size, test_env->stride_size,
                        test_env->kernel_number, test_env->kernel_height,
                        test_env->kernel_width, ReLU_alpha, output);
         free(BTN_CNT);
@@ -126,17 +122,18 @@ int verify() {
         baseline::conv(registry::conv_type::BNN, nullptr, TX.data(),
                        test_env->input_height, test_env->input_width,
                        test_env->padding_size, test_env->padding_size,
-                       Q_Threshold.data(), test_env->num_channels, QW,
-                       Batch_Size, test_env->stride_size, test_env->stride_size,
+                       Q_Threshold, test_env->num_channels, QW, Batch_Size,
+                       test_env->stride_size, test_env->stride_size,
                        test_env->kernel_number, test_env->kernel_height,
                        test_env->kernel_width, ReLU_alpha, output);
       }
 
       // Get reference conv result: direct conv on ref_x and ref_w
 
-      std::vector<float> px = DirectPad(
-          ref_x, test_env->padding_size, test_env->padding_size, Batch_Size,
-          test_env->num_channels, test_env->input_height, test_env->input_width);
+      std::vector<float> px =
+          DirectPad(ref_x, test_env->padding_size, test_env->padding_size,
+                    Batch_Size, test_env->num_channels, test_env->input_height,
+                    test_env->input_width);
       // std::vector<float> DirectConv2d_FP32(float* x, float* w, int stride1,
       // int stride2, int N, int C, int paddedH, int paddedW, int KN, int KH,
       // int KW)
@@ -184,6 +181,7 @@ int verify() {
     }
     free(output);
     free(QW);
+    free(Q_Threshold);
   }
   return 0;
 }

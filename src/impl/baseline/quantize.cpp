@@ -15,8 +15,8 @@
 //   qx: the quantized x, using N, H, W, C, B format
 void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
                              int padding_width, float *quant_threshold,
-                             int batch_size, int chan, int input_height,
-                             int input_width, int64_t *qx) {
+                             int kernel_number, int chan, int kernel_height,
+                             int kernel_width, int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -29,24 +29,12 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
   // packed_channels: actual packed input channel
   const int packed_channels =
       (chan % CNTBITS) ? (pri_channel + 1) : pri_channel;
-  const int packed_height = input_height + 2 * padding_height;
-  const int packed_width = input_width + 2 * padding_width;
+  const int packed_height = kernel_height + 2 * padding_height;
+  const int packed_width = kernel_width + 2 * padding_width;
 
-  // DEBUG
-  size_t max_access_offst = ((((batch_size - 1) * packed_height +
-                               (input_height - 1) + padding_height) *
-                                  packed_width +
-                              (input_width - 1) + padding_width) *
-                                 packed_channels +
-                             (pri_channel - 1)) *
-                                BITS +
-                            0;
-  std::cout << "max_access_offst " << max_access_offst << std::endl;
-  // END DEBUG
-
-  for (int in = 0; in < batch_size; in++) {
-    for (int ih = 0; ih < input_height; ih++) {
-      for (int iw = 0; iw < input_width; iw++) {
+  for (int in = 0; in < kernel_number; in++) {
+    for (int ih = 0; ih < kernel_height; ih++) {
+      for (int iw = 0; iw < kernel_width; iw++) {
 
         // Pack the first part: 0 ~ priChannel*CNTBITS
         for (int ic = 0; ic < pri_channel; ic++) {
@@ -57,8 +45,9 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
             // PyTorch uses N_C_H_W format
             // x.index({in, ic*CNTBITS+bit, ih, iw})
             float currentx =
-                input[((in * chan + (ic * CNTBITS + bit)) * input_height + ih) *
-                          input_width +
+                input[((in * chan + (ic * CNTBITS + bit)) * kernel_height +
+                       ih) *
+                          kernel_width +
                       iw];
             if (currentx > quant_threshold[in]) {
               // Pack 1: 01
@@ -92,9 +81,9 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
           for (uint32_t bit = 0; bit < (chan % CNTBITS); bit++) {
             float currentx =
                 input[((in * chan + (pri_channel * CNTBITS + bit)) *
-                           input_height +
+                           kernel_height +
                        ih) *
-                          input_width +
+                          kernel_width +
                       iw];
             if (currentx > quant_threshold[in]) {
               // Pack 1: 01
