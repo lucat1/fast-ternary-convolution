@@ -34,7 +34,6 @@ run: $(TARGET)
 debug: CXXFLAGS += -ggdb -fsanitize=address -fno-omit-frame-pointer
 debug: LDFLAGS += -fsanitize=address
 debug: compile
-	@gdb $(TARGET)
 
 clean:
 	@echo -e "RMRF\tbuild $(TARGET)"

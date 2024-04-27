@@ -13,10 +13,11 @@
 //       int64_t initialized to 0.
 // Output:
 //   qx: the quantized x, using N, H, W, C, B format
-void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
-                             int padding_width, float *quant_threshold,
-                             int kernel_number, int chan, int kernel_height,
-                             int kernel_width, int64_t *qx) {
+void ternarize_NCHW_to_NHWCB(float *input, size_t padding_height,
+                             size_t padding_width, float *quant_threshold,
+                             size_t kernel_number, size_t chan,
+                             size_t kernel_height, size_t kernel_width,
+                             int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -25,19 +26,19 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
   }
 
   // initial packed channel num
-  const int pri_channel = chan / CNTBITS;
+  const size_t pri_channel = chan / CNTBITS;
   // packed_channels: actual packed input channel
-  const int packed_channels =
+  const size_t packed_channels =
       (chan % CNTBITS) ? (pri_channel + 1) : pri_channel;
-  const int packed_height = kernel_height + 2 * padding_height;
-  const int packed_width = kernel_width + 2 * padding_width;
+  const size_t packed_height = kernel_height + 2 * padding_height;
+  const size_t packed_width = kernel_width + 2 * padding_width;
 
-  for (int in = 0; in < kernel_number; in++) {
-    for (int ih = 0; ih < kernel_height; ih++) {
-      for (int iw = 0; iw < kernel_width; iw++) {
+  for (size_t in = 0; in < kernel_number; in++) {
+    for (size_t ih = 0; ih < kernel_height; ih++) {
+      for (size_t iw = 0; iw < kernel_width; iw++) {
 
         // Pack the first part: 0 ~ priChannel*CNTBITS
-        for (int ic = 0; ic < pri_channel; ic++) {
+        for (size_t ic = 0; ic < pri_channel; ic++) {
           // for 2-bit packing
           int64_t p1 = 0;
           int64_t p2 = 0;
@@ -75,10 +76,11 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
         }
 
         // Pack the second part: priChannel*CNTBITS ~ C
-        if ((chan % CNTBITS) > 0) {
+        size_t remainder = (chan % CNTBITS);
+        if (remainder > 0) {
           int64_t p1 = 0;
           int64_t p2 = 0;
-          for (uint32_t bit = 0; bit < (chan % CNTBITS); bit++) {
+          for (uint32_t bit = 0; bit < remainder; bit++) {
             float currentx =
                 input[((in * chan + (pri_channel * CNTBITS + bit)) *
                            kernel_height +
@@ -131,10 +133,11 @@ void ternarize_NCHW_to_NHWCB(float *input, int padding_height,
 //       int64_t initialized to 0.
 // Output:
 //   qx: the quantized x, using N, H, W, C format
-void binarize_NCHW_to_NHWC(const float *input, int padding_height,
-                           int padding_width, float *quant_threshold,
-                           int batch_size, int num_channels, int input_height,
-                           int input_width, int64_t *qx) {
+void binarize_NCHW_to_NHWC(const float *input, size_t padding_height,
+                           size_t padding_width, float *quant_threshold,
+                           size_t batch_size, size_t num_channels,
+                           size_t input_height, size_t input_width,
+                           int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -154,9 +157,9 @@ void binarize_NCHW_to_NHWC(const float *input, int padding_height,
   // the data torch::Tensor qx = torch::zeros({ N, packed_height, packed_width,
   // packed_channels }, torch::dtype(torch::kInt64));
 
-  for (int in = 0; in < batch_size; in++) {
-    for (int ih = 0; ih < input_height; ih++) {
-      for (int iw = 0; iw < input_width; iw++) {
+  for (size_t in = 0; in < batch_size; in++) {
+    for (size_t ih = 0; ih < input_height; ih++) {
+      for (size_t iw = 0; iw < input_width; iw++) {
 
         // Pack the first part: 0 ~ priChannel*CNTBITS
         for (int ic = 0; ic < priChannel; ic++) {
@@ -209,9 +212,10 @@ void binarize_NCHW_to_NHWC(const float *input, int padding_height,
 // qx: pointer to batch_size * packed_height * packed_width * packed_channels
 // int64_t
 //     initialized to 0
-void binarize_NCHW_to_NHWC(const float *input, int padding_height,
-                           int padding_width, int batch_size, int num_channels,
-                           int input_height, int input_width, int64_t *qx) {
+void binarize_NCHW_to_NHWC(const float *input, size_t padding_height,
+                           size_t padding_width, size_t batch_size,
+                           size_t num_channels, size_t input_height,
+                           size_t input_width, int64_t *qx) {
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -231,9 +235,9 @@ void binarize_NCHW_to_NHWC(const float *input, int padding_height,
   // the data torch::Tensor qx = torch::zeros({ N, packed_height, packed_width,
   // packed_channels }, torch::dtype(torch::kInt64));
 
-  for (int in = 0; in < batch_size; in++) {
-    for (int ih = 0; ih < input_height; ih++) {
-      for (int iw = 0; iw < input_width; iw++) {
+  for (size_t in = 0; in < batch_size; in++) {
+    for (size_t ih = 0; ih < input_height; ih++) {
+      for (size_t iw = 0; iw < input_width; iw++) {
 
         // Pack the first part: 0 ~ priChannel*CNTBITS
         for (int ic = 0; ic < priChannel; ic++) {
@@ -283,16 +287,17 @@ void binarize_NCHW_to_NHWC(const float *input, int padding_height,
 }
 
 // y: pointer to kernel_number ints initialized to 0
-void btn_cnt_w2(int64_t *quantized_weights, int num_channels, int kernel_number,
-                int kernel_height, int kernel_width, int *y) {
-  int num_packed_channels = (num_channels % CNTBITS)
-                                ? (num_channels / CNTBITS + 1)
-                                : (num_channels / CNTBITS);
+void btn_cnt_w2(int64_t *quantized_weights, size_t num_channels,
+                size_t kernel_number, size_t kernel_height, size_t kernel_width,
+                int *y) {
+  size_t num_packed_channels = (num_channels % CNTBITS)
+                                   ? (num_channels / CNTBITS + 1)
+                                   : (num_channels / CNTBITS);
 
-  for (int n = 0; n < kernel_number; n++) {
-    for (int h = 0; h < kernel_height; h++) {
-      for (int w = 0; w < kernel_width; w++) {
-        for (int c = 0; c < num_packed_channels; c++) {
+  for (size_t n = 0; n < kernel_number; n++) {
+    for (size_t h = 0; h < kernel_height; h++) {
+      for (size_t w = 0; w < kernel_width; w++) {
+        for (size_t c = 0; c < num_packed_channels; c++) {
           y[n] += popcnt64(
               quantized_weights[(((n * kernel_height + h) * kernel_width + w) *
                                      num_packed_channels +

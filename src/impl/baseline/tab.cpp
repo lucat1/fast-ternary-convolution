@@ -29,7 +29,9 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
   fused_height = output_height * output_width;
   fused_width = kernel_height * kernel_width * num_channels;
 
+  size_t qx_size;
   int64_t *qx;
+  size_t i2rqx_size;
   int64_t *i2rqx;
   int *y_intermediate;
 
@@ -37,10 +39,12 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
 
   if ((type == registry::conv_type_t::TNN) ||
       (type == registry::conv_type_t::TBN)) {
-    qx = registry::calloc<int64_t>(batch_size * packed_height * packed_width *
-                                   packed_channels * BITS);
-    i2rqx = registry::alloc<int64_t>(batch_size * fused_height * fused_width *
-                                     BITS);
+    qx_size =
+        batch_size * packed_height * packed_width * packed_channels * BITS;
+    qx = registry::calloc<int64_t>(qx_size);
+    i2rqx_size = batch_size * fused_height * fused_width * BITS;
+    i2rqx = registry::calloc<int64_t>(i2rqx_size);
+
     ternarize_NCHW_to_NHWCB(input, padding_height, padding_width,
                             quant_threshold, batch_size, num_channels,
                             input_height, input_width, qx);
@@ -48,9 +52,10 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
         qx, batch_size, packed_channels * BITS, packed_height, packed_width,
         kernel_height, kernel_width, stride_height, stride_width, i2rqx);
   } else {
-    qx = registry::calloc<int64_t>(batch_size * packed_height * packed_width *
-                                   packed_channels);
-    i2rqx = registry::alloc<int64_t>(batch_size * fused_height * fused_width);
+    qx_size = batch_size * packed_height * packed_width * packed_channels;
+    qx = registry::calloc<int64_t>(qx_size);
+    i2rqx_size = batch_size * fused_height * fused_width;
+    i2rqx = registry::calloc<int64_t>(i2rqx_size);
 
     binarize_NCHW_to_NHWC(input, padding_height, padding_width, quant_threshold,
                           batch_size, num_channels, input_height, input_width,
@@ -62,8 +67,8 @@ void conv(registry::conv_type_t type, int *btn_cnt1, float *input,
 
   // Bitwise GEMM
 
-  y_intermediate = registry::calloc<int>(batch_size * output_height *
-                                         output_width * kernel_number);
+  size_t y_size = batch_size * output_height * output_width * kernel_number;
+  y_intermediate = registry::calloc<int>(y_size);
   switch (type) {
   case registry::conv_type_t::TNN: {
     tnn_gemm_baseline(i2rqx, quant_weights,
