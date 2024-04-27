@@ -29,13 +29,13 @@ std::vector<T> DirectPad(T *x, int padding1, int padding2, int N, int C, int H,
   return qx;
 }
 
-std::vector<float> DirectConv2d_FP32(float *x, float *w, int stride1,
-                                     int stride2, int N, int C, int H, int W,
-                                     int KN, int KH, int KW) {
+std::vector<float> DirectConv2d_FP32(float *x, float *w, int stride_height,
+                                     int stride_width, int N, int C, int H,
+                                     int W, int KN, int KH, int KW) {
   const int OH = H - KH + 1;
   const int OW = W - KW + 1;
-  const int FH = (int)(OH / stride1);
-  const int FW = (int)(OW / stride2);
+  const int FH = (int)(OH / stride_height);
+  const int FW = (int)(OW / stride_width);
 
   std::vector<float> y = std::vector<float>(N * KN * FH * FW);
   float *yptr = y.data();
@@ -50,8 +50,8 @@ std::vector<float> DirectConv2d_FP32(float *x, float *w, int stride1,
             for (int kh = 0; kh < KH; kh++) {
               for (int kw = 0; kw < KW; kw++) {
                 // Use N_C_H_W format
-                sum += x[((on * C + kc) * H + (oh * stride1 + kh)) * W +
-                         ow * stride2 + kw] *
+                sum += x[((on * C + kc) * H + (oh * stride_height + kh)) * W +
+                         ow * stride_width + kw] *
                        w[((kn * C + kc) * KH + kh) * KW + kw];
               }
             }

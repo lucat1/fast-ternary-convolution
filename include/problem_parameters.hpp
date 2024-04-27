@@ -30,4 +30,6 @@ public:
   Parameters(ConvolutionType conv_type, uint32_t batch_size,
              uint32_t num_channels, uint32_t kernel_number, Size input_size,
              Size kernel_size, Size padding_size, Size stride_size);
+
+  virtual ~Parameters() = default;
 };
