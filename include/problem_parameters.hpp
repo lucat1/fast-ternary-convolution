@@ -1,9 +1,10 @@
 #pragma once
+
+#include "common.hpp"
+
 #include <cstdint>
 
 using namespace std;
-
-enum ConvolutionType { TNN, TBN, BTN, BNN };
 
 // Could have used a tuple, but this way the fields are declarative
 class Size {
