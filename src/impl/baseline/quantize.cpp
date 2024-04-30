@@ -1,6 +1,6 @@
 #include "impl/baseline/quantize.hpp"
 #include "common.hpp"
-#include <iostream>
+#include "measure.hpp"
 
 namespace baseline {
 
@@ -23,6 +23,7 @@ void ternarize_NCHW_to_NHWCB(float *input, size_t padding_height,
                              size_t kernel_number, size_t chan,
                              size_t kernel_height, size_t kernel_width,
                              int64_t *qx) {
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::START);
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -126,6 +127,7 @@ void ternarize_NCHW_to_NHWCB(float *input, size_t padding_height,
       }
     }
   }
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::END);
 }
 
 // Quantize the input x to be {+1, -1}
@@ -144,6 +146,7 @@ void binarize_NCHW_to_NHWC(const float *input, size_t padding_height,
                            size_t batch_size, size_t num_channels,
                            size_t input_height, size_t input_width,
                            int64_t *qx) {
+  measure_point(MeasurementFunction::BINARIZE, MeasurementEvent::START);
   const int64_t one = 1;
   int64_t onebit[CNTBITS];
   // 64-bits, set each bit
@@ -212,6 +215,7 @@ void binarize_NCHW_to_NHWC(const float *input, size_t padding_height,
       }
     }
   }
+  measure_point(MeasurementFunction::BINARIZE, MeasurementEvent::END);
 }
 
 // This Binarization use ths=0

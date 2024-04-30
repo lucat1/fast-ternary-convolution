@@ -59,20 +59,4 @@ public:
   }
 };
 
-class VerificationReport {
-public:
-  std::vector<Data *> passed;
-  std::vector<Data *> failed;
-
-  VerificationReport(std::vector<Data *> passed, std::vector<Data *> failed)
-      : passed(passed), failed(failed) {}
-
-  ~VerificationReport() {
-    for (auto p : passed)
-      delete p;
-    for (auto f : failed)
-      delete f;
-  }
-};
-
-VerificationReport *verify();
+void verify();
