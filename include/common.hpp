@@ -25,6 +25,9 @@
 #endif
 #endif // CLANG
 
+// used for pretty-printing
+const constexpr uint32_t name_space = 20;
+
 // The bits of the container integer: int64_t
 const constexpr uint32_t CNTBITS = 64;
 // The bit width of quantized input values

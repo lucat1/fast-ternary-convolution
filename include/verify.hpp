@@ -1,10 +1,10 @@
 #pragma once
 
 #include "alloc.hpp"
+#include "impl.hpp"
 #include "problem_data.hpp"
 
 #include <random>
-#include <vector>
 
 class VerificationData : public Data {
 private:
@@ -59,4 +59,4 @@ public:
   }
 };
 
-void verify();
+void verify(Registry r);
