@@ -1,7 +1,9 @@
 #include "bench.hpp"
 #include "measure.hpp"
 #include "problem_data.hpp"
+#include "tsc.hpp"
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -112,7 +114,7 @@ map<MeasurementFunction, uint64_t> average(vector<vector<Interval>> raw) {
 }
 
 const constexpr size_t conv_type_space = 3;
-const constexpr size_t time_space = 12;
+const constexpr size_t cycles_space = 12;
 const constexpr size_t num_channels_space = 5;
 const constexpr size_t batch_size_space = 2;
 const constexpr size_t kernel_number_space = 4;
@@ -123,11 +125,11 @@ const constexpr size_t kernel_width_space = 2;
 const constexpr size_t padding_size_space = 1;
 const constexpr size_t stride_size_space = 1;
 
-void print_line(string impl_name, ConvolutionType ct, MeasurementFunction mf,
-                uint64_t time, uint32_t num_channels, int batch_size,
-                uint32_t kernel_number, size_t input_height, size_t input_width,
-                size_t kernel_height, size_t kernel_width, size_t padding_size,
-                size_t stride_size) {
+void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
+                MeasurementFunction mf, uint64_t cycles, uint32_t num_channels,
+                int batch_size, uint32_t kernel_number, size_t input_height,
+                size_t input_width, size_t kernel_height, size_t kernel_width,
+                size_t padding_size, size_t stride_size) {
 #ifndef PRINT_ALL
   if (mf == MeasurementFunction::CONV)
 #endif
@@ -137,7 +139,7 @@ void print_line(string impl_name, ConvolutionType ct, MeasurementFunction mf,
 #ifdef PRINT_ALL
          << setw(9) << measurement_function_name(mf) << " "
 #endif
-         << setw(time_space) << time << " " << setw(num_channels_space)
+         << setw(cycles_space) << cycles << " " << setw(num_channels_space)
          << num_channels << " " << setw(batch_size_space) << batch_size << " "
          << setw(kernel_number_space) << kernel_number << " "
          << setw(input_height_space) << input_height << " "
@@ -146,12 +148,23 @@ void print_line(string impl_name, ConvolutionType ct, MeasurementFunction mf,
          << setw(kernel_width_space) << kernel_width << " "
          << setw(padding_size_space) << padding_size << " "
          << setw(stride_size_space) << stride_size << endl;
+
+    *csv << impl_name << "," << convolution_name(ct) << ","
+#ifdef PRINT_ALL
+         << measurement_function_name(mf) << ","
+#endif
+         << cycles << "," << num_channels << "," << batch_size << ","
+         << kernel_number << "," << input_height << "," << input_width << ","
+         << kernel_height << "," << kernel_width << "," << padding_size << ","
+         << stride_size << endl;
   }
 }
 
 void bench(Registry r) {
   const int batch_size = 2;
   const float relu_alpha = 0.1;
+  auto csv = new ofstream();
+  csv->open("benchmark.csv");
 
   cout << setw(name_space) << "name"
        << " " << setw(conv_type_space) << "ct"
@@ -160,7 +173,7 @@ void bench(Registry r) {
        << setw(9) << "fn"
        << " "
 #endif
-       << setw(time_space) << "time"
+       << setw(cycles_space) << "cycles"
        << " " << setw(num_channels_space) << "c"
        << " " << setw(batch_size_space) << "b"
        << " " << setw(kernel_number_space) << "kn"
@@ -170,6 +183,15 @@ void bench(Registry r) {
        << " " << setw(kernel_width_space) << "kw"
        << " " << setw(padding_size_space) << "p"
        << " " << setw(stride_size_space) << "s" << endl;
+
+  *csv << "name,ct,"
+#ifdef PRINT_ALL
+       << "fn,"
+#endif
+       << "cycles,num_channels,batch_size,kernel_number,input_height,input_"
+          "width,"
+          "kernel_height,kernel_width,padding_size,stride_size"
+       << endl;
 
   for (auto impl : r.implementations()) {
     for (auto bc : bench_cases) {
@@ -184,11 +206,32 @@ void bench(Registry r) {
         auto intervals = one_run(impl, data);
         auto averages = average(intervals);
         for (auto avg : averages)
-          print_line(impl.name, conv_type, avg.first, avg.second,
+          print_line(csv, impl.name, conv_type, avg.first, avg.second,
                      bc.num_channels, batch_size, bc.kernel_number,
                      bc.input_height, bc.input_width, bc.kernel_height,
                      bc.kernel_width, bc.padding_size, bc.stride_size);
       }
     }
   }
+  csv->close();
+}
+
+void measure_overhead() {
+  auto m = Measure::get_instance();
+  size_t runs = 1000000;
+  size_t measurement_size =
+      measurement_function_types.size() * measurement_event_types.size();
+  size_t cycles = 0;
+  for (size_t j = 0; j < runs; ++j) {
+    uint64_t start = read_start();
+    for (size_t i = 0; i < measurement_size; ++i)
+      measure_point(MeasurementFunction::CONV, MeasurementEvent::START);
+    uint64_t end = read_end();
+    cycles += end - start;
+    m->reset();
+  }
+
+  cycles = (cycles) / (runs * measurement_size);
+  cout << setw(name_space) << "meas. overhead"
+       << " :: " << cycles << " cycles per call" << endl;
 }

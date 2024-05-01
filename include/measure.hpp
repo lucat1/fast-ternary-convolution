@@ -8,7 +8,7 @@
 using namespace std;
 
 enum class MeasurementEvent : uint8_t { START, END };
-const std::array<MeasurementEvent, 2> measure_event_types = {
+const std::array<MeasurementEvent, 2> measurement_event_types = {
     MeasurementEvent::START, MeasurementEvent::END};
 string measurement_event_name(MeasurementEvent me);
 
@@ -23,6 +23,10 @@ enum class MeasurementFunction : uint8_t {
   TBN_GEMM,
   BTN_GEMM,
   BNN_GEMM,
+
+  ALLOC,
+  ALLOC2,
+  FREE,
 
   PRELU,
 

@@ -42,11 +42,13 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   // Quantize and Img2Row/Img2Col
 
   if (has_ternary_input(type)) {
+    measure_point(MeasurementFunction::ALLOC, MeasurementEvent::START);
     qx_size =
         batch_size * packed_height * packed_width * packed_channels * BITS;
     qx = alloc::calloc<int64_t>(qx_size);
     i2rqx_size = batch_size * fused_height * fused_width * BITS;
     i2rqx = alloc::calloc<int64_t>(i2rqx_size);
+    measure_point(MeasurementFunction::ALLOC, MeasurementEvent::END);
 
     ternarize_NCHW_to_NHWCB(input, padding_height, padding_width,
                             quant_threshold, batch_size, num_channels,
@@ -55,10 +57,12 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
         qx, batch_size, packed_channels * BITS, packed_height, packed_width,
         kernel_height, kernel_width, stride_height, stride_width, i2rqx);
   } else {
+    measure_point(MeasurementFunction::ALLOC, MeasurementEvent::START);
     qx_size = batch_size * packed_height * packed_width * packed_channels;
     qx = alloc::calloc<int64_t>(qx_size);
     i2rqx_size = batch_size * fused_height * fused_width;
     i2rqx = alloc::calloc<int64_t>(i2rqx_size);
+    measure_point(MeasurementFunction::ALLOC, MeasurementEvent::END);
 
     binarize_NCHW_to_NHWC(input, padding_height, padding_width, quant_threshold,
                           batch_size, num_channels, input_height, input_width,
@@ -70,8 +74,10 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
 
   // Bitwise GEMM
 
+  measure_point(MeasurementFunction::ALLOC2, MeasurementEvent::START);
   size_t y_size = batch_size * output_height * output_width * kernel_number;
   y_intermediate = alloc::calloc<int>(y_size);
+  measure_point(MeasurementFunction::ALLOC2, MeasurementEvent::END);
   switch (type) {
   case ConvolutionType::TNN: {
     tnn_gemm_baseline(i2rqx, quant_weights,
@@ -110,9 +116,11 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   PReLU(y_intermediate, batch_size, kernel_number, output_height, output_width,
         relu_alpha, output);
 
+  measure_point(MeasurementFunction::FREE, MeasurementEvent::START);
   free(qx);
   free(i2rqx);
   free(y_intermediate);
+  measure_point(MeasurementFunction::FREE, MeasurementEvent::END);
 }
 
 } // namespace baseline

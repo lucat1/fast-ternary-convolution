@@ -7,9 +7,11 @@
 using namespace std;
 
 int main() {
+  measure_overhead();
+
   Registry r;
   r.add(Implementation("baseline", baseline::conv));
 
-  // verify(r);
+  verify(r);
   bench(r);
 }

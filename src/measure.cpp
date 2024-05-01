@@ -23,6 +23,9 @@ map<MeasurementFunction, string> __mfs = {
     {MeasurementFunction::PRELU, "PRELU"},
     {MeasurementFunction::CONV, "CONV"},
 
+    {MeasurementFunction::ALLOC, "ALLOC"},
+    {MeasurementFunction::ALLOC2, "ALLOC2"},
+    {MeasurementFunction::FREE, "FREE"},
 };
 
 string measurement_function_name(MeasurementFunction mf) { return __mfs[mf]; }
@@ -45,7 +48,7 @@ Measure *Measure::get_instance() {
 }
 
 Measure::Measure() : measurements({}) {
-  measurements.reserve(measure_event_types.size() *
+  measurements.reserve(measurement_event_types.size() *
                        measurement_function_types.size());
 }
 
@@ -74,6 +77,9 @@ vector<Interval> Measure::intervals() {
   intervals.reserve(measurements.size() / 2);
 
   vector<MeasurementPoint> ms(measurements);
+  // for (auto m : ms)
+  //   cout << measurement_function_name(m.func) << " "
+  //        << measurement_event_name(m.event) << endl;
   while (ms.size() > 0) {
     // find the first starting point
     auto it = ms.begin();
