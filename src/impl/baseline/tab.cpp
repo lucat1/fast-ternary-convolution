@@ -117,9 +117,9 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
         relu_alpha, output);
 
   measure_point(MeasurementFunction::FREE, MeasurementEvent::START);
-  free(qx);
-  free(i2rqx);
-  free(y_intermediate);
+  alloc::free(qx);
+  alloc::free(i2rqx);
+  alloc::free(y_intermediate);
   measure_point(MeasurementFunction::FREE, MeasurementEvent::END);
 }
 

@@ -39,3 +39,4 @@ compile_commands.json
 
 # Project specific
 tnn
+benchmark.csv

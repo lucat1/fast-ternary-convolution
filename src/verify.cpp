@@ -67,7 +67,7 @@ public:
 
   ~VerificationData() {
     if (weights != nullptr)
-      free(weights);
+      alloc::free(weights);
 
     weights = nullptr;
   }

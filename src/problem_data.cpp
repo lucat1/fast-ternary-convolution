@@ -87,18 +87,18 @@ Data::Data(ConvolutionType conv_type, uint32_t batch_size,
 
 Data::~Data() {
   if (x != nullptr)
-    free(x);
+    alloc::free(x);
   if (quant_threshold != nullptr)
-    free(quant_threshold);
+    alloc::free(quant_threshold);
 
   if (quant_weights != nullptr)
-    free(quant_weights);
+    alloc::free(quant_weights);
 
   if (btn_cnt != nullptr)
-    free(btn_cnt);
+    alloc::free(btn_cnt);
 
   if (y != nullptr)
-    free(y);
+    alloc::free(y);
 
   x = quant_threshold = y = nullptr;
   quant_weights = nullptr;
