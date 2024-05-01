@@ -68,6 +68,8 @@ void Measure::track(MeasurementFunction func, MeasurementEvent event) {
   };
   auto point = MeasurementPoint(func, event, time);
   // This should never result in an extra allocation
+  if (measurements.size() > 20)
+    cout << "measurements size " << measurements.size() << endl;
   measurements.push_back(point);
 }
 

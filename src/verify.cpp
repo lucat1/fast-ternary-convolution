@@ -5,6 +5,7 @@
 // TODO: rework these functions and move them in this file
 #include "alloc.hpp"
 #include "impl/baseline/quantize.hpp"
+#include "measure.hpp"
 #include "problem_data.hpp"
 #include "verify_util.hpp"
 
@@ -75,6 +76,7 @@ public:
 void verify(Registry r) {
   const int batch_size = 2;
   const int relu_alpha = 1;
+  auto m = Measure::get_instance();
 
   for (auto impl : r.implementations()) {
     size_t passed = 0, failed = 0,
@@ -145,6 +147,7 @@ void verify(Registry r) {
           cout << "[" << (passed + failed) << "/" << total
                << "] Failed test case" << endl;
         }
+        m->reset();
       }
     }
     cout << setw(name_space) << impl.name << " :: " << passed << "/" << total

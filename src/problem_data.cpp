@@ -3,8 +3,6 @@
 #include "common.hpp"
 #include "problem_parameters.hpp"
 
-#include <iostream>
-
 using namespace std;
 
 size_t Matrix2D::_size() { return height * width; }
