@@ -145,16 +145,13 @@ void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
          << setw(kernel_width_space) << kernel_width << " "
          << setw(padding_size_space) << padding_size << " "
          << setw(stride_size_space) << stride_size << endl;
-
-    *csv << impl_name << "," << convolution_name(ct) << ","
-#ifdef PRINT_ALL
-         << measurement_function_name(mf) << ","
-#endif
-         << cycles << "," << num_channels << "," << batch_size << ","
-         << kernel_number << "," << input_height << "," << input_width << ","
-         << kernel_height << "," << kernel_width << "," << padding_size << ","
-         << stride_size << endl;
   }
+
+  *csv << impl_name << "," << convolution_name(ct) << ","
+       << measurement_function_name(mf) << "," << cycles << "," << num_channels
+       << "," << batch_size << "," << kernel_number << "," << input_height
+       << "," << input_width << "," << kernel_height << "," << kernel_width
+       << "," << padding_size << "," << stride_size << endl;
 }
 
 void bench(Registry r) {
@@ -181,13 +178,9 @@ void bench(Registry r) {
        << " " << setw(padding_size_space) << "p"
        << " " << setw(stride_size_space) << "s" << endl;
 
-  *csv << "name,ct,"
-#ifdef PRINT_ALL
-       << "fn,"
-#endif
-       << "cycles,num_channels,batch_size,kernel_number,input_height,input_"
-          "width,"
-          "kernel_height,kernel_width,padding_size,stride_size"
+  *csv << "name,ct,fn,cycles,num_channels,batch_size,kernel_number,input_"
+          "height,input_width,kernel_height,kernel_width,padding_size,stride_"
+          "size"
        << endl;
 
   for (auto impl : r.implementations()) {
