@@ -6,6 +6,7 @@
 
 #include "alloc.hpp"
 #include "common.hpp"
+#include "measure.hpp"
 
 #include <cstring>
 

@@ -300,6 +300,7 @@ void binarize_NCHW_to_NHWC(const float *input, size_t padding_height,
 void btn_cnt_w2(int64_t *quantized_weights, size_t num_channels,
                 size_t kernel_number, size_t kernel_height, size_t kernel_width,
                 int *y) {
+  measure_point(MeasurementFunction::BTN_CNT, MeasurementEvent::START);
   size_t num_packed_channels = (num_channels % CNTBITS)
                                    ? (num_channels / CNTBITS + 1)
                                    : (num_channels / CNTBITS);
@@ -318,6 +319,7 @@ void btn_cnt_w2(int64_t *quantized_weights, size_t num_channels,
       }
     }
   }
+  measure_point(MeasurementFunction::BTN_CNT, MeasurementEvent::END);
 }
 
 } // namespace baseline

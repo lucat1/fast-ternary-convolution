@@ -2,6 +2,28 @@
 #include "tsc.hpp"
 
 #include <cassert>
+#include <map>
+
+map<MeasurementEvent, string> __mes = {{MeasurementEvent::START, "START"},
+                                       {MeasurementEvent::END, "END"}};
+
+string measure_event_name(MeasurementEvent me) { return __mes[me]; }
+
+map<MeasurementFunction, string> __mfs = {
+    {MeasurementFunction::TERNARIZE, "TERNARIZE"},
+    {MeasurementFunction::BINARIZE, "BINARIZE"},
+    {MeasurementFunction::BTN_CNT, "BTN_CNT"},
+    {MeasurementFunction::IMG2ROW, "IMG2ROW"},
+    {MeasurementFunction::TNN_GEMM, "TNN_GEMM"},
+    {MeasurementFunction::TBN_GEMM, "TBN_GEMM"},
+    {MeasurementFunction::BTN_GEMM, "BTN_GEMM"},
+    {MeasurementFunction::BNN_GEMM, "BNN_GEMM"},
+    {MeasurementFunction::PRELU, "PRELU"},
+    {MeasurementFunction::CONV, "CONV"},
+
+};
+
+string measurement_function_name(MeasurementFunction mf) { return __mfs[mf]; }
 
 MeasurementPoint::MeasurementPoint(MeasurementFunction func,
                                    MeasurementEvent event, uint64_t time)
@@ -21,8 +43,8 @@ Measure *Measure::get_instance() {
 }
 
 Measure::Measure() : measurements({}) {
-  measurements.reserve(static_cast<size_t>(MeasurementEvent::__count) *
-                       static_cast<size_t>(MeasurementFunction::__count));
+  measurements.reserve(measure_event_types.size() *
+                       measurement_function_types.size());
 }
 
 void Measure::track(MeasurementFunction func, MeasurementEvent event) {
@@ -34,12 +56,10 @@ void Measure::track(MeasurementFunction func, MeasurementEvent event) {
   case MeasurementEvent::END:
     time = read_end();
     break;
-  case MeasurementEvent::__count:
-    assert(0);
-    break;
   default:
-    // make pendantic mode happy
+    // Just to make clang happy. Will never occour actually
     time = 0;
+    assert(0);
   };
   auto point = MeasurementPoint(func, event, time);
   // This should never result in an extra allocation
@@ -66,14 +86,18 @@ vector<Interval> Measure::intervals() {
 
     // find a mathing end point
     it = next(it);
-    while (it->event != MeasurementEvent::END && it->func == start_point->func)
+    while (it != ms.end()) {
+      if (it->func == start_point->func && it->event == MeasurementEvent::END)
+        break;
       it = next(it);
+    }
     // this means we didn't find a matching end measurement. Ultimately, this
     // points out that some measurement calls are missing
     if (it == ms.end())
       assert(0);
     auto end_point = it;
 
+    assert(start_point->func == end_point->func);
     auto interval =
         Interval(start_point->func, start_point->time, end_point->time);
     intervals.push_back(interval);

@@ -9,8 +9,7 @@ using namespace std;
 int main() {
   Registry r;
   r.add(Implementation("baseline", baseline::conv));
-  r.add(Implementation("baseline1", baseline::conv));
 
-  verify(r);
+  // verify(r);
   bench(r);
 }

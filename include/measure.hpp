@@ -7,7 +7,10 @@
 
 using namespace std;
 
-enum class MeasurementEvent : uint8_t { START, END, __count };
+enum class MeasurementEvent : uint8_t { START, END };
+const std::array<MeasurementEvent, 2> measure_event_types = {
+    MeasurementEvent::START, MeasurementEvent::END};
+string measurement_event_name(MeasurementEvent me);
 
 enum class MeasurementFunction : uint8_t {
   TERNARIZE,
@@ -24,9 +27,15 @@ enum class MeasurementFunction : uint8_t {
   PRELU,
 
   CONV,
-
-  __count
 };
+const std::array<MeasurementFunction, 10> measurement_function_types = {
+    MeasurementFunction::TERNARIZE, MeasurementFunction::BINARIZE,
+    MeasurementFunction::BTN_CNT,   MeasurementFunction::IMG2ROW,
+    MeasurementFunction::TNN_GEMM,  MeasurementFunction::TBN_GEMM,
+    MeasurementFunction::BTN_GEMM,  MeasurementFunction::BNN_GEMM,
+    MeasurementFunction::PRELU,     MeasurementFunction::CONV,
+};
+string measurement_function_name(MeasurementFunction mf);
 
 #ifdef MEASURE_INTERNAL
 #define measure_point(measurement_func, measurement_type)                      \
