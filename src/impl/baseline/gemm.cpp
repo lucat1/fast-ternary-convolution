@@ -1,5 +1,7 @@
 #include "impl/baseline/gemm.hpp"
+
 #include "common.hpp"
+#include "measure.hpp"
 
 // TABGEMM: TNN
 // In M-K, N-K order, Output is M-N,
@@ -11,6 +13,7 @@
 // y: pointer to m * n ints initialized to 0
 // result is stored in y
 void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
+  measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::START);
   const int k_bits = k * BITS;
 
   for (int output_height = 0; output_height < m; output_height++) {
@@ -29,12 +32,14 @@ void tnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
       y[output_height * n + output_width] = cntp1 - cntp2 - cntp2;
     }
   }
+  measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
 }
 
 // In M-K, N-K order, TBN, Ternary-Activation Binary-Weight
 // y: pointer to m * n ints
 // result is stored in y
 void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
+  measure_point(MeasurementFunction::TBN_GEMM, MeasurementEvent::START);
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
@@ -50,6 +55,7 @@ void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
       y[output_height * n + output_width] = cntp1 - cntp2 - cntp2;
     }
   }
+  measure_point(MeasurementFunction::TBN_GEMM, MeasurementEvent::END);
 }
 
 // In M-K, N-K order, BTN, Binary-Activation Ternary-Weight
@@ -57,6 +63,7 @@ void tbn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int *y) {
 // result is stored in y
 void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m, int n, int k,
                        int *y) {
+  measure_point(MeasurementFunction::BTN_GEMM, MeasurementEvent::START);
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp2 = 0;
@@ -69,6 +76,7 @@ void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m, int n, int k,
       y[output_height * n + output_width] = cnt1[output_width] - cntp2 - cntp2;
     }
   }
+  measure_point(MeasurementFunction::BTN_GEMM, MeasurementEvent::END);
 }
 
 // In M-K, N-K order, BNN, Binary-Activation Binary-Weight
@@ -76,6 +84,7 @@ void btn_gemm_baseline(int64_t *a, int64_t *b, int *cnt1, int m, int n, int k,
 // result is stored in y
 void bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int NUM,
                        int *y) {
+  measure_point(MeasurementFunction::BNN_GEMM, MeasurementEvent::START);
   for (int output_height = 0; output_height < m; output_height++) {
     for (int output_width = 0; output_width < n; output_width++) {
       int cntp1 = 0;
@@ -87,4 +96,5 @@ void bnn_gemm_baseline(int64_t *a, int64_t *b, int m, int n, int k, int NUM,
       y[output_height * n + output_width] = NUM - cntp1 - cntp1;
     }
   }
+  measure_point(MeasurementFunction::BNN_GEMM, MeasurementEvent::END);
 }

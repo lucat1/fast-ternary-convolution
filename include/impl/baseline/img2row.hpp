@@ -1,7 +1,7 @@
 #ifndef _BASELINE_IMG2ROW_HPP
 #define _BASELINE_IMG2ROW_HPP
 
-#include "common.hpp"
+#include "measure.hpp"
 
 // y: pointer to batch_size * fused_height * fused_width elements of type T
 template <typename T>
@@ -9,7 +9,7 @@ void img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
                                    int input_height, int input_width,
                                    int kernel_height, int kernel_width,
                                    int stride_height, int stride_width, T *y) {
-
+  measure_point(MeasurementFunction::IMG2ROW, MeasurementEvent::START);
   const int output_height = (input_height - kernel_height + 1) / stride_height;
   const int output_width = (input_width - kernel_width + 1) / stride_width;
   const int fused_height = output_height * output_width;
@@ -34,6 +34,7 @@ void img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
       }
     }
   }
+  measure_point(MeasurementFunction::IMG2ROW, MeasurementEvent::END);
 }
 
 #endif // _BASELINE_IMG2ROW_HPP

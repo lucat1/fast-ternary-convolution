@@ -4,6 +4,8 @@
 #include <cassert>
 #include <map>
 
+#include <iostream>
+
 map<MeasurementEvent, string> __mes = {{MeasurementEvent::START, "START"},
                                        {MeasurementEvent::END, "END"}};
 
@@ -75,13 +77,15 @@ vector<Interval> Measure::intervals() {
   while (ms.size() > 0) {
     // find the first starting point
     auto it = ms.begin();
-    while (it->event != MeasurementEvent::START)
+    while (it != ms.end()) {
+      if (it->event == MeasurementEvent::START)
+        break;
       it = next(it);
+    }
     // this means we didn't find a start event but we still have some
     // measurements. Ultimately, this points out that some measurement calls
     // are missing
-    if (it == ms.end())
-      assert(0);
+    assert(it != ms.end());
     auto start_point = it;
 
     // find a mathing end point
@@ -93,16 +97,16 @@ vector<Interval> Measure::intervals() {
     }
     // this means we didn't find a matching end measurement. Ultimately, this
     // points out that some measurement calls are missing
-    if (it == ms.end())
-      assert(0);
     auto end_point = it;
 
+    assert(end_point != ms.end());
     assert(start_point->func == end_point->func);
+
     auto interval =
         Interval(start_point->func, start_point->time, end_point->time);
     intervals.push_back(interval);
-    ms.erase(start_point);
     ms.erase(end_point);
+    ms.erase(start_point);
   }
 
   return intervals;

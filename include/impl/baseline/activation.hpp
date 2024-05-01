@@ -1,11 +1,14 @@
 #ifndef _BASELINE_TAB_ACTIVATION_HPP
 #define _BASELINE_TAB_ACTIVATION_HPP
 
+#include "measure.hpp"
+
 namespace baseline {
 
 // y: pointer to n * c * h * w floats; holds result
 template <typename T>
 void PReLU(T *x, int n, int c, int h, int w, float alpha, float *y) {
+  measure_point(MeasurementFunction::PRELU, MeasurementEvent::START);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < c; j++) {
       for (int k = 0; k < h; k++) {
@@ -19,6 +22,7 @@ void PReLU(T *x, int n, int c, int h, int w, float alpha, float *y) {
       }
     }
   }
+  measure_point(MeasurementFunction::PRELU, MeasurementEvent::END);
 }
 
 } // namespace baseline

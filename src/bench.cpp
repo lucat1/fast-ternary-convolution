@@ -7,8 +7,8 @@
 #include <map>
 #include <random>
 
-// comment this for a detailed (visual) performance measurement
-// #define PRINT_ALL
+// uncomment this for a detailed (visual) performance measurement
+#define PRINT_ALL
 
 using namespace std;
 
@@ -69,7 +69,8 @@ vector<vector<Interval>> one_run(Implementation impl, Data &data) {
 
   for (size_t i = 0; i < num_runs; ++i) {
     m->reset();
-    measure_point(MeasurementFunction::CONV, MeasurementEvent::START);
+
+    m->track(MeasurementFunction::CONV, MeasurementEvent::START);
     impl.fn(data.conv_type, data.btn_cnt, data.x, data.input_size.height,
             data.input_size.width, data.padding_size.height,
             data.padding_size.width, data.quant_threshold, data.num_channels,
@@ -77,7 +78,8 @@ vector<vector<Interval>> one_run(Implementation impl, Data &data) {
             data.stride_size.height, data.kernel_number,
             data.kernel_size.height, data.kernel_size.width, data.relu_alpha,
             data.y);
-    measure_point(MeasurementFunction::CONV, MeasurementEvent::END);
+    m->track(MeasurementFunction::CONV, MeasurementEvent::END);
+
     measurement_intervals.push_back(m->intervals());
   }
 
