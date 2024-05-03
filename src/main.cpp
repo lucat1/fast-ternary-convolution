@@ -1,15 +1,15 @@
 #include "bench.hpp"
 #include "impl.hpp"
+#include "impl/baseline/tab.hpp"
 #include "verify.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#include "impl/baseline/tab.hpp"
 
 using namespace std;
 
@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   stringstream f;
   fstream p;
   string segment;
+  string bench_out = "benchmark.csv";
 
   InfraParameters param(0, 0, 0, 0, 0, 0, 0, 0, 0);
   string __str;
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
 
   int opt;
   // : means the previous option requires an argument
-  while ((opt = getopt(argc, argv, "i:p:thb")) != -1) {
+  while ((opt = getopt(argc, argv, "i:p:o:thb")) != -1) {
     switch (opt) {
     case 't':
       test = true;
@@ -41,19 +42,26 @@ int main(int argc, char *argv[]) {
       cout << "USAGE " << argv[0] << ":" << endl;
       cout << "\t-i <impl,>\t\tRun only on the sleected implementations" << endl
            << "\t\t\t\tMultiple can be specified separated by a comma." << endl;
-      cout << "\t-p <params>\t\tProvide parameters for the benchmark" << endl;
+      cout << "\t-p <params.csv>\t\tProvide parameters for the benchmark"
+           << endl;
+      cout << "\t-o <out.csv>\t\tSpecify the output locatin for the benchark "
+              "data"
+           << endl;
       cout << "\t-t\t\t\tEnable testing" << endl;
       cout << "\t-b\t\t\tEnable benchmarking" << endl;
       exit(0);
       break;
     case 'i':
       f = stringstream(optarg);
+      assert(!f.fail());
+
       while (std::getline(f, segment, ',')) {
         filter.push_back(segment);
       }
       break;
     case 'p':
       p = fstream(optarg);
+      assert(!p.fail());
 
       // Ignore the first line
       getline(p, __str);
@@ -62,6 +70,9 @@ int main(int argc, char *argv[]) {
         p >> param;
         params.push_back(param);
       };
+      break;
+    case 'o':
+      bench_out = string(optarg);
       break;
     default:
       break;
@@ -79,7 +90,7 @@ int main(int argc, char *argv[]) {
     if (test)
       verify(r);
     if (measure)
-      bench(r, params.size() == 0 ? nullptr : &params);
+      bench(r, params.size() == 0 ? nullptr : &params, bench_out);
   }
   return 0;
 }

@@ -5,5 +5,5 @@
 
 #include <vector>
 
-void bench(Registry r, vector<InfraParameters> *params);
+void bench(Registry r, vector<InfraParameters> *params, string output);
 void measure_overhead();

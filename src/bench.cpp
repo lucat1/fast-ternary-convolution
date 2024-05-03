@@ -117,7 +117,7 @@ const constexpr size_t kernel_width_space = 2;
 const constexpr size_t padding_size_space = 1;
 const constexpr size_t stride_size_space = 1;
 
-void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
+void print_line(ofstream &csv, string impl_name, ConvolutionType ct,
                 MeasurementFunction mf, uint64_t cycles, uint32_t num_channels,
                 int batch_size, uint32_t kernel_number, size_t input_height,
                 size_t input_width, size_t kernel_height, size_t kernel_width,
@@ -142,17 +142,17 @@ void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
          << setw(stride_size_space) << stride_size << endl;
   }
 
-  *csv << impl_name << "," << convolution_name(ct) << ","
-       << measurement_function_name(mf) << "," << cycles << "," << num_channels
-       << "," << batch_size << "," << kernel_number << "," << input_height
-       << "," << input_width << "," << kernel_height << "," << kernel_width
-       << "," << padding_size << "," << stride_size << endl;
+  csv << impl_name << "," << convolution_name(ct) << ","
+      << measurement_function_name(mf) << "," << cycles << "," << num_channels
+      << "," << batch_size << "," << kernel_number << "," << input_height << ","
+      << input_width << "," << kernel_height << "," << kernel_width << ","
+      << padding_size << "," << stride_size << endl;
 }
 
-void bench(Registry r, vector<InfraParameters> *params) {
+void bench(Registry r, vector<InfraParameters> *params, string output) {
   const float relu_alpha = 0.1;
-  auto csv = new ofstream();
-  csv->open("benchmark.csv");
+  auto csv = ofstream(output);
+  assert(!csv.fail());
 
   if (params == nullptr)
     params = &bench_cases;
@@ -175,10 +175,10 @@ void bench(Registry r, vector<InfraParameters> *params) {
        << " " << setw(padding_size_space) << "p"
        << " " << setw(stride_size_space) << "s" << endl;
 
-  *csv << "name,ct,fn,cycles,num_channels,batch_size,kernel_number,input_"
-          "height,input_width,kernel_height,kernel_width,padding_size,stride_"
-          "size"
-       << endl;
+  csv << "name,ct,fn,cycles,num_channels,batch_size,kernel_number,input_"
+         "height,input_width,kernel_height,kernel_width,padding_size,stride_"
+         "size"
+      << endl;
 
   for (auto impl : r.implementations()) {
     for (auto bc : *params) {
@@ -200,7 +200,7 @@ void bench(Registry r, vector<InfraParameters> *params) {
       }
     }
   }
-  csv->close();
+  csv.close();
 }
 
 void measure_overhead() {
