@@ -20,8 +20,8 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
           int64_t *quant_weights, uint32_t batch_size, uint32_t stride_height,
           uint32_t stride_width, uint32_t kernel_number, uint32_t kernel_height,
           uint32_t kernel_width, float relu_alpha, float *output) {
-  int packed_height, packed_width, packed_channels, output_height, output_width,
-      fused_height, fused_width;
+  size_t packed_height, packed_width, packed_channels, output_height,
+      output_width, fused_height, fused_width;
   packed_height = input_height + 2 * padding_height;
   packed_width = input_width + 2 * padding_width;
   packed_channels = (num_channels % CNTBITS) ? ((num_channels / CNTBITS) + 1)
@@ -31,7 +31,7 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   output_width = (packed_width - kernel_width + 1) / stride_width;
 
   fused_height = output_height * output_width;
-  fused_width = kernel_height * kernel_width * num_channels;
+  fused_width = kernel_height * kernel_width * (packed_channels * BITS);
 
   size_t qx_size;
   int64_t *qx;
@@ -40,13 +40,12 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   int *y_intermediate;
 
   // Quantize and Img2Row/Img2Col
-
   if (has_ternary_input(type)) {
     measure_point(MeasurementFunction::ALLOC, MeasurementEvent::START);
     qx_size =
         batch_size * packed_height * packed_width * packed_channels * BITS;
     qx = alloc::calloc<int64_t>(qx_size);
-    i2rqx_size = batch_size * fused_height * fused_width * BITS;
+    i2rqx_size = batch_size * fused_height * fused_width;
     i2rqx = alloc::calloc<int64_t>(i2rqx_size);
     measure_point(MeasurementFunction::ALLOC, MeasurementEvent::END);
 

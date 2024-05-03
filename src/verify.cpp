@@ -22,10 +22,6 @@ std::vector<InfraParameters> test_cases = {
 
 class VerificationData : public Data {
 private:
-  Matrix4D _weights_shape() {
-    return Matrix4D(kernel_number, kernel_size.height, kernel_size.width,
-                    num_channels);
-  }
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution;
 
@@ -41,35 +37,21 @@ private:
   }
 
 public:
-  float *weights;
+  Matrix4D<float> weights;
 
-  Matrix4D weights_shape;
-
-  VerificationData(ConvolutionType conv_type, uint32_t batch_size,
-                   uint32_t num_channels, uint32_t kernel_number,
-                   Size input_size, Size kernel_size, Size padding_size,
-                   Size stride_size, float relu_alpha)
-      : Data(conv_type, batch_size, num_channels, kernel_number, input_size,
-             kernel_size, padding_size, stride_size, relu_alpha),
-        weights_shape(_weights_shape()) {
+  VerificationData(Parameters p)
+      : Data(p), weights(kernel_number, kernel_size.height, kernel_size.width,
+                         num_channels, false) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
     // TODO: ask for this
     // The +1 is required as ternarize_* does an off-by-one access
-    randomize(x, x_shape.size + 1, has_ternary_input(conv_type));
+    randomize(x.data, x.shape.size + 1, has_ternary_input(conv_type));
 
-    weights = alloc::alloc<float>(weights_shape.size);
-    randomize(weights, weights_shape.size, has_ternary_weights(conv_type));
+    randomize(weights.data, weights.shape.size, has_ternary_weights(conv_type));
 
-    for (size_t i = 0; i < quant_threshold_size; ++i)
-      quant_threshold[i] = 0.5;
-  }
-
-  ~VerificationData() {
-    if (weights != nullptr)
-      alloc::free(weights);
-
-    weights = nullptr;
+    for (size_t i = 0; i < quant_threshold.size; ++i)
+      quant_threshold.data[i] = 0.5;
   }
 };
 
@@ -84,45 +66,46 @@ void verify(Registry r) {
     for (auto tc : test_cases) {
       for (auto conv_type : convolution_types) {
         auto data = VerificationData(
-            conv_type, batch_size, tc.num_channels, tc.kernel_number,
-            {tc.input_height, tc.input_width},
-            {tc.kernel_height, tc.kernel_width},
-            {tc.padding_size, tc.padding_size},
-            {tc.stride_size, tc.stride_size}, relu_alpha);
+            Parameters(conv_type, batch_size, tc.num_channels, tc.kernel_number,
+                       relu_alpha, {tc.input_height, tc.input_width},
+                       {tc.kernel_height, tc.kernel_width},
+                       {tc.padding_size, tc.padding_size},
+                       {tc.stride_size, tc.stride_size}));
         if (has_ternary_weights(conv_type))
           baseline::ternarize_NCHW_to_NHWCB(
-              data.weights, 0, 0, data.quant_threshold, data.kernel_number,
-              data.num_channels, data.kernel_size.height,
-              data.kernel_size.width, data.quant_weights);
+              data.weights.data, 0, 0, data.quant_threshold.data,
+              data.kernel_number, data.num_channels, data.kernel_size.height,
+              data.kernel_size.width, data.quant_weights.data);
         else
           baseline::binarize_NCHW_to_NHWC(
-              data.weights, 0, 0, data.kernel_number, data.num_channels,
+              data.weights.data, 0, 0, data.kernel_number, data.num_channels,
               data.kernel_size.height, data.kernel_size.width,
-              data.quant_weights);
+              data.quant_weights.data);
 
         if (conv_type == ConvolutionType::BTN)
-          baseline::btn_cnt_w2(data.quant_weights, data.num_channels,
+          baseline::btn_cnt_w2(data.quant_weights.data, data.num_channels,
                                data.kernel_number, data.kernel_size.height,
-                               data.kernel_size.width, data.btn_cnt);
+                               data.kernel_size.width, data.btn_cnt.data);
 
-        impl.fn(conv_type, data.btn_cnt, data.x, data.input_size.height,
-                data.input_size.width, data.padding_size.height,
-                data.padding_size.width, data.quant_threshold,
-                data.num_channels, data.quant_weights, batch_size,
-                data.stride_size.height, data.stride_size.height,
-                data.kernel_number, data.kernel_size.height,
-                data.kernel_size.width, relu_alpha, data.y);
+        impl.fn(conv_type, data.btn_cnt.data, data.x.data,
+                data.input_size.height, data.input_size.width,
+                data.padding_size.height, data.padding_size.width,
+                data.quant_threshold.data, data.num_channels,
+                data.quant_weights.data, batch_size, data.stride_size.height,
+                data.stride_size.height, data.kernel_number,
+                data.kernel_size.height, data.kernel_size.width, relu_alpha,
+                data.y.data);
 
         std::vector<float> px =
-            DirectPad(data.x, data.padding_size.height, data.padding_size.width,
-                      batch_size, data.num_channels, data.input_size.height,
-                      data.input_size.width);
-        std::vector<float> ref_y =
-            DirectConv2d_FP32(px.data(), data.weights, data.stride_size.height,
-                              data.stride_size.width, batch_size,
-                              data.num_channels, data.packed_input_size.height,
-                              data.packed_input_size.width, data.kernel_number,
-                              data.kernel_size.height, data.kernel_size.width);
+            DirectPad(data.x.data, data.padding_size.height,
+                      data.padding_size.width, batch_size, data.num_channels,
+                      data.input_size.height, data.input_size.width);
+        std::vector<float> ref_y = DirectConv2d_FP32(
+            px.data(), data.weights.data, data.stride_size.height,
+            data.stride_size.width, batch_size, data.num_channels,
+            data.packed_input_size.height, data.packed_input_size.width,
+            data.kernel_number, data.kernel_size.height,
+            data.kernel_size.width);
 
         // Compare the conv results to ensure the functions are correct
         int cmp;
@@ -132,13 +115,13 @@ void verify(Registry r) {
           // quantization only has (+1, -1) no zeros. So we only compare the
           // central part of conv results here, excluding the zero padding part.
           cmp = Compare_Tensor_BNN_Padding(
-              data.y, ref_y.data(), batch_size, data.kernel_number,
-              data.y_shape.height, data.y_shape.width, data.padding_size.height,
+              data.y.data, ref_y.data(), batch_size, data.kernel_number,
+              data.y.shape.height, data.y.shape.width, data.padding_size.height,
               data.padding_size.width);
         else
-          cmp = Compare_Tensor_NHWC(data.y, ref_y.data(), batch_size,
-                                    data.kernel_number, data.y_shape.height,
-                                    data.y_shape.width);
+          cmp = Compare_Tensor_NHWC(data.y.data, ref_y.data(), batch_size,
+                                    data.kernel_number, data.y.shape.height,
+                                    data.y.shape.width);
 
         if (cmp > 0)
           passed++;

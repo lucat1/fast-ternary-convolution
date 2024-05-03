@@ -4,8 +4,6 @@
 #include <cassert>
 #include <map>
 
-#include <iostream>
-
 map<MeasurementEvent, string> __mes = {{MeasurementEvent::START, "START"},
                                        {MeasurementEvent::END, "END"}};
 
@@ -68,8 +66,6 @@ void Measure::track(MeasurementFunction func, MeasurementEvent event) {
   };
   auto point = MeasurementPoint(func, event, time);
   // This should never result in an extra allocation
-  if (measurements.size() > 20)
-    cout << "measurements size " << measurements.size() << endl;
   measurements.push_back(point);
 }
 
@@ -79,9 +75,6 @@ vector<Interval> Measure::intervals() {
   intervals.reserve(measurements.size() / 2);
 
   vector<MeasurementPoint> ms(measurements);
-  // for (auto m : ms)
-  //   cout << measurement_function_name(m.func) << " "
-  //        << measurement_event_name(m.event) << endl;
   while (ms.size() > 0) {
     // find the first starting point
     auto it = ms.begin();

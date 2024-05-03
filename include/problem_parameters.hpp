@@ -6,30 +6,35 @@
 
 using namespace std;
 
-// Could have used a tuple, but this way the fields are declarative
-class Size {
+class Shape2D {
 public:
-  size_t height, width;
+  const size_t height;
+  const size_t width;
 
-  Size(size_t height, size_t width);
+  // precomputed height * width
+  const size_t size;
+
+  Shape2D(size_t height, size_t width);
 };
 
 // Holds the problem's parameters
 class Parameters {
 public:
   ConvolutionType conv_type;
-  uint32_t batch_size;
-  uint32_t num_channels;
-  uint32_t kernel_number;
+  size_t batch_size;
+  size_t num_channels;
+  size_t kernel_number;
+  float relu_alpha;
 
-  Size input_size;
-  Size kernel_size;
-  Size padding_size;
-  Size stride_size;
+  Shape2D input_size;
+  Shape2D kernel_size;
+  Shape2D padding_size;
+  Shape2D stride_size;
 
   Parameters(ConvolutionType conv_type, uint32_t batch_size,
-             uint32_t num_channels, uint32_t kernel_number, Size input_size,
-             Size kernel_size, Size padding_size, Size stride_size);
+             uint32_t num_channels, uint32_t kernel_number, float relu_alpha,
+             Shape2D input_size, Shape2D kernel_size, Shape2D padding_size,
+             Shape2D stride_size);
 
   virtual ~Parameters() = default;
 };

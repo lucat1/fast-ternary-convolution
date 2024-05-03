@@ -44,20 +44,15 @@ private:
   }
 
 public:
-  BenchData(ConvolutionType conv_type, uint32_t batch_size,
-            uint32_t num_channels, uint32_t kernel_number, Size input_size,
-            Size kernel_size, Size padding_size, Size stride_size,
-            float relu_alpha)
-      : Data(conv_type, batch_size, num_channels, kernel_number, input_size,
-             kernel_size, padding_size, stride_size, relu_alpha) {
+  BenchData(Parameters p) : Data(p) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
     // TODO: ask for this
     // The +1 is required as ternarize_* does an off-by-one access
-    randomize(x, x_shape.size + 1, has_ternary_input(conv_type));
+    randomize(x.data, x.shape.size, has_ternary_input(conv_type));
 
-    for (size_t i = 0; i < quant_threshold_size; ++i)
-      quant_threshold[i] = 0.5;
+    for (size_t i = 0; i < quant_threshold.size; ++i)
+      quant_threshold.data[i] = 0.5;
   }
 };
 
@@ -70,13 +65,13 @@ vector<vector<Interval>> one_run(Implementation impl, Data &data) {
     m->reset();
 
     m->track(MeasurementFunction::CONV, MeasurementEvent::START);
-    impl.fn(data.conv_type, data.btn_cnt, data.x, data.input_size.height,
-            data.input_size.width, data.padding_size.height,
-            data.padding_size.width, data.quant_threshold, data.num_channels,
-            data.quant_weights, data.batch_size, data.stride_size.height,
-            data.stride_size.height, data.kernel_number,
-            data.kernel_size.height, data.kernel_size.width, data.relu_alpha,
-            data.y);
+    impl.fn(
+        data.conv_type, data.btn_cnt.data, data.x.data, data.input_size.height,
+        data.input_size.width, data.padding_size.height,
+        data.padding_size.width, data.quant_threshold.data, data.num_channels,
+        data.quant_weights.data, data.batch_size, data.stride_size.height,
+        data.stride_size.height, data.kernel_number, data.kernel_size.height,
+        data.kernel_size.width, data.relu_alpha, data.y.data);
     m->track(MeasurementFunction::CONV, MeasurementEvent::END);
 
     measurement_intervals.push_back(m->intervals());
@@ -155,7 +150,7 @@ void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
 }
 
 void bench(Registry r) {
-  const int batch_size = 2;
+  const int batch_size = 1;
   const float relu_alpha = 0.1;
   auto csv = new ofstream();
   csv->open("benchmark.csv");
@@ -186,12 +181,12 @@ void bench(Registry r) {
   for (auto impl : r.implementations()) {
     for (auto bc : bench_cases) {
       for (auto conv_type : convolution_types) {
-        auto data =
-            BenchData(conv_type, batch_size, bc.num_channels, bc.kernel_number,
-                      {bc.input_height, bc.input_width},
-                      {bc.kernel_height, bc.kernel_width},
-                      {bc.padding_size, bc.padding_size},
-                      {bc.stride_size, bc.stride_size}, relu_alpha);
+        auto data = BenchData(Parameters(conv_type, batch_size, bc.num_channels,
+                                         bc.kernel_number, relu_alpha,
+                                         {bc.input_height, bc.input_width},
+                                         {bc.kernel_height, bc.kernel_width},
+                                         {bc.padding_size, bc.padding_size},
+                                         {bc.stride_size, bc.stride_size}));
 
         auto intervals = one_run(impl, data);
         auto averages = average(intervals);
@@ -223,5 +218,5 @@ void measure_overhead() {
 
   cycles = (cycles) / (runs * measurement_size);
   cout << setw(name_space) << "meas. overhead"
-       << " :: " << cycles << " cycles per call" << endl;
+       << " :: " << cycles << " cycles/call" << endl;
 }
