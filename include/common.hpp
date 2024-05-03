@@ -48,6 +48,7 @@ std::string convolution_name(ConvolutionType t);
 class InfraParameters {
 public:
   uint32_t num_channels;
+  uint32_t batch_size;
   size_t input_height;
   size_t input_width;
   uint32_t kernel_number;
@@ -56,8 +57,10 @@ public:
   size_t padding_size;
   size_t stride_size;
 
-  InfraParameters(uint32_t num_channels, size_t input_height,
+  InfraParameters(uint32_t num_channels, size_t batch_size, size_t input_height,
                   size_t input_width, uint32_t kernel_number,
                   size_t kernel_height, size_t kernel_width,
                   size_t padding_size, size_t stride_size);
 };
+
+fstream &operator>>(fstream &is, InfraParameters &params);

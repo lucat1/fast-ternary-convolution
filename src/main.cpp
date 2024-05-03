@@ -3,6 +3,7 @@
 #include "verify.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <getopt.h>
 #include <iostream>
 #include <sstream>
@@ -19,11 +20,16 @@ int main(int argc, char *argv[]) {
   bool measure = false;
 
   stringstream f;
+  fstream p;
   string segment;
+
+  InfraParameters param(0, 0, 0, 0, 0, 0, 0, 0, 0);
+  string __str;
+  vector<InfraParameters> params;
 
   int opt;
   // : means the previous option requires an argument
-  while ((opt = getopt(argc, argv, "i:thb")) != -1) {
+  while ((opt = getopt(argc, argv, "i:p:thb")) != -1) {
     switch (opt) {
     case 't':
       test = true;
@@ -35,6 +41,7 @@ int main(int argc, char *argv[]) {
       cout << "USAGE " << argv[0] << ":" << endl;
       cout << "\t-i <impl,>\t\tRun only on the sleected implementations" << endl
            << "\t\t\t\tMultiple can be specified separated by a comma." << endl;
+      cout << "\t-p <params>\t\tProvide parameters for the benchmark" << endl;
       cout << "\t-t\t\t\tEnable testing" << endl;
       cout << "\t-b\t\t\tEnable benchmarking" << endl;
       exit(0);
@@ -44,6 +51,17 @@ int main(int argc, char *argv[]) {
       while (std::getline(f, segment, ',')) {
         filter.push_back(segment);
       }
+      break;
+    case 'p':
+      p = fstream(optarg);
+
+      // Ignore the first line
+      getline(p, __str);
+
+      while (!p.eof()) {
+        p >> param;
+        params.push_back(param);
+      };
       break;
     default:
       break;
@@ -61,7 +79,7 @@ int main(int argc, char *argv[]) {
     if (test)
       verify(r);
     if (measure)
-      bench(r);
+      bench(r, params.size() == 0 ? nullptr : &params);
   }
   return 0;
 }

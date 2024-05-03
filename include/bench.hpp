@@ -1,6 +1,9 @@
 #pragma once
 
+#include "common.hpp"
 #include "impl.hpp"
 
-void bench(Registry r);
+#include <vector>
+
+void bench(Registry r, vector<InfraParameters> *params);
 void measure_overhead();

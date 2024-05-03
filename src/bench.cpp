@@ -15,16 +15,16 @@
 using namespace std;
 
 std::vector<InfraParameters> bench_cases = {
-    {64, 56, 56, 64, 3, 3, 1, 1},    {64, 56, 56, 128, 3, 3, 1, 1},
-    {128, 28, 28, 128, 3, 3, 1, 1},  {128, 28, 28, 256, 3, 3, 1, 1},
-    {256, 14, 14, 256, 3, 3, 1, 1},  {256, 14, 14, 512, 3, 3, 1, 1},
-    {80, 224, 224, 80, 3, 3, 1, 1},  {80, 224, 224, 80, 3, 3, 1, 2},
-    {80, 224, 224, 80, 3, 3, 1, 3},  {80, 224, 224, 80, 3, 3, 1, 4},
-    {512, 56, 56, 256, 1, 1, 0, 1},  {512, 56, 56, 256, 3, 3, 1, 1},
-    {512, 56, 56, 256, 5, 5, 2, 1},  {512, 56, 56, 256, 7, 7, 3, 1},
-    {512, 56, 56, 256, 9, 9, 3, 1},  {512, 56, 56, 256, 11, 11, 3, 1},
-    {2000, 1, 1, 4000, 1, 1, 0, 1},  {4000, 1, 1, 8000, 1, 1, 0, 1},
-    {8000, 1, 1, 16000, 1, 1, 0, 1}, {16000, 1, 1, 32000, 1, 1, 0, 1},
+    {64, 1, 56, 56, 64, 3, 3, 1, 1},    {64, 1, 56, 56, 128, 3, 3, 1, 1},
+    {128, 1, 28, 28, 128, 3, 3, 1, 1},  {128, 1, 28, 28, 256, 3, 3, 1, 1},
+    {256, 1, 14, 14, 256, 3, 3, 1, 1},  {256, 1, 14, 14, 512, 3, 3, 1, 1},
+    {80, 1, 224, 224, 80, 3, 3, 1, 1},  {80, 1, 224, 224, 80, 3, 3, 1, 2},
+    {80, 1, 224, 224, 80, 3, 3, 1, 3},  {80, 1, 224, 224, 80, 3, 3, 1, 4},
+    {512, 1, 56, 56, 256, 1, 1, 0, 1},  {512, 1, 56, 56, 256, 3, 3, 1, 1},
+    {512, 1, 56, 56, 256, 5, 5, 2, 1},  {512, 1, 56, 56, 256, 7, 7, 3, 1},
+    {512, 1, 56, 56, 256, 9, 9, 3, 1},  {512, 1, 56, 56, 256, 11, 11, 3, 1},
+    {2000, 1, 1, 1, 4000, 1, 1, 0, 1},  {4000, 1, 1, 1, 8000, 1, 1, 0, 1},
+    {8000, 1, 1, 1, 16000, 1, 1, 0, 1}, {16000, 1, 1, 1, 32000, 1, 1, 0, 1},
 };
 
 class BenchData : public Data {
@@ -149,11 +149,13 @@ void print_line(ofstream *csv, string impl_name, ConvolutionType ct,
        << "," << padding_size << "," << stride_size << endl;
 }
 
-void bench(Registry r) {
-  const int batch_size = 1;
+void bench(Registry r, vector<InfraParameters> *params) {
   const float relu_alpha = 0.1;
   auto csv = new ofstream();
   csv->open("benchmark.csv");
+
+  if (params == nullptr)
+    params = &bench_cases;
 
   cout << setw(name_space) << "name"
        << " " << setw(conv_type_space) << "ct"
@@ -179,20 +181,20 @@ void bench(Registry r) {
        << endl;
 
   for (auto impl : r.implementations()) {
-    for (auto bc : bench_cases) {
+    for (auto bc : *params) {
       for (auto conv_type : convolution_types) {
-        auto data = BenchData(Parameters(conv_type, batch_size, bc.num_channels,
-                                         bc.kernel_number, relu_alpha,
-                                         {bc.input_height, bc.input_width},
-                                         {bc.kernel_height, bc.kernel_width},
-                                         {bc.padding_size, bc.padding_size},
-                                         {bc.stride_size, bc.stride_size}));
+        auto data = BenchData(Parameters(
+            conv_type, bc.batch_size, bc.num_channels, bc.kernel_number,
+            relu_alpha, {bc.input_height, bc.input_width},
+            {bc.kernel_height, bc.kernel_width},
+            {bc.padding_size, bc.padding_size},
+            {bc.stride_size, bc.stride_size}));
 
         auto intervals = one_run(impl, data);
         auto averages = average(intervals);
         for (auto avg : averages)
           print_line(csv, impl.name, conv_type, avg.first, avg.second,
-                     bc.num_channels, batch_size, bc.kernel_number,
+                     bc.num_channels, bc.batch_size, bc.kernel_number,
                      bc.input_height, bc.input_width, bc.kernel_height,
                      bc.kernel_width, bc.padding_size, bc.stride_size);
       }
