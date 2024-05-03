@@ -2,5 +2,5 @@
 
 # make clean
 make
-./tnn -t -b -p parameters/batch_size_md.csv -o benchmarks/batch_size_md.csv
-./tnn -t -b -p parameters/batch_size_lg.csv -o benchmarks/batch_size_lg.csv
+taskset -a -c 0 ./tnn -t -b -p parameters/batch_size_md.csv -o benchmarks/batch_size_md.csv
+taskset -a -c 0 ./tnn -t -b -p parameters/batch_size_lg.csv -o benchmarks/batch_size_lg.csv
