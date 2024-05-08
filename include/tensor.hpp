@@ -1,0 +1,140 @@
+#pragma once
+#include "alloc.hpp"
+
+// Implements a five dimensional tensor for basic types.
+template <typename T>
+class Tensor5D {
+public:
+  // cannot be const as move constructor may set it to nullptr
+  T* data;
+  const size_t dim1;
+  const size_t dim2;
+  const size_t dim3;
+  const size_t dim4;
+  const size_t dim5;
+
+  // Construct a new five dimensional tensor.
+  // Input:
+  //  dim{i}: the size of the i-th dimension
+  //  zero: if true, initializes the memory with zero.
+  Tensor5D(const size_t dim1, const size_t dim2, const size_t dim3, const size_t dim4,
+	   const size_t dim5, const bool zero)
+    : data(zero ? alloc::calloc<T>(dim1 * dim2 * dim3 * dim4 * dim5)
+	   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4 * dim5)),
+      dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4), dim5(dim5) {}
+
+  // Destructor: automatically cleans up memory when the object leaves the scope.
+  ~Tensor5D() {
+    // pointer may be zero due to the move constructor moving the data out
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+  // Rule of Five: either define all of the essential operations, or none.
+  // - default constructor: unnecessary
+  // - do not allow copying (expensive; do it manually if needed)
+  // - no move assignment: want dimensions to stay const if possible
+  // - move constructor: not sure whether it will be used, but at least the
+  //   compiler needs it (cannot guarantee NRVO)
+
+  // Default constructor
+  Tensor5D() =delete;
+  // Copy constructor
+  Tensor5D(const Tensor5D&) =delete;
+  // Copy assignment
+  Tensor5D& operator=(const Tensor5D&) =delete;
+  // Move constructor
+  Tensor5D(Tensor5D&& other)
+    : data(other.data), dim1(other.dim1), dim2(other.dim2),
+      dim3(other.dim3), dim4(other.dim4), dim5(other.dim5)
+  {
+    // if we do not change this to nullptr, destructing this and other will (probably)
+    // lead to a double free.
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor5D& operator=(Tensor5D&&) =delete;
+};
+
+// Implements a four dimensional tensor for basic types.
+template <typename T>
+class Tensor4D {
+public:
+  T* data;
+  const size_t dim1;
+  const size_t dim2;
+  const size_t dim3;
+  const size_t dim4;
+
+  // Construct a new four dimensional tensor.
+  // Input:
+  //  dim{i}: the size of the i-th dimension
+  //  zero: if true, initializes the memory with zero.
+  Tensor4D(const size_t dim1, const size_t dim2, const size_t dim3, const size_t dim4,
+           const bool zero)
+    : data(zero ? alloc::calloc<T>(dim1 * dim2 * dim3 * dim4)
+	   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4)),
+      dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4) {}
+
+  // Destructor
+  ~Tensor4D() {
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+  // Default constructor
+  Tensor4D() =delete;
+  // Copy constructor
+  Tensor4D(const Tensor4D&) =delete;
+  // Copy assignment
+  Tensor4D& operator=(const Tensor4D&) =delete;
+  // Move constructor
+  Tensor4D(Tensor4D&& other)
+    : data(other.data), dim1(other.dim1), dim2(other.dim2),
+      dim3(other.dim3), dim4(other.dim4)
+  {
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor4D& operator=(Tensor4D&&) =delete;
+};
+
+// Implements a one dimensional tensor for basic types.
+template <typename T>
+class Tensor1D {
+public:
+  T* data;
+  const size_t size;
+
+  // Construct a new one dimensional tensor.
+  // Input:
+  //  size: the size of the tensor
+  //  zero: if true, initializes the memory with zero.
+  Tensor1D(const size_t size, const bool zero)
+      : size(size),
+        data(zero ? alloc::calloc<T>(size) : alloc::alloc<T>(size)) {}
+
+  // Destructor
+  ~Tensor1D() {
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+  // Default constructor
+  Tensor1D() =delete;
+  // Copy constructor
+  Tensor1D(const Tensor1D&) =delete;
+  // Copy assignment
+  Tensor1D& operator=(const Tensor1D&) =delete;
+  // Move constructor
+  Tensor1D(Tensor1D&& other)
+    : data(other.data), size(other.size)
+  {
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor1D& operator=(Tensor1D&&) =delete;
+};
