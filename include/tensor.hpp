@@ -2,6 +2,7 @@
 #include "alloc.hpp"
 
 // Implements a five dimensional tensor for basic types.
+// T (probably) must have a copy constructor for get()
 template <typename T>
 class Tensor5D {
 public:
@@ -29,6 +30,18 @@ public:
     if (data != nullptr) {
       alloc::free(data);
     }
+  }
+
+  void set(const T value, const size_t i, const size_t j, const size_t k, const size_t l,
+	   const size_t m) {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+    assert(m < dim5);
+
+    data[(i * (dim2 * dim3 * dim4 * dim5)) +
+	 (j * (dim3 * dim4 * dim5)) + (k * (dim4 * dim5)) + (l * (dim5)) + m] = value;
   }
 
   // Rule of Five: either define all of the essential operations, or none.
@@ -77,6 +90,15 @@ public:
 	   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4)),
       dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4) {}
 
+  T get(const size_t i, const size_t j, const size_t k, const size_t l) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+
+    return data[(i * (dim2 * dim3 * dim4)) + (j * (dim3 * dim4)) + (k * dim4) + l];
+  }
+
   // Destructor
   ~Tensor4D() {
     if (data != nullptr) {
@@ -115,6 +137,11 @@ public:
   Tensor1D(const size_t size, const bool zero)
       : size(size),
         data(zero ? alloc::calloc<T>(size) : alloc::alloc<T>(size)) {}
+
+  T get(const size_t i) const {
+    assert(i < size);
+    return data[i];
+  }
 
   // Destructor
   ~Tensor1D() {
