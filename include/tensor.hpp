@@ -135,8 +135,8 @@ public:
   //  size: the size of the tensor
   //  zero: if true, initializes the memory with zero.
   Tensor1D(const size_t size, const bool zero)
-      : size(size),
-        data(zero ? alloc::calloc<T>(size) : alloc::alloc<T>(size)) {}
+    : data(zero ? alloc::calloc<T>(size) : alloc::alloc<T>(size)),
+      size(size) {}
 
   T get(const size_t i) const {
     assert(i < size);

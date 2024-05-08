@@ -1,5 +1,5 @@
+#include "impl/baseline_nhwc/quantize.hpp"
 #include "common.hpp"
-#include "tensor.hpp"
 
 // Quantize the floats in data to {+1 (01), 0 (00), -1 (11)}
 // Input:
