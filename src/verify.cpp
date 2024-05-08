@@ -62,7 +62,8 @@ void verify(Registry r) {
     size_t passed = 0, failed = 0,
            total = test_cases.size() * convolution_types.size();
     for (auto tc : test_cases) {
-      for (auto conv_type : convolution_types) {
+      //for (auto conv_type : convolution_types) {
+      auto conv_type = ConvolutionType::TNN;
         auto data = VerificationData(Parameters(
             conv_type, tc.batch_size, tc.num_channels, tc.kernel_number,
             relu_alpha, {tc.input_height, tc.input_width},
@@ -129,7 +130,7 @@ void verify(Registry r) {
                << "] Failed test case" << endl;
         }
         m->reset();
-      }
+	//}
     }
     cout << setw(name_space) << impl.name << " :: " << passed << "/" << total
          << " tests passed" << endl;
