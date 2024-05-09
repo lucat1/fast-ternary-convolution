@@ -11,6 +11,15 @@
 #include <iomanip>
 #include <random>
 
+// uint32_t num_channels;
+// uint32_t batch_size;
+// size_t input_height;
+// size_t input_width;
+// uint32_t kernel_number;
+// size_t kernel_height;
+// size_t kernel_width;
+// size_t padding_size;
+// size_t stride_size;
 std::vector<InfraParameters> test_cases = {
     {1, 2, 2, 2, 1, 3, 3, 1, 1},       {64, 2, 12, 16, 64, 1, 1, 0, 1},
     {32, 2, 12, 16, 52, 1, 1, 0, 2},   {256, 2, 56, 56, 10, 3, 3, 1, 1},

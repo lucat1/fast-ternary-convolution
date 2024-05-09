@@ -17,7 +17,8 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
   // is set to 1.
   int64_t onebit[CNTBITS];
   for (size_t i = 0; i < CNTBITS; i++) {
-    onebit[i] = 1 << i;
+    // cast is important - otherwise we get wrong results
+    onebit[i] = (int64_t) 1 << i;
   }
 
   // sizes for our data
@@ -59,14 +60,16 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 	    // NOTE Do scalar replacement on thresholds
 	    if (current_value > thresholds.get(in)) {
 	      // Pack 1: 01 => only need to set second bit
-	      second_bits = second_bits | onebit[bit];
+	      second_bits |= onebit[bit];
 	    } else if (current_value < -thresholds.get(in)) {
 	      // Pack -1: 11 => need to set both bits
-	      first_bits = first_bits | onebit[bit];
-	      second_bits = second_bits | onebit[bit];
+	      first_bits |= onebit[bit];
+	      second_bits |= onebit[bit];
 	    }
 	    // else: Pack 0: 00 => no bits need to be set
 	  }
+
+
 
 	  // Store the ternarized and packed data
 	  quantized_data.set(first_bits, in, ih + padding_h,
@@ -88,11 +91,11 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 	    // NOTE Do scalar replacement on thresholds
 	    if (current_value > thresholds.get(in)) {
 	      // Pack 1: 01 => only need to set second bit
-	      second_bits = second_bits | onebit[bit];
+	      second_bits |= onebit[bit];
 	    } else if (current_value < -thresholds.get(in)) {
 	      // Pack -1: 11 => need to set both bits
-	      first_bits = first_bits | onebit[bit];
-	      second_bits = second_bits | onebit[bit];
+	      first_bits |= onebit[bit];
+	      second_bits |= onebit[bit];
 	    }
 	    // else: Pack 0: 00 => no bits need to be set
 	  }

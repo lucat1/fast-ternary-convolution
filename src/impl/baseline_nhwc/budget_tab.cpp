@@ -1,16 +1,21 @@
 // yoinked this bad boy directly from baseline/
+// its called budget tab because of that
 
+#include "impl/baseline/tab.hpp"
 #include "impl/baseline_nhwc/budget_tab.hpp"
 #include "impl/baseline/activation.hpp"
 #include "impl/baseline/gemm.hpp"
 #include "impl/baseline/img2row.hpp"
 #include "impl/baseline_nhwc/quantize.hpp"
+#include "impl/baseline/quantize.hpp"
 
 #include "alloc.hpp"
 #include "common.hpp"
 #include "measure.hpp"
 
 #include <cstring>
+#include <iostream>
+#include <bitset>
 
 namespace baseline_nhwc {
 
@@ -46,19 +51,69 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
     measure_point(MeasurementFunction::ALLOC, MeasurementEvent::START);
     qx_size =
         batch_size * packed_height * packed_width * packed_channels * BITS;
-
+    qx = alloc::calloc<int64_t>(qx_size);
     i2rqx_size = batch_size * fused_height * fused_width;
     i2rqx = alloc::calloc<int64_t>(i2rqx_size);
     measure_point(MeasurementFunction::ALLOC, MeasurementEvent::END);
 
-    // nasty
+    // TODO just make data be in the correct format in the first place
     Tensor4D<float> input_data (batch_size, input_height, input_width, num_channels, false);
-    std::memcpy(input_data.data, input, sizeof(float) * batch_size * input_height * input_width * num_channels);
 
+    // NCHW => NHWC
+    for (size_t in = 0; in < batch_size; in++) {
+      for (int ic = 0; ic < num_channels; ic++) {
+	for (size_t ih = 0; ih < input_height; ih++) {
+	  for (size_t iw = 0; iw < input_width; iw++) {
+	    // too lazy to implement a setter for this one right now
+	    size_t inhwc = (in * (input_height * input_width * num_channels)) +
+	      (ih * input_width * num_channels) +
+	      (iw * num_channels) + ic;
+
+	    size_t inchw = (in * num_channels * input_height * input_width) +
+	      (ic * input_height * input_width) +
+	      (ih * input_width) + iw;
+
+	    input_data.data[inhwc] = input[inchw];
+	  }
+	}
+      }
+    }
+    // just copy, ignoring the formatting (probably wrong)
+    //std::memcpy(input_data.data, input, batch_size * input_height * input_width * num_channels);
+    
     Tensor1D<float> quant_data (batch_size, false);
     std::memcpy(quant_data.data, quant_threshold, sizeof(float) * batch_size);
     
     Tensor5D<int64_t> quantized = ternarize(input_data, quant_data, padding_height, padding_width);
+
+    baseline::ternarize_NCHW_to_NHWCB(input, padding_height, padding_width,
+                            quant_threshold, batch_size, num_channels,
+                            input_height, input_width, qx);
+
+    for (size_t in = 0; in < batch_size; in++) {
+       for (size_t ih = 0; ih < packed_height; ih++){
+	 for (size_t iw = 0; iw < packed_width; iw++){
+	   for (size_t ic = 0; ic < packed_channels; ic++){
+	     for (int bit = 0; bit < 2; bit++) {
+	       // too lazy to implement a setter for this one right now
+	    size_t inhwcb = (in * (packed_height * packed_width * packed_channels)) +
+	      (ih * packed_width * packed_channels) +
+	      (iw * packed_channels) + 2 * ic + bit;
+
+	    if (qx[inhwcb] != quantized.data[inhwcb]) {
+	       std::cout << " :( old[" << in << ", " << ih << ", " << iw << ", " << ic << ", "<< bit << ", " << "] =" << std::bitset<64>(qx[inhwcb]) << ", new[" << in << ", " << ih << ", " << iw << ", " << ic << ", "<< bit << ", " << "] =" << std::bitset<64>(quantized.data[inhwcb]) << std::endl;
+
+	       }
+      
+
+	  
+      }
+	  }
+	}
+      }
+    }
+
+    alloc::free(qx);
     qx = quantized.data;
     img2row_NHWCB_to_N_OHOW_KHKWC<int64_t>(
         qx, batch_size, packed_channels * BITS, packed_height, packed_width,

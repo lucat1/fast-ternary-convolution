@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include <iostream>
 #include <vector>
 
@@ -116,22 +117,4 @@ int Compare_Tensor_BNN_Padding(T *X, T *X2, int N, int C, int H, int W,
     }
   }
   return 1;
-}
-
-// TODO: use this for debugging errors
-template <typename T> void print_vec(std::string name, T *v, int size) {
-  std::cout << "vec \"" << name << "\" size " << size << std::endl;
-  int i;
-  for (i = 0; i < size - 7; i += 8) {
-    std::cout << i << ": ";
-    for (int j = i; j < i + 8; ++j)
-      std::cout << v[j] << " ";
-    std::cout << std::endl;
-  }
-  if (i < size) {
-    std::cout << i << ": ";
-    for (; i < size; ++i)
-      std::cout << v[i] << " ";
-    std::cout << std::endl;
-  }
 }

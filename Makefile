@@ -31,8 +31,8 @@ run: $(TARGET)
 	@echo -e "RUN\t$(TARGET)"
 	@./$(TARGET)
 
-debug: CXXFLAGS += -ggdb -fsanitize=address -fno-omit-frame-pointer
-debug: LDFLAGS += -fsanitize=address
+debug: CXXFLAGS += -ggdb -fsanitize=address,leak,undefined -fno-omit-frame-pointer
+debug: LDFLAGS += -fsanitize=address,leak,undefined
 debug: compile
 
 clean:
