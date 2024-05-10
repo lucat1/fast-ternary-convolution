@@ -1,6 +1,9 @@
 #pragma once
 #include "alloc.hpp"
 
+// NOTE It may be a good idea to simplify the index computations when we inline them.
+//   Ideally we compare them using Compiler Explorer.
+
 // Implements a five dimensional tensor for basic types.
 // T (probably) must have a copy constructor for get()
 template <typename T>
@@ -30,6 +33,18 @@ public:
     if (data != nullptr) {
       alloc::free(data);
     }
+  }
+
+  T get(const size_t i, const size_t j, const size_t k, const size_t l,
+	   const size_t m) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+    assert(m < dim5);
+
+    return data[(i * (dim2 * dim3 * dim4 * dim5)) +
+		(j * (dim3 * dim4 * dim5)) + (k * (dim4 * dim5)) + (l * (dim5)) + m];
   }
 
   void set(const T value, const size_t i, const size_t j, const size_t k, const size_t l,
@@ -97,6 +112,15 @@ public:
     assert(l < dim4);
 
     return data[(i * (dim2 * dim3 * dim4)) + (j * (dim3 * dim4)) + (k * dim4) + l];
+  }
+
+  void set(const T value, const size_t i, const size_t j, const size_t k, const size_t l) {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+
+    data[(i * (dim2 * dim3 * dim4)) + (j * (dim3 * dim4)) + (k * dim4) + l] = value;
   }
 
   // Destructor

@@ -33,10 +33,10 @@ std::vector<T> DirectPad(T *x, int padding1, int padding2, int N, int C, int H,
 std::vector<float> DirectConv2d_FP32(float *x, float *w, int stride_height,
                                      int stride_width, int N, int C, int H,
                                      int W, int KN, int KH, int KW) {
-  const int OH = H - KH + 1;
-  const int OW = W - KW + 1;
-  const int FH = (int)(OH / stride_height);
-  const int FW = (int)(OW / stride_width);
+  const int OH = H - KH;
+  const int OW = W - KW;
+  const int FH = (int)(OH / stride_height) + 1;
+  const int FW = (int)(OW / stride_width) + 1;
 
   std::vector<float> y = std::vector<float>(N * KN * FH * FW);
   float *yptr = y.data();

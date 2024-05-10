@@ -22,6 +22,7 @@ void img2row_NHWCB_to_N_OHOW_KHKWC(T *input, int batch_size, int num_channels,
           for (int kw = 0; kw < kernel_width; kw++) {
             for (int c = 0; c < num_channels; c++)
               // y[N, OH, OW, KH, KW, C] = X[N, H+kh, W+kw, C]
+	      
               y[(n * fused_height + oh * output_width + ow) * fused_width +
                 kh * kernel_width * num_channels + kw * num_channels + c] =
                   input[((n * input_height + oh * stride_height + kh) *
