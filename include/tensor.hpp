@@ -1,6 +1,8 @@
 #pragma once
 #include "alloc.hpp"
 
+// TODO Remove unused getters/setters
+
 // NOTE It may be a good idea to simplify the index computations when we inline them.
 //   Ideally we compare them using Compiler Explorer.
 
@@ -145,6 +147,60 @@ public:
   }
   // Move assignment
   Tensor4D& operator=(Tensor4D&&) =delete;
+};
+
+// Implements a two dimensional tensor for basic types.
+template <typename T>
+class Tensor2D {
+public:
+  T* data;
+  const size_t dim1;
+  const size_t dim2;
+
+  // Construct a new two dimensional tensor.
+  // Input:
+  //  dim{i}: the size of the i-th dimension
+  //  zero: if true, initializes the memory with zero.
+  Tensor2D(const size_t dim1, const size_t dim2, const bool zero)
+    : data(zero ? alloc::calloc<T>(dim1 * dim2)
+	   : alloc::alloc<T>(dim1 * dim2)),
+	   dim1(dim1), dim2(dim2) {}
+
+  T get(const size_t i, const size_t j) const {
+    assert(i < dim1);
+    assert(j < dim2);
+
+    return data[i * dim2 + j];
+  }
+
+  void set(const T value, const size_t i, const size_t j) {
+    assert(i < dim1);
+    assert(j < dim2);
+
+    data[i * dim2 + j] = value;
+  }
+
+  // Destructor
+  ~Tensor2D() {
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+  // Default constructor
+  Tensor2D() =delete;
+  // Copy constructor
+  Tensor2D(const Tensor2D&) =delete;
+  // Copy assignment
+  Tensor2D& operator=(const Tensor2D&) =delete;
+  // Move constructor
+  Tensor2D(Tensor2D&& other)
+    : data(other.data), dim1(other.dim1), dim2(other.dim2)
+  {
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor2D& operator=(Tensor2D&) =delete;
 };
 
 // Implements a one dimensional tensor for basic types.
