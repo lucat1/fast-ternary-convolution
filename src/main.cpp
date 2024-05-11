@@ -1,7 +1,7 @@
 #include "bench.hpp"
 #include "impl.hpp"
 #include "impl/baseline/tab.hpp"
-#include "impl/baseline_nhwc/budget_tab.hpp"
+#include "impl/baseline_nhwc/tab.hpp"
 #include "verify.hpp"
 
 
