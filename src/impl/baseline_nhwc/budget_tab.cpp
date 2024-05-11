@@ -8,6 +8,7 @@
 #include "impl/baseline/quantize.hpp"
 #include "impl/baseline/tab.hpp"
 #include "impl/baseline_nhwc/im2row.hpp"
+#include "impl/baseline_nhwc/prelu.hpp"
 #include "impl/baseline_nhwc/quantize.hpp"
 #include "impl/baseline_nhwc/gemm.hpp"
 
@@ -36,8 +37,8 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   packed_channels = (num_channels % CNTBITS) ? ((num_channels / CNTBITS) + 1)
                                              : (num_channels / CNTBITS);
 
-  output_height = (packed_height - kernel_height + 1) / stride_height;
-  output_width = (packed_width - kernel_width + 1) / stride_width;
+  output_height = (packed_height - kernel_height) / stride_height + 1;
+  output_width = (packed_width - kernel_width) / stride_width + 1;
 
   fused_height = output_height * output_width;
   fused_width = kernel_height * kernel_width * (packed_channels * BITS);
@@ -149,9 +150,16 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   weight_tensor.data = temp_ptr;
 
   // Activation function: PReLU
+  auto result = prelu(gemm_result, relu_alpha);
 
-  baseline::PReLU(gemm_result.data, batch_size, kernel_number, output_height,
-                  output_width, relu_alpha, output);
+  for (size_t im = 0; im < result.dim1; im++) {
+    for (size_t in = 0; in < result.dim2; in++) {
+      output[im * result.dim2 + in] = result.get(im, in);
+    }
+  }
+
+  // baseline::PReLU(gemm_result.data, batch_size, kernel_number, output_height,
+  //                 output_width, relu_alpha, output);
 
   measure_point(MeasurementFunction::FREE, MeasurementEvent::START);
   alloc::free(i2rqx);

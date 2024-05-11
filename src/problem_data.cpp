@@ -26,10 +26,10 @@ size_t pckd_chans(Parameters &p) {
 Shape4D y_shape(Parameters &p) {
   auto packed_input_size = packed_size(p, p.input_size);
   uint32_t output_height =
-      (packed_input_size.height - p.kernel_size.height + 1) /
-      p.stride_size.height;
+      (packed_input_size.height - p.kernel_size.height) /
+      p.stride_size.height + 1;
   uint32_t output_width =
-      (packed_input_size.width - p.kernel_size.width + 1) / p.stride_size.width;
+      (packed_input_size.width - p.kernel_size.width) / p.stride_size.width + 1;
 
   // TODO: in this input this is num_channels. In the output, it is kernel
   // number. Does this make sense?
