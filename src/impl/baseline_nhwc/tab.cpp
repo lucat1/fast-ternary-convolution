@@ -7,7 +7,7 @@
 namespace baseline_nhwc {
 
 // TODO @luca: I think we should have the following signature:
-// Tensor2D<float> conv(const Tensor4D<float>& input, const Tensor1D<float>& thresholds,
+// Tensor4D<float> conv(const Tensor4D<float>& input, const Tensor1D<float>& thresholds,
 //                      const size_t padding_h, const size_t padding_w,
 //                      const Tensor4D<int64_t>& kernel,
 //                      const size_t stride_h, const size_t stride_w);
