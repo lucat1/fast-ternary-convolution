@@ -9,6 +9,7 @@
 #include "impl/baseline/tab.hpp"
 #include "impl/baseline_nhwc/im2row.hpp"
 #include "impl/baseline_nhwc/quantize.hpp"
+#include "impl/baseline_nhwc/gemm.hpp"
 
 #include "alloc.hpp"
 #include "common.hpp"
@@ -135,14 +136,21 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   size_t y_size = batch_size * output_height * output_width * kernel_number;
   y_intermediate = alloc::calloc<int>(y_size);
   measure_point(MeasurementFunction::ALLOC2, MeasurementEvent::END);
-  tnn_gemm_baseline(lmao.data, quant_weights,
-                    batch_size * output_height * output_width, kernel_number,
-                    packed_channels * kernel_height * kernel_width,
-                    y_intermediate);
+  // tnn_gemm_baseline(lmao.data, quant_weights,
+  //                   batch_size * output_height * output_width, kernel_number,
+  //                   packed_channels * kernel_height * kernel_width,
+  //                   y_intermediate);
+
+  Tensor2D<int64_t> weight_tensor (kernel_number, packed_channels * kernel_height * kernel_width * 2, false);
+  int64_t* temp_ptr = weight_tensor.data;
+  weight_tensor.data = quant_weights;
+ 
+  auto gemm_result = ternary_gemm(lmao, weight_tensor);
+  weight_tensor.data = temp_ptr;
 
   // Activation function: PReLU
 
-  baseline::PReLU(y_intermediate, batch_size, kernel_number, output_height,
+  baseline::PReLU(gemm_result.data, batch_size, kernel_number, output_height,
                   output_width, relu_alpha, output);
 
   measure_point(MeasurementFunction::FREE, MeasurementEvent::START);

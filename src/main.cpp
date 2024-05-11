@@ -16,7 +16,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  vector<Implementation> impls = {{"baseline", baseline::conv}, {"baseline_nhwc", baseline_nhwc::conv}};
+  vector<Implementation> impls = { {"baseline_nhwc", baseline_nhwc::conv}, {"baseline", baseline::conv},};
   vector<string> filter;
   bool test = false;
   bool measure = false;
