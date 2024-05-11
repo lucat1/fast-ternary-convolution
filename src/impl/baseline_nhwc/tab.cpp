@@ -66,6 +66,8 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   /// Actual algorithm
   ///
 
+  // TODO @daniel: It may be better to return the largest possible tensor
+
   // quantization + packing
   Tensor5D<int64_t> quantized =
       ternarize(input_data, quant_data, padding_height, padding_width);
