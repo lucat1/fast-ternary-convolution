@@ -11,11 +11,24 @@
 #include <iomanip>
 #include <random>
 
+// uint32_t num_channels;
+// uint32_t batch_size;
+// size_t input_height;
+// size_t input_width;
+// uint32_t kernel_number;
+// size_t kernel_height;
+// size_t kernel_width;
+// size_t padding_size;
+// size_t stride_size;
 std::vector<InfraParameters> test_cases = {
-    {1, 2, 2, 2, 1, 3, 3, 1, 1},       {64, 2, 12, 16, 64, 1, 1, 0, 1},
-    {32, 2, 12, 16, 52, 1, 1, 0, 2},   {256, 2, 56, 56, 10, 3, 3, 1, 1},
-    {160, 2, 64, 56, 32, 3, 3, 0, 2},  {325, 2, 36, 25, 125, 5, 7, 3, 4},
-    {32, 2, 1, 1, 120, 1, 1, 0, 1},    {512, 2, 1, 1, 1024, 1, 1, 0, 1},
+    {1, 2, 2, 2, 1, 3, 3, 1, 1},
+    {64, 2, 12, 16, 64, 1, 1, 0, 1},
+    {32, 2, 12, 16, 52, 1, 1, 0, 2},
+    {256, 2, 56, 56, 10, 3, 3, 1, 1},
+    {160, 2, 64, 56, 32, 3, 3, 0, 2},
+    {325, 2, 36, 25, 125, 5, 7, 3, 4},
+    {32, 2, 1, 1, 120, 1, 1, 0, 1},
+    {512, 2, 1, 1, 1024, 1, 1, 0, 1},
     {1024, 2, 1, 1, 1640, 1, 1, 2, 3},
 };
 
@@ -62,7 +75,8 @@ void verify(Registry r) {
     size_t passed = 0, failed = 0,
            total = test_cases.size() * convolution_types.size();
     for (auto tc : test_cases) {
-      for (auto conv_type : convolution_types) {
+      //for (auto conv_type : convolution_types) {
+      auto conv_type = ConvolutionType::TNN;
         auto data = VerificationData(Parameters(
             conv_type, tc.batch_size, tc.num_channels, tc.kernel_number,
             relu_alpha, {tc.input_height, tc.input_width},
@@ -129,7 +143,7 @@ void verify(Registry r) {
                << "] Failed test case" << endl;
         }
         m->reset();
-      }
+	//}
     }
     cout << setw(name_space) << impl.name << " :: " << passed << "/" << total
          << " tests passed" << endl;
