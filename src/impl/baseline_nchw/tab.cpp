@@ -1,18 +1,11 @@
-#include "impl/baseline_nhwc/tab.hpp"
+#include "impl/baseline_nchw/tab.hpp"
+#include "impl/baseline_nchw/quantize.hpp"
 #include "impl/baseline_nhwc/im2row.hpp"
 #include "impl/baseline_nhwc/prelu.hpp"
-#include "impl/baseline_nhwc/quantize.hpp"
 #include "impl/baseline_nhwc/gemm.hpp"
 
-namespace baseline_nhwc {
+namespace baseline_nchw {
 
-// TODO @luca: I think we should have the following signature:
-// Tensor4D<float> conv(const Tensor4D<float>& input, const Tensor1D<float>& thresholds,
-//                      const size_t padding_h, const size_t padding_w,
-//                      const Tensor5D<int64_t>& kernel,
-//                      const size_t stride_h, const size_t stride_w);
-// Additionally, whoever calls conv should pass in the correct shape which could be
-// registered together with the function name and pointer.
 void conv(ConvolutionType type, int *btn_cnt1, float *input,
           uint32_t input_height, uint32_t input_width, uint32_t padding_height,
           uint32_t padding_width, float *quant_threshold, int num_channels,
@@ -29,27 +22,10 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   ///
 
   // input data
-  Tensor4D<float> input_data(batch_size, input_height, input_width,
-                             num_channels, false);
-  // NCHW => NHWC
-  for (size_t in = 0; in < batch_size; in++) {
-    for (int ic = 0; ic < num_channels; ic++) {
-      for (size_t ih = 0; ih < input_height; ih++) {
-        for (size_t iw = 0; iw < input_width; iw++) {
-          size_t inhwc = (in * (input_height * input_width * num_channels)) +
-                         (ih * input_width * num_channels) +
-                         (iw * num_channels) + ic;
-
-          size_t inchw = (in * num_channels * input_height * input_width) +
-                         (ic * input_height * input_width) +
-                         (ih * input_width) + iw;
-
-          input_data.data[inhwc] = input[inchw];
-        }
-      }
-    }
-  }
-
+  Tensor4D<float> input_data(batch_size, num_channels,
+			     input_height, input_width, false);
+  std::memcpy(input_data.data, input, batch_size * input_height * input_width * num_channels * sizeof(float));
+  
   // kernel weights
   const size_t packed_channels = (num_channels % CNTBITS) ? ((num_channels / CNTBITS) + 1)
                                              : (num_channels / CNTBITS);
@@ -86,4 +62,4 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   }
 }
 
-} // namespace baseline_nhwc
+} // namespace baseline_nchw

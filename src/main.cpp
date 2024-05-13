@@ -2,6 +2,7 @@
 #include "impl.hpp"
 #include "impl/baseline/tab.hpp"
 #include "impl/baseline_nhwc/tab.hpp"
+#include "impl/baseline_nchw/tab.hpp"
 #include "verify.hpp"
 
 
@@ -16,7 +17,10 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  vector<Implementation> impls = { {"baseline_nhwc", baseline_nhwc::conv}, {"baseline", baseline::conv},};
+  vector<Implementation> impls = {{"baseline_nchw", baseline_nchw::conv},
+				  {"baseline_nhwc", baseline_nhwc::conv},
+				  {"baseline", baseline::conv}
+  };
   vector<string> filter;
   bool test = false;
   bool measure = false;

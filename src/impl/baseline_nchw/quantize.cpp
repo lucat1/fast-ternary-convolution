@@ -1,15 +1,15 @@
-#include "impl/baseline_nhwc/quantize.hpp"
+#include "impl/baseline_nchw/quantize.hpp"
 #include "common.hpp"
 
 // Quantize the floats in data to {+1 (01), 0 (00), -1 (11)}
 // Input:
-//   data: data to be quantized, using the (N, H, W, C) format
+//   data: data to be quantized, using the (N, C, H, W) format
 //   thresholds: quantization threshold values for each N
 //   padding_h: padding around height
 //   padding_w: padding around width
 // Output:
 //   quantized_data: the quantized data, using the (N, H, W, C, BITS) format
-namespace baseline_nhwc {
+namespace baseline_nchw {
 Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 			    const Tensor1D<float>& thresholds,
 			    const size_t padding_h, const size_t padding_w) {
@@ -24,9 +24,9 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 
   // sizes for our data
   const size_t n = data.dim1;
-  const size_t height = data.dim2;
-  const size_t width = data.dim3;
-  const size_t channels = data.dim4;
+  const size_t channels = data.dim2;
+  const size_t height = data.dim3;
+  const size_t width = data.dim4;
 
   // sizes for the quantized data
   // formulas follow from definition of padding
@@ -56,7 +56,7 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 	  // Ternarize and pack the data
 	  for (size_t bit = 0; bit < CNTBITS; bit++) {
 	    // NOTE I wonder whether we can apply strength reduction here
-	    float current_value = data.get(in, ih, iw, ic * CNTBITS + bit);
+	    float current_value = data.get(in, ic * CNTBITS + bit, ih, iw);
 
 	    // NOTE Do scalar replacement on thresholds
 	    if (current_value > thresholds.get(in)) {
@@ -87,7 +87,7 @@ Tensor5D<int64_t> ternarize(const Tensor4D<float>& data,
 	  // Ternarize and pack the data
 	  for (size_t bit = 0; bit < (channels % 64); bit++) {
 	    // NOTE I wonder whether we can apply strength reduction here
-	    float current_value = data.get(in, ih, iw, full_blocks_c * CNTBITS + bit);
+	    float current_value = data.get(in, full_blocks_c * CNTBITS + bit, ih, iw);
 
 	    // NOTE Do scalar replacement on thresholds
 	    if (current_value > thresholds.get(in)) {
