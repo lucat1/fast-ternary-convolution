@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "tensor.hpp"
 
 #include <cstdint>
 #include <string>
@@ -8,17 +9,20 @@
 
 using namespace std;
 
-typedef void (*ConvFunc)(ConvolutionType, int *, float *, uint32_t, uint32_t,
-                         uint32_t, uint32_t, float *, int, int64_t *, uint32_t,
-                         uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
-                         float, float *);
+typedef Tensor4D<float> (*ConvFunc)(const Tensor4D<float> &,
+                                    const Tensor1D<float> &, const size_t,
+                                    const size_t, const Tensor5D<int64_t> &,
+                                    const size_t, const size_t, float);
+
+enum class DataOrder { NCHW, NHWC };
 
 class Implementation {
 public:
   string name;
+  DataOrder data_shape;
   ConvFunc fn;
 
-  Implementation(string name, ConvFunc func);
+  Implementation(string name, DataOrder data_shape, ConvFunc func);
 };
 
 class Registry {

@@ -1,4 +1,5 @@
 #include "bench.hpp"
+#include "common.hpp"
 #include "measure.hpp"
 #include "problem_data.hpp"
 #include "tsc.hpp"
@@ -44,15 +45,15 @@ private:
   }
 
 public:
-  BenchData(Parameters p) : Data(p) {
+  BenchData(ConvolutionType conv_type, InfraParameters p, float relu_alpha)
+      : Data(conv_type, p, relu_alpha) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
-    // TODO: ask for this
-    // The +1 is required as ternarize_* does an off-by-one access
-    randomize(x.data, x.shape.size, has_ternary_input(conv_type));
+    randomize(input.data, input.dim1 * input.dim2 * input.dim3 * input.dim4,
+              has_ternary_input(conv_type));
 
-    for (size_t i = 0; i < quant_threshold.size; ++i)
-      quant_threshold.data[i] = 0.5;
+    for (size_t i = 0; i < threshold.size; ++i)
+      threshold.data[i] = 0.5;
   }
 };
 
@@ -65,13 +66,8 @@ vector<vector<Interval>> one_run(Implementation impl, Data &data) {
     m->reset();
 
     m->track(MeasurementFunction::CONV, MeasurementEvent::START);
-    impl.fn(
-        data.conv_type, data.btn_cnt.data, data.x.data, data.input_size.height,
-        data.input_size.width, data.padding_size.height,
-        data.padding_size.width, data.quant_threshold.data, data.num_channels,
-        data.quant_weights.data, data.batch_size, data.stride_size.height,
-        data.stride_size.height, data.kernel_number, data.kernel_size.height,
-        data.kernel_size.width, data.relu_alpha, data.y.data);
+    impl.fn(data.input, data.threshold, data.padding_h, data.padding_w,
+            data.kernel, data.stride_h, data.stride_w, data.relu_alpha);
     m->track(MeasurementFunction::CONV, MeasurementEvent::END);
 
     measurement_intervals.push_back(m->intervals());
@@ -183,12 +179,7 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
   for (auto impl : r.implementations()) {
     for (auto bc : *params) {
       for (auto conv_type : convolution_types) {
-        auto data = BenchData(Parameters(
-            conv_type, bc.batch_size, bc.num_channels, bc.kernel_number,
-            relu_alpha, {bc.input_height, bc.input_width},
-            {bc.kernel_height, bc.kernel_width},
-            {bc.padding_size, bc.padding_size},
-            {bc.stride_size, bc.stride_size}));
+        auto data = BenchData(conv_type, bc, relu_alpha);
 
         auto intervals = one_run(impl, data);
         auto averages = average(intervals);
