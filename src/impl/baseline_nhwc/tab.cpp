@@ -9,7 +9,7 @@ namespace baseline_nhwc {
 // TODO @luca: I think we should have the following signature:
 // Tensor4D<float> conv(const Tensor4D<float>& input, const Tensor1D<float>& thresholds,
 //                      const size_t padding_h, const size_t padding_w,
-//                      const Tensor4D<int64_t>& kernel,
+//                      const Tensor5D<int64_t>& kernel,
 //                      const size_t stride_h, const size_t stride_w);
 // Additionally, whoever calls conv should pass in the correct shape which could be
 // registered together with the function name and pointer.
@@ -53,7 +53,7 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   // kernel weights
   const size_t packed_channels = (num_channels % CNTBITS) ? ((num_channels / CNTBITS) + 1)
                                              : (num_channels / CNTBITS);
-  Tensor2D<int64_t> weight_tensor (kernel_number, packed_channels * kernel_height * kernel_width * 2, false);
+  Tensor5D<int64_t> weight_tensor (kernel_number, packed_channels, kernel_height, kernel_width, 2, false);
   for (size_t i = 0; i < kernel_number * packed_channels * kernel_height * kernel_width * 2; i++) {
     weight_tensor.data[i] = quant_weights[i];
   }
@@ -73,7 +73,7 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
       ternarize(input_data, quant_data, padding_height, padding_width);
 
   // im2row
-  Tensor2D<int64_t> reshaped = im2row(quantized, kernel_height, kernel_width, stride_height,
+  Tensor7D<int64_t> reshaped = im2row(quantized, kernel_height, kernel_width, stride_height,
                      stride_width);
 
   // gemm
@@ -81,10 +81,8 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
 
   // activation
   auto prelu_result = prelu(gemm_result, relu_alpha);
-  for (size_t im = 0; im < prelu_result.dim1; im++) {
-    for (size_t in = 0; in < prelu_result.dim2; in++) {
-      output[im * prelu_result.dim2 + in] = prelu_result.get(im, in);
-    }
+  for (size_t i = 0; i < prelu_result.dim1 * prelu_result.dim2 * prelu_result.dim3 * prelu_result.dim4; i++) {
+    output[i] = prelu_result.data[i];
   }
 }
 

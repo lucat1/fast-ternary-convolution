@@ -38,7 +38,7 @@ public:
   }
 
   T get(const size_t i, const size_t j, const size_t k, const size_t l,
-	   const size_t m) const {
+	const size_t m) const {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -47,6 +47,15 @@ public:
 
     return data[(i * (dim2 * dim3 * dim4 * dim5)) +
 		(j * (dim3 * dim4 * dim5)) + (k * (dim4 * dim5)) + (l * (dim5)) + m];
+  }
+
+  // Get element from the tensor interpreting it as a 2D tensor where the last 4
+  // dimensions are merged.
+  T get_1_2345(const size_t i, const size_t j) const {
+    assert(i < dim1);
+    assert(j < dim2 * dim3 * dim4 * dim5);
+
+    return data[i * dim2 * dim3 * dim4 * dim5 + j];
   }
 
   void set(const T value, const size_t i, const size_t j, const size_t k, const size_t l,
@@ -123,6 +132,15 @@ public:
     assert(l < dim4);
 
     data[(i * (dim2 * dim3 * dim4)) + (j * (dim3 * dim4)) + (k * dim4) + l] = value;
+  }
+
+  // Set an element in the tensor by interpreting it as a 2D tensor where the first 3
+  // dimensions have been merged.
+  void set_123_4(const T value, const size_t i, const size_t j) {
+    assert(i < dim1 * dim2 * dim3);
+    assert(j < dim4);
+
+    data[i * dim4 + j] = value;
   }
 
   // Destructor
@@ -244,4 +262,95 @@ public:
   }
   // Move assignment
   Tensor1D& operator=(Tensor1D&&) =delete;
+};
+
+// Implements a seven dimensional tensor for basic types.
+// T (probably) must have a copy constructor for get()
+template <typename T>
+class Tensor7D {
+public:
+  // cannot be const as move constructor may set it to nullptr
+  T* data;
+  const size_t dim1;
+  const size_t dim2;
+  const size_t dim3;
+  const size_t dim4;
+  const size_t dim5;
+  const size_t dim6;
+  const size_t dim7;
+
+  // Construct a new seven dimensional tensor.
+  // Input:
+  //  dim{i}: the size of the i-th dimension
+  //  zero: if true, initializes the memory with zero.
+  Tensor7D(const size_t dim1, const size_t dim2, const size_t dim3, const size_t dim4,
+	   const size_t dim5, const size_t dim6, const size_t dim7, const bool zero)
+    : data(zero ? alloc::calloc<T>(dim1 * dim2 * dim3 * dim4 * dim5 * dim6 * dim7)
+	   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4 * dim5 * dim6 * dim7)),
+      dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4), dim5(dim5), dim6(dim6), dim7(dim7) {}
+
+  // Destructor: automatically cleans up memory when the object leaves the scope.
+  ~Tensor7D() {
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+  T get(const size_t i, const size_t j, const size_t k, const size_t l,
+	const size_t m, const size_t n, const size_t o) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+    assert(m < dim5);
+    assert(n < dim6);
+    assert(o < dim7);
+
+    return data[(i * (dim2 * dim3 * dim4 * dim5 * dim6 * dim7)) +
+		(j * (dim3 * dim4 * dim5 * dim6 * dim7)) +
+		(k * (dim4 * dim5 * dim6 * dim7)) +
+		(l * (dim5 * dim6 * dim7)) +
+		(m * (dim6 * dim7)) + (n * dim7) + o];
+  }
+
+  // Get an element from the tensor by interpreting it as a 2D tensor where dimensions
+  // 1, 2 and 3 are merged, and 4, 5, 6 and 7 are merged.
+  T get_123_4567(const size_t i, const size_t j)  const {
+    assert(i < dim1 * dim2 * dim3);
+    assert(j < dim4 * dim5 * dim6 * dim7);
+    return data[i * dim4 * dim5 * dim6 * dim7 + j];
+  }
+
+  void set(const T value, const size_t i, const size_t j, const size_t k, const size_t l,
+	   const size_t m, const size_t n, const size_t o) {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+    assert(m < dim5);
+    assert(n < dim6);
+    assert(o < dim7);
+
+    data[(i * (dim2 * dim3 * dim4 * dim5 * dim6 * dim7)) +
+	 (j * (dim3 * dim4 * dim5 * dim6 * dim7)) +
+	 (k * (dim4 * dim5 * dim6 * dim7)) +
+	 (l * (dim5 * dim6 * dim7)) +
+	 (m * (dim6 * dim7)) + (n * dim7) + o] = value;
+  }
+
+  // Default constructor
+  Tensor7D() =delete;
+  // Copy constructor
+  Tensor7D(const Tensor7D&) =delete;
+  // Copy assignment
+  Tensor7D& operator=(const Tensor7D&) =delete;
+  // Move constructor
+  Tensor7D(Tensor7D&& other)
+    : data(other.data), dim1(other.dim1), dim2(other.dim2), dim3(other.dim3),
+      dim4(other.dim4), dim5(other.dim5), dim6(other.dim6), dim7(other.dim7)
+  {
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor7D& operator=(Tensor7D&&) =delete;
 };
