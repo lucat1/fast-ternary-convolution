@@ -1,7 +1,8 @@
 #include "bench.hpp"
 #include "impl.hpp"
-#include "impl/baseline/tab.hpp"
+#include "impl/baseline_nchw/quantize.hpp"
 #include "impl/baseline_nchw/tab.hpp"
+#include "impl/baseline_nhwc/quantize.hpp"
 #include "impl/baseline_nhwc/tab.hpp"
 #include "verify.hpp"
 
@@ -17,9 +18,10 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
-      /* {"baseline_nchw", baseline_nchw::conv}, */
-      {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv} /* , */
-      /* {"baseline", baseline::conv} */
+      {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv,
+       baseline_nhwc::ternarize},
+      {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv,
+       baseline_nchw::ternarize},
   };
   vector<string> filter;
   bool test = false;

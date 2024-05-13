@@ -1,5 +1,6 @@
 #include "verify.hpp"
 #include "common.hpp"
+#include "direct.hpp"
 #include "problem_data.hpp"
 
 #include "impl/baseline/quantize.hpp"
@@ -13,6 +14,30 @@
 #include <cstring>
 #include <iomanip>
 #include <random>
+
+size_t compare_nhwc(Tensor4D<float> &x, Tensor4D<float> &y) {
+  assert(x.dim1 == y.dim1);
+  assert(x.dim2 == y.dim2);
+  assert(x.dim3 == y.dim3);
+  assert(x.dim4 == y.dim4);
+  for (size_t n = 0; n < x.dim1; n++) {
+    for (size_t h = 0; h < x.dim2; h++) {
+      for (size_t w = 0; w < x.dim3; w++) {
+        for (size_t c = 0; c < x.dim4; c++) {
+          float xx = x.get(n, h, w, c);
+          float yy = y.get(n, h, w, c);
+          if (abs(xx - yy) > 0.01) {
+            std::cout << "n: " << n << ", h: " << h << ", w: " << w
+                      << ", c: " << c;
+            std::cout << ", x: " << xx << ", y: " << yy << std::endl;
+            return -1;
+          }
+        }
+      }
+    }
+  }
+  return 1;
+}
 
 // uint32_t num_channels;
 // uint32_t batch_size;
@@ -48,22 +73,32 @@ private:
   }
 
 public:
-  Tensor4D<float> non_quantized_kernel;
+  // The kernel values before quantization
+  Tensor4D<float> real_kernel;
   Tensor1D<float> kernel_threshold;
 
-  VerificationData(ConvolutionType conv_type, InfraParameters p,
-                   float relu_alpha)
-      : Data(conv_type, p, relu_alpha),
-        non_quantized_kernel(kernel_n, kernel_h, kernel_w, channels, false),
-        kernel_threshold(kernel_n, false) {
+  VerificationData(ConvolutionType conv_type, DataOrder data_order,
+                   InfraParameters p, float relu_alpha)
+      : Data(conv_type, data_order, p, relu_alpha),
+        // TODO @daniel: check this. This is in shape (KN, C, KH, KW) if
+        // data_order == NCHW. This is because, although conv always takes the
+        // kernel as a (KN, KH, KW, C, BITS), this "real" (i.e., using floats)
+        // kernel will be run through the quantize function of the provided
+        // implementation. Thus, it will be returned as a (KN, KH, KW, C, BITS)
+        // anyway, but the input shape has to be the same order of the layer
+        // input. I hope this is correct.
+        real_kernel(kernel_n, nchw_or_nhwc(channels, kernel_h),
+                    nchw_or_nhwc(kernel_h, kernel_w),
+                    nchw_or_nhwc(kernel_w, channels), false),
+        kernel_threshold(kernel.dim1, false) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
     randomize(input.data, input.dim1 * input.dim2 * input.dim3 * input.dim4,
               has_ternary_input(conv_type));
 
-    randomize(non_quantized_kernel.data,
-              non_quantized_kernel.dim1 * non_quantized_kernel.dim2 *
-                  non_quantized_kernel.dim3 * non_quantized_kernel.dim4,
+    randomize(real_kernel.data,
+              real_kernel.dim1 * real_kernel.dim2 * real_kernel.dim3 *
+                  real_kernel.dim4,
               has_ternary_weights(conv_type));
 
     for (size_t i = 0; i < threshold.size; ++i)
@@ -83,10 +118,24 @@ void verify(Registry r) {
     for (auto tc : test_cases) {
       // for (auto conv_type : convolution_types) {
       auto conv_type = ConvolutionType::TNN;
-      auto data = VerificationData(conv_type, tc, relu_alpha);
-      // if (has_ternary_weights(conv_type))
-      auto kernel = baseline_nhwc::ternarize(data.non_quantized_kernel,
-                                             data.kernel_threshold, 0, 0);
+      auto data = VerificationData(conv_type, impl.data_order, tc, relu_alpha);
+      // sanity checks on the shapes
+      assert(data.input.dim1 == tc.batch_size);
+      assert(data.kernel.dim1 == tc.kernel_number);
+      if (impl.data_order == DataOrder::NHWC) {
+        assert(data.input.dim2 == tc.input_height);
+        assert(data.input.dim3 == tc.input_width);
+        assert(data.input.dim4 == tc.channels);
+      } else {
+        assert(data.input.dim2 == tc.channels);
+        assert(data.input.dim3 == tc.input_height);
+        assert(data.input.dim4 == tc.input_width);
+      }
+
+      assert(data.kernel_threshold.size == data.real_kernel.dim1);
+      auto kernel =
+          impl.ternarize(data.real_kernel, data.kernel_threshold, 0, 0);
+      // Sanity checks on the kernel size, before copying data over
       assert(kernel.dim1 == data.kernel.dim1);
       assert(kernel.dim2 == data.kernel.dim2);
       assert(kernel.dim3 == data.kernel.dim3);
@@ -95,50 +144,75 @@ void verify(Registry r) {
       memcpy(data.kernel.data, kernel.data,
              data.kernel.dim1 * data.kernel.dim2 * data.kernel.dim3 *
                  data.kernel.dim4 * data.kernel.dim5);
+
+      // NOTE: for when we add binary layers back, we should quantize the
+      // weights differently based on the type
+      // if (has_ternary_weights(conv_type))
+      // -- what we're already doing for TNN
       // else
       //   baseline::binarize_NCHW_to_NHWC(
       //       data.weights.data, 0, 0, data.kernel_number, data.num_channels,
       //       data.kernel_size.height, data.kernel_size.width,
       //       data.quant_weights.data);
-
       // if (conv_type == ConvolutionType::BTN)
       //   baseline::btn_cnt_w2(data.quant_weights.data, data.num_channels,
       //                        data.kernel_number, data.kernel_size.height,
       //                        data.kernel_size.width, data.btn_cnt.data);
 
-      // only TNN for now
-      auto y =
+      auto output =
           impl.fn(data.input, data.threshold, data.padding_h, data.padding_w,
                   data.kernel, data.stride_h, data.stride_w, data.relu_alpha);
 
-      cout << y.data << endl;
-      size_t y_n = y.dim1;
-      size_t y_c = y.dim2;
-      size_t y_h = y.dim3;
-      size_t y_w = y.dim4;
-
-      const int packH = data.input_h + 2 * data.padding_h;
-      const int packW = data.input_w + 2 * data.padding_w;
-      std::vector<float> px = DirectPadNCHW(
-          data.input.data, data.padding_h, data.padding_w, data.batch_size,
-          data.channels, data.input_h, data.input_w);
-      std::vector<float> ref_y = DirectConv2d_FP32NCHW(
-          px.data(), data.non_quantized_kernel.data, data.stride_h,
-          data.stride_w, data.batch_size, data.channels, packH, packW,
-          data.kernel_n, data.kernel_h, data.kernel_w);
-      cout << ref_y.data() << endl;
+      // Data for the direct convolution is always provided in NHWC shape
+      // @all: I had to separate this in an if-then-else otherwise C++
+      // continues complaining (it's not happy if I use a ternary operator)
+      Tensor4D<float> reference_output(output.dim1, output.dim2, output.dim3,
+                                       output.dim4, false);
+      if (data.data_order == DataOrder::NCHW) {
+        Tensor4D<float> padded_input = direct_pad(
+            reshape_nchw_nhwc(data.input), data.padding_h, data.padding_w);
+        Tensor4D<float> ref_out =
+            direct_conv(padded_input, reshape_nchw_nhwc(data.real_kernel),
+                        data.stride_h, data.stride_w);
+        assert(ref_out.dim1 == output.dim1);
+        assert(ref_out.dim2 == output.dim2);
+        assert(ref_out.dim3 == output.dim3);
+        assert(ref_out.dim4 == output.dim4);
+        for (size_t i = 0;
+             i < ref_out.dim1 * ref_out.dim2 * ref_out.dim3 * ref_out.dim4; ++i)
+          reference_output.data[i] = ref_out.data[i];
+      } else {
+        Tensor4D<float> padded_input =
+            direct_pad(data.input, data.padding_h, data.padding_w);
+        Tensor4D<float> ref_out = direct_conv(padded_input, data.real_kernel,
+                                              data.stride_h, data.stride_w);
+        assert(ref_out.dim1 == reference_output.dim1);
+        assert(ref_out.dim2 == reference_output.dim2);
+        assert(ref_out.dim3 == reference_output.dim3);
+        assert(ref_out.dim4 == reference_output.dim4);
+        for (size_t i = 0;
+             i < ref_out.dim1 * ref_out.dim2 * ref_out.dim3 * ref_out.dim4; ++i)
+          reference_output.data[i] = ref_out.data[i];
+      }
 
       // Compare the conv results to ensure the functions are correct
       int cmp;
-      if ((data.padding_w > 0 || data.padding_h > 0) &&
-          !has_ternary_input(conv_type))
-        // BTN and BNN regard the padded zeros as 1s because binary
-        // quantization only has (+1, -1) no zeros. So we only compare the
-        // central part of conv results here, excluding the zero padding part.
-        cmp = Compare_Tensor_BNN_Padding(y.data, ref_y.data(), y_n, y_c, y_h,
-                                         y_w, data.padding_h, data.padding_w);
-      else
-        cmp = Compare_Tensor_NCHW(y.data, ref_y.data(), y_n, y_c, y_h, y_w);
+      // NOTE: for when we add binary layers back, comparison needs to be done
+      // differently
+      // if ((data.padding_w > 0 || data.padding_h > 0) &&
+      //     !has_ternary_input(conv_type))
+      //   // BTN and BNN regard the padded zeros as 1s because binary
+      //   // quantization only has (+1, -1) no zeros. So we only compare the
+      //   // central part of conv results here, excluding the zero padding
+      //   part. cmp = Compare_Tensor_BNN_Padding(y.data, ref_y.data(), y_n,
+      //   y_c, y_h,
+      //                                    y_w, data.padding_h,
+      //                                    data.padding_w);
+      // else
+
+      // NOTE @daniel: I assume the output of the layer is always NHWC, thus
+      // we don't need to branch on data.data_order
+      cmp = compare_nhwc(output, reference_output);
 
       if (cmp > 0)
         passed++;

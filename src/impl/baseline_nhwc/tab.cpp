@@ -13,6 +13,8 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
                      const size_t stride_h, const size_t stride_w,
                      float relu_alpha) {
+  // TODO @daniel: It may be better to return the largest possible tensor
+
   // quantization + packing
   Tensor5D<int64_t> quantized =
       ternarize(input, thresholds, padding_h, padding_w);

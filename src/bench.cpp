@@ -45,8 +45,9 @@ private:
   }
 
 public:
-  BenchData(ConvolutionType conv_type, InfraParameters p, float relu_alpha)
-      : Data(conv_type, p, relu_alpha) {
+  BenchData(ConvolutionType conv_type, DataOrder data_order, InfraParameters p,
+            float relu_alpha)
+      : Data(conv_type, data_order, p, relu_alpha) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
     randomize(input.data, input.dim1 * input.dim2 * input.dim3 * input.dim4,
@@ -179,13 +180,13 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
   for (auto impl : r.implementations()) {
     for (auto bc : *params) {
       for (auto conv_type : convolution_types) {
-        auto data = BenchData(conv_type, bc, relu_alpha);
+        auto data = BenchData(conv_type, impl.data_order, bc, relu_alpha);
 
         auto intervals = one_run(impl, data);
         auto averages = average(intervals);
         for (auto avg : averages)
           print_line(csv, impl.name, conv_type, avg.first, avg.second,
-                     bc.num_channels, bc.batch_size, bc.kernel_number,
+                     bc.channels, bc.batch_size, bc.kernel_number,
                      bc.input_height, bc.input_width, bc.kernel_height,
                      bc.kernel_width, bc.padding_size, bc.stride_size);
       }

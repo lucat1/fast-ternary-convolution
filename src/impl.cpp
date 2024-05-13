@@ -1,7 +1,8 @@
 #include "impl.hpp"
 
-Implementation::Implementation(string name, DataOrder data_shape, ConvFunc func)
-    : name(name), data_shape(data_shape), fn(func) {}
+Implementation::Implementation(string name, DataOrder data_order, ConvFunc func,
+                               Ternarize ternarize)
+    : name(name), data_order(data_order), fn(func), ternarize(ternarize) {}
 
 Registry::Registry() {}
 
