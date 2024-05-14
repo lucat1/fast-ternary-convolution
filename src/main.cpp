@@ -18,10 +18,8 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
-      {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv,
-       baseline_nhwc::ternarize},
-      {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv,
-       baseline_nchw::ternarize},
+      {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
+      {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
   };
   vector<string> filter;
   bool test = false;

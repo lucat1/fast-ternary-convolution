@@ -4,7 +4,7 @@
 #include "problem_data.hpp"
 
 #include "impl/baseline/quantize.hpp"
-#include "impl/baseline_nhwc/quantize.hpp"
+#include "impl/baseline_nchw/quantize.hpp"
 #include "measure.hpp"
 #include "problem_data.hpp"
 #include "tensor.hpp"
@@ -80,16 +80,10 @@ public:
   VerificationData(ConvolutionType conv_type, DataOrder data_order,
                    InfraParameters p, float relu_alpha)
       : Data(conv_type, data_order, p, relu_alpha),
-        // TODO @daniel: check this. This is in shape (KN, C, KH, KW) if
-        // data_order == NCHW. This is because, although conv always takes the
-        // kernel as a (KN, KH, KW, C, BITS), this "real" (i.e., using floats)
-        // kernel will be run through the quantize function of the provided
-        // implementation. Thus, it will be returned as a (KN, KH, KW, C, BITS)
-        // anyway, but the input shape has to be the same order of the layer
-        // input. I hope this is correct.
-        real_kernel(kernel_n, nchw_or_nhwc(channels, kernel_h),
-                    nchw_or_nhwc(kernel_h, kernel_w),
-                    nchw_or_nhwc(kernel_w, channels), false),
+        // The real kernel is always in shape (KN, PC, KH, KW) beacuse that's
+        // what direct_conv expects. It always gets quantized using the
+        // baseline_nchw ternarize function
+        real_kernel(kernel_n, channels, kernel_h, kernel_w, false),
         kernel_threshold(kernel.dim1, false) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
 
@@ -119,7 +113,7 @@ void verify(Registry r) {
       // for (auto conv_type : convolution_types) {
       auto conv_type = ConvolutionType::TNN;
       auto data = VerificationData(conv_type, impl.data_order, tc, relu_alpha);
-      // sanity checks on the shapes
+      // Sanity checks on the input shapes
       assert(data.input.dim1 == tc.batch_size);
       assert(data.kernel.dim1 == tc.kernel_number);
       if (impl.data_order == DataOrder::NHWC) {
@@ -132,9 +126,14 @@ void verify(Registry r) {
         assert(data.input.dim4 == tc.input_width);
       }
 
+      // Sanyt check to verify that the real_kernel is NCHW
+      assert(data.real_kernel.dim1 == data.kernel_n);
+      assert(data.real_kernel.dim2 == data.channels);
+      assert(data.real_kernel.dim3 == data.kernel_h);
+      assert(data.real_kernel.dim4 == data.kernel_w);
       assert(data.kernel_threshold.size == data.real_kernel.dim1);
-      auto kernel =
-          impl.ternarize(data.real_kernel, data.kernel_threshold, 0, 0);
+      auto kernel = baseline_nchw::ternarize(data.real_kernel,
+                                             data.kernel_threshold, 0, 0);
       // Sanity checks on the kernel size, before copying data over
       assert(kernel.dim1 == data.kernel.dim1);
       assert(kernel.dim2 == data.kernel.dim2);
@@ -163,36 +162,37 @@ void verify(Registry r) {
           impl.fn(data.input, data.threshold, data.padding_h, data.padding_w,
                   data.kernel, data.stride_h, data.stride_w, data.relu_alpha);
 
-      // Data for the direct convolution is always provided in NHWC shape
+      // Data for the direct convolution is always provided in NCHW shape
       // @all: I had to separate this in an if-then-else otherwise C++
       // continues complaining (it's not happy if I use a ternary operator)
       Tensor4D<float> reference_output(output.dim1, output.dim2, output.dim3,
                                        output.dim4, false);
       if (data.data_order == DataOrder::NCHW) {
-        Tensor4D<float> padded_input = direct_pad(
-            reshape_nchw_nhwc(data.input), data.padding_h, data.padding_w);
-        Tensor4D<float> ref_out =
-            direct_conv(padded_input, reshape_nchw_nhwc(data.real_kernel),
-                        data.stride_h, data.stride_w);
-        assert(ref_out.dim1 == output.dim1);
-        assert(ref_out.dim2 == output.dim2);
-        assert(ref_out.dim3 == output.dim3);
-        assert(ref_out.dim4 == output.dim4);
-        for (size_t i = 0;
-             i < ref_out.dim1 * ref_out.dim2 * ref_out.dim3 * ref_out.dim4; ++i)
-          reference_output.data[i] = ref_out.data[i];
-      } else {
         Tensor4D<float> padded_input =
             direct_pad(data.input, data.padding_h, data.padding_w);
-        Tensor4D<float> ref_out = direct_conv(padded_input, data.real_kernel,
-                                              data.stride_h, data.stride_w);
-        assert(ref_out.dim1 == reference_output.dim1);
-        assert(ref_out.dim2 == reference_output.dim2);
-        assert(ref_out.dim3 == reference_output.dim3);
-        assert(ref_out.dim4 == reference_output.dim4);
-        for (size_t i = 0;
-             i < ref_out.dim1 * ref_out.dim2 * ref_out.dim3 * ref_out.dim4; ++i)
-          reference_output.data[i] = ref_out.data[i];
+        std::vector<float> ref_out =
+            direct_conv(padded_input.data, data.real_kernel.data, data.stride_h,
+                        data.stride_w, padded_input.dim1, padded_input.dim2,
+                        padded_input.dim3, padded_input.dim4, data.kernel_n,
+                        data.kernel_h, data.kernel_w);
+
+        assert(ref_out.size() ==
+               output.dim1 * output.dim2 * output.dim3 * output.dim4);
+        for (size_t i = 0; i < ref_out.size(); ++i)
+          reference_output.data[i] = ref_out[i];
+      } else {
+        cout << "reshaping" << endl;
+        Tensor4D<float> padded_input = direct_pad(
+            reshape_nhwc_nchw(data.input), data.padding_h, data.padding_w);
+        std::vector<float> ref_out =
+            direct_conv(padded_input.data, data.real_kernel.data, data.stride_h,
+                        data.stride_w, padded_input.dim1, padded_input.dim2,
+                        padded_input.dim3, padded_input.dim4, data.kernel_n,
+                        data.kernel_h, data.kernel_w);
+        assert(ref_out.size() ==
+               output.dim1 * output.dim2 * output.dim3 * output.dim4);
+        for (size_t i = 0; i < ref_out.size(); ++i)
+          reference_output.data[i] = ref_out[i];
       }
 
       // Compare the conv results to ensure the functions are correct
@@ -210,13 +210,12 @@ void verify(Registry r) {
       //                                    data.padding_w);
       // else
 
-      // NOTE @daniel: I assume the output of the layer is always NHWC, thus
-      // we don't need to branch on data.data_order
       cmp = compare_nhwc(output, reference_output);
 
-      if (cmp > 0)
+      if (cmp > 0) {
+        cout << "passed" << endl;
         passed++;
-      else {
+      } else {
         failed++;
         cout << "[" << (passed + failed) << "/" << total << "] Failed test case"
              << endl;
