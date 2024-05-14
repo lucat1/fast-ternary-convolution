@@ -39,30 +39,29 @@ Tensor4D<float> direct_pad(const Tensor4D<float> &x, const size_t padding_h,
 //                             const Tensor4D<float> &kernel,
 //                             const size_t stride_height,
 //                             const size_t stride_width) {
-std::vector<float> direct_conv(float *x, float *w, size_t stride_height,
-                               size_t stride_width, size_t N, size_t C,
-                               size_t H, size_t W, size_t KN, size_t KH,
-                               size_t KW) {
+std::vector<float> direct_conv(float *x, float *w, int stride1, int stride2,
+                               int N, int C, int H, int W, int KN, int KH,
+                               int KW) {
   const int OH = H - KH;
   const int OW = W - KW;
-  const int FH = (int)(OH / stride_height) + 1;
-  const int FW = (int)(OW / stride_width) + 1;
+  const int FH = (int)(OH / stride1) + 1;
+  const int FW = (int)(OW / stride2) + 1;
 
   std::vector<float> y = std::vector<float>(N * KN * FH * FW);
   float *yptr = y.data();
 
-  for (size_t on = 0; on < N; on++) {
-    for (size_t kn = 0; kn < KN; kn++) {
+  for (int on = 0; on < N; on++) {
+    for (int kn = 0; kn < KN; kn++) {
       for (int oh = 0; oh < FH; oh++) {
         for (int ow = 0; ow < FW; ow++) {
           float sum = 0;
           // kc = kc + 1
-          for (size_t kc = 0; kc < C; kc++) {
-            for (size_t kh = 0; kh < KH; kh++) {
-              for (size_t kw = 0; kw < KW; kw++) {
+          for (int kc = 0; kc < C; kc++) {
+            for (int kh = 0; kh < KH; kh++) {
+              for (int kw = 0; kw < KW; kw++) {
                 // Use N_C_H_W format
-                sum += x[((on * C + kc) * H + (oh * stride_height + kh)) * W +
-                         ow * stride_width + kw] *
+                sum += x[((on * C + kc) * H + (oh * stride1 + kh)) * W +
+                         ow * stride2 + kw] *
                        w[((kn * C + kc) * KH + kh) * KW + kw];
               }
             }

@@ -11,7 +11,6 @@ Tensor4D<float> direct_pad(const Tensor4D<float> &x, const size_t padding_h,
 //                             const Tensor4D<float> &kernel,
 //                             const size_t stride_height,
 //                             const size_t stride_width);
-std::vector<float> direct_conv(float *x, float *w, size_t stride_height,
-                               size_t stride_width, size_t N, size_t C,
-                               size_t H, size_t W, size_t KN, size_t KH,
-                               size_t KW);
+std::vector<float> direct_conv(float *x, float *w, int stride1, int stride2,
+                               int N, int C, int H, int W, int KN, int KH,
+                               int KW);
