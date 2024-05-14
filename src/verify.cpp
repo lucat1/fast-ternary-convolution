@@ -231,7 +231,7 @@ void verify(Registry r) {
       m->reset();
       //}
     }
-    cout << setw(name_space) << impl.name << " :: " << passed << "/" << total
-         << " tests passed" << endl;
+    cout << setw(impl_name_space) << impl.name << " :: " << passed << "/"
+         << total << " tests passed" << endl;
   }
 }

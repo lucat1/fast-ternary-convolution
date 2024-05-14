@@ -1,9 +1,10 @@
+#include "impl/baseline_original/tab.hpp"
 #include "common.hpp"
 #include "impl/baseline_original/activation.hpp"
 #include "impl/baseline_original/gemm.hpp"
 #include "impl/baseline_original/im2row.hpp"
 #include "impl/baseline_original/quantize.hpp"
-#include "impl/baseline_original/tab.hpp"
+#include "measure.hpp"
 
 namespace baseline_original {
 Tensor4D<float> conv(const Tensor4D<float> &_input,
@@ -48,7 +49,7 @@ Tensor4D<float> conv(const Tensor4D<float> &_input,
 
   // Start of the algorithm
   int PackedH, PackedW, OH, OW, PackedC;
-  
+
   PackedH = H + 2 * PaddingH; // Height after bit-packing
   PackedW = W + 2 * PaddingW; // Width  after bit-packing
   // Referring to
@@ -64,8 +65,10 @@ Tensor4D<float> conv(const Tensor4D<float> &_input,
   // Quantize and Img2Row/Img2Col
 
   if ((TYPE == ConvolutionType::TNN) || (TYPE == ConvolutionType::TBN)) {
+    measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::START);
     qx = Ternarize_NCHW_to_NHWCB(X, PaddingH, PaddingW, Q_Threshold, Batch_Size,
                                  C, H, W);
+    measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::END);
     qx = Img2Row_NHWCB_to_N_OHOW_KHKWC(qx.data(), Batch_Size, PackedC * BITS,
                                        PackedH, PackedW, KH, KW, StrideH,
                                        StrideW);
@@ -104,4 +107,4 @@ Tensor4D<float> conv(const Tensor4D<float> &_input,
   // Activation function: PReLU
   return PReLU(yi.data(), Batch_Size, KN, OH, OW, ReLU_alpha);
 }
-}
+} // namespace baseline_original

@@ -123,7 +123,7 @@ void print_line(ofstream &csv, string impl_name, ConvolutionType ct,
   if (mf == MeasurementFunction::CONV)
 #endif
   {
-    cout << setw(name_space) << impl_name << " " << setw(conv_type_space)
+    cout << setw(impl_name_space) << impl_name << " " << setw(conv_type_space)
          << convolution_name(ct) << " :: "
 #ifdef PRINT_ALL
          << setw(9) << measurement_function_name(mf) << " "
@@ -154,7 +154,7 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
   if (params == nullptr)
     params = &bench_cases;
 
-  cout << setw(name_space) << "name"
+  cout << setw(impl_name_space) << "name"
        << " " << setw(conv_type_space) << "ct"
        << " :: "
 #ifdef PRINT_ALL
@@ -212,6 +212,6 @@ void measure_overhead() {
   }
 
   cycles = (cycles) / (runs * measurement_size);
-  cout << setw(name_space) << "meas. overhead"
+  cout << setw(impl_name_space) << "meas. overhead"
        << " :: " << cycles << " cycles/call" << endl;
 }

@@ -3,6 +3,7 @@
 #include "impl/baseline_nhwc/im2row.hpp"
 #include "impl/baseline_nhwc/prelu.hpp"
 #include "impl/baseline_nhwc/quantize.hpp"
+#include "measure.hpp"
 
 namespace baseline_nhwc {
 
@@ -14,8 +15,10 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
                      const size_t stride_h, const size_t stride_w,
                      float relu_alpha) {
   // quantization + packing
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::START);
   Tensor5D<int64_t> quantized =
       ternarize(input, thresholds, padding_h, padding_w);
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::END);
 
   // im2row
   Tensor7D<int64_t> reshaped =
