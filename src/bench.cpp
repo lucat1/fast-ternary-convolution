@@ -177,19 +177,20 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
          "size"
       << endl;
 
-  for (auto impl : r.implementations()) {
-    for (auto bc : *params) {
-      for (auto conv_type : convolution_types) {
-        auto data = BenchData(conv_type, impl.data_order, bc, relu_alpha);
+  for (auto bc : *params) {
+    for (auto impl : r.implementations()) {
+      // for (auto conv_type : convolution_types) {
+      ConvolutionType conv_type = ConvolutionType::TNN;
+      auto data = BenchData(conv_type, impl.data_order, bc, relu_alpha);
 
-        auto intervals = one_run(impl, data);
-        auto averages = average(intervals);
-        for (auto avg : averages)
-          print_line(csv, impl.name, conv_type, avg.first, avg.second,
-                     bc.channels, bc.batch_size, bc.kernel_number,
-                     bc.input_height, bc.input_width, bc.kernel_height,
-                     bc.kernel_width, bc.padding_size, bc.stride_size);
-      }
+      auto intervals = one_run(impl, data);
+      auto averages = average(intervals);
+      for (auto avg : averages)
+        print_line(csv, impl.name, conv_type, avg.first, avg.second,
+                   bc.channels, bc.batch_size, bc.kernel_number,
+                   bc.input_height, bc.input_width, bc.kernel_height,
+                   bc.kernel_width, bc.padding_size, bc.stride_size);
+      // }
     }
   }
   csv.close();
