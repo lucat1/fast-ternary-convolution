@@ -108,7 +108,7 @@ void verify(Registry r) {
 
   for (auto impl : r.implementations()) {
     size_t passed = 0, failed = 0,
-           total = test_cases.size() * convolution_types.size();
+           total = test_cases.size() /* * convolution_types.size() */;
     for (auto tc : test_cases) {
       // for (auto conv_type : convolution_types) {
       auto conv_type = ConvolutionType::TNN;
@@ -132,17 +132,19 @@ void verify(Registry r) {
       assert(data.real_kernel.dim3 == data.kernel_h);
       assert(data.real_kernel.dim4 == data.kernel_w);
       assert(data.kernel_threshold.size == data.real_kernel.dim1);
-      auto kernel = baseline_nchw::ternarize(data.real_kernel,
-                                             data.kernel_threshold, 0, 0);
+      baseline::ternarize_NCHW_to_NHWCB(
+          data.real_kernel.data, 0, 0, data.kernel_threshold.data,
+          data.kernel_n, data.channels, data.kernel_h, data.kernel_w,
+          data.kernel.data);
       // Sanity checks on the kernel size, before copying data over
-      assert(kernel.dim1 == data.kernel.dim1);
-      assert(kernel.dim2 == data.kernel.dim2);
-      assert(kernel.dim3 == data.kernel.dim3);
-      assert(kernel.dim4 == data.kernel.dim4);
-      assert(kernel.dim5 == data.kernel.dim5);
-      memcpy(data.kernel.data, kernel.data,
-             data.kernel.dim1 * data.kernel.dim2 * data.kernel.dim3 *
-                 data.kernel.dim4 * data.kernel.dim5);
+      // assert(kernel.dim1 == data.kernel.dim1);
+      // assert(kernel.dim2 == data.kernel.dim2);
+      // assert(kernel.dim3 == data.kernel.dim3);
+      // assert(kernel.dim4 == data.kernel.dim4);
+      // assert(kernel.dim5 == data.kernel.dim5);
+      // memcpy(data.kernel.data, kernel.data,
+      //        data.kernel.dim1 * data.kernel.dim2 * data.kernel.dim3 *
+      //            data.kernel.dim4 * data.kernel.dim5);
 
       // NOTE: for when we add binary layers back, we should quantize the
       // weights differently based on the type
@@ -181,7 +183,6 @@ void verify(Registry r) {
         for (size_t i = 0; i < ref_out.size(); ++i)
           reference_output.data[i] = ref_out[i];
       } else {
-        cout << "reshaping" << endl;
         Tensor4D<float> padded_input = direct_pad(
             reshape_nhwc_nchw(data.input), data.padding_h, data.padding_w);
         std::vector<float> ref_out =
@@ -213,7 +214,6 @@ void verify(Registry r) {
       cmp = compare_nhwc(output, reference_output);
 
       if (cmp > 0) {
-        cout << "passed" << endl;
         passed++;
       } else {
         failed++;
