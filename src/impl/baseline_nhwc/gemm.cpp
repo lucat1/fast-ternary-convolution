@@ -1,6 +1,7 @@
 #include "impl/baseline_nhwc/gemm.hpp"
 #include "common.hpp"
 
+namespace baseline_nhwc {
 // Multiply two matrices containing ternary values together (Algorithm 3).
 Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
                                const Tensor5D<int64_t> &kernel) {
@@ -42,4 +43,5 @@ Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
   }
 
   return output;
+}
 }
