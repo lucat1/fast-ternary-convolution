@@ -136,6 +136,7 @@ void verify(Registry r) {
           data.real_kernel.data, 0, 0, data.kernel_threshold.data,
           data.kernel_n, data.channels, data.kernel_h, data.kernel_w,
           data.kernel.data);
+      // bsaeline_nchw::ternarize should be used instead, + the following code
       // Sanity checks on the kernel size, before copying data over
       // assert(kernel.dim1 == data.kernel.dim1);
       // assert(kernel.dim2 == data.kernel.dim2);

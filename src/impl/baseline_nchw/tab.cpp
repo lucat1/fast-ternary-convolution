@@ -24,7 +24,7 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   // shape of kernel. This is if the kernel is NCHWB. Change to dim2,dim3 if
   // kernel is NHWCB
   Tensor7D<int64_t> reshaped =
-      im2row(quantized, kernel.dim3, kernel.dim4, stride_h, stride_w);
+      im2row(quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
 
   // gemm
   auto gemm_result = ternary_gemm(reshaped, kernel);
