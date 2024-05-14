@@ -3,13 +3,10 @@
 #include "direct.hpp"
 #include "problem_data.hpp"
 
-#include "impl/baseline/quantize.hpp"
 #include "impl/baseline_nchw/quantize.hpp"
 #include "measure.hpp"
 #include "problem_data.hpp"
 #include "tensor.hpp"
-// TODO: rework these functions and move them in this file
-#include "verify_util.hpp"
 
 #include <cstring>
 #include <iomanip>
