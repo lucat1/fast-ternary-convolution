@@ -2,29 +2,6 @@
 
 #include <vector>
 
-// Reshapes a tensor from (N, H, W, C) to (N, C, H, W)
-Tensor4D<float> reshape_nhwc_nchw(const Tensor4D<float> &src) {
-  const size_t N = src.dim1;
-  const size_t H = src.dim2;
-  const size_t W = src.dim3;
-  const size_t C = src.dim4;
-
-  Tensor4D<float> dest = Tensor4D<float>(N, C, H, W, false);
-
-  for (size_t in = 0; in < N; in++) {
-    for (size_t ih = 0; ih < H; ih++) {
-      for (size_t iw = 0; iw < W; iw++) {
-        for (size_t ic = 0; ic < C; ic++) {
-          float val = src.get(in, ih, iw, ic);
-          dest.set(val, in, ic, ih, iw);
-        }
-      }
-    }
-  }
-
-  return dest;
-}
-
 // Pads the given 4-dimensional tensor over the H and W dimensions
 // Input: Tensor4D(N, C, H, W)
 // Output: Tensor4D(N, C, H+2padding_h, 2+2padding_w)
