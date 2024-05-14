@@ -8,9 +8,8 @@
 
 #include <array>
 #include <cstdint>
-#include <string>
 #include <iostream>
-
+#include <string>
 
 using namespace std;
 
@@ -65,9 +64,14 @@ std::string convolution_name(ConvolutionType t);
 #define has_ternary_weights(t)                                                 \
   (t == ConvolutionType::TNN || t == ConvolutionType::BTN)
 
+#define nchw_or_nhwc(e1, e2) (data_order == DataOrder::NCHW ? (e1) : (e2))
+#define int64s_for_bits(c) ((c % 64) ? (c / 64 + 1) : (c / 64))
+
+enum class DataOrder { NCHW, NHWC };
+
 class InfraParameters {
 public:
-  uint32_t num_channels;
+  uint32_t channels;
   uint32_t batch_size;
   size_t input_height;
   size_t input_width;
@@ -77,7 +81,7 @@ public:
   size_t padding_size;
   size_t stride_size;
 
-  InfraParameters(uint32_t num_channels, size_t batch_size, size_t input_height,
+  InfraParameters(uint32_t channels, size_t batch_size, size_t input_height,
                   size_t input_width, uint32_t kernel_number,
                   size_t kernel_height, size_t kernel_width,
                   size_t padding_size, size_t stride_size);

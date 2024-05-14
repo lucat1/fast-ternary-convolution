@@ -12,14 +12,32 @@
 
 namespace baseline {
 
-// output: point to n * c * h * w floats (batch_size * kernel_number *
-// output_height * output_width)
-void conv(ConvolutionType type, int *btn_cnt1, float *input,
-          uint32_t input_height, uint32_t input_width, uint32_t padding_height,
-          uint32_t padding_width, float *quant_threshold, int num_channels,
-          int64_t *quant_weights, uint32_t batch_size, uint32_t stride_height,
-          uint32_t stride_width, uint32_t kernel_number, uint32_t kernel_height,
-          uint32_t kernel_width, float relu_alpha, float *output) {
+// Input: (N, C, H, W)
+// Kernel: (KN, KH, KW, C, B)
+// Thresholds: (N)
+Tensor4D<float> conv(const Tensor4D<float> &_input,
+                     const Tensor1D<float> &_thresholds,
+                     const size_t _padding_h, const size_t _padding_w,
+                     const Tensor5D<int64_t> &_kernel, const size_t _stride_h,
+                     const size_t _stride_w, float _relu_alpha) {
+  ConvolutionType type = ConvolutionType::TNN;
+  int *btn_cnt1 = nullptr;
+  float *input = _input.data;
+  uint32_t input_height = _input.dim3;
+  uint32_t input_width = _input.dim4;
+  uint32_t padding_height = _padding_h;
+  uint32_t padding_width = _padding_w;
+  float *quant_threshold = _thresholds.data;
+  int num_channels = _input.dim2;
+  int64_t *quant_weights = _kernel.data;
+  uint32_t batch_size = _input.dim1;
+  uint32_t stride_height = _stride_h;
+  uint32_t stride_width = _stride_w;
+  uint32_t kernel_number = _kernel.dim1;
+  uint32_t kernel_height = _kernel.dim2;
+  uint32_t kernel_width = _kernel.dim3;
+  float relu_alpha = _relu_alpha;
+
   size_t packed_height, packed_width, packed_channels, output_height,
       output_width, fused_height, fused_width;
   packed_height = input_height + 2 * padding_height;
@@ -27,8 +45,8 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
   packed_channels = (num_channels % CNTBITS) ? ((num_channels / CNTBITS) + 1)
                                              : (num_channels / CNTBITS);
 
-  output_height = (packed_height - kernel_height + 1) / stride_height;
-  output_width = (packed_width - kernel_width + 1) / stride_width;
+  output_height = (packed_height - kernel_height) / stride_height + 1;
+  output_width = (packed_width - kernel_width) / stride_width + 1;
 
   fused_height = output_height * output_width;
   fused_width = kernel_height * kernel_width * (packed_channels * BITS);
@@ -112,14 +130,17 @@ void conv(ConvolutionType type, int *btn_cnt1, float *input,
 
   // Activation function: PReLU
 
+  Tensor4D<float> output = Tensor4D<float>(batch_size, output_height,
+                                           output_width, kernel_number, false);
   PReLU(y_intermediate, batch_size, kernel_number, output_height, output_width,
-        relu_alpha, output);
+        relu_alpha, output.data);
 
   measure_point(MeasurementFunction::FREE, MeasurementEvent::START);
   alloc::free(qx);
   alloc::free(i2rqx);
   alloc::free(y_intermediate);
   measure_point(MeasurementFunction::FREE, MeasurementEvent::END);
+  return output;
 }
 
 } // namespace baseline

@@ -1,53 +1,28 @@
 #include "problem_data.hpp"
 #include "common.hpp"
 
-using namespace std;
+Data::Data(ConvolutionType conv_type, DataOrder data_order, size_t batch_size,
+           size_t channels, size_t input_h, size_t input_w, size_t kernel_n,
+           size_t kernel_h, size_t kernel_w, size_t padding_h, size_t padding_w,
+           size_t stride_h, size_t stride_w, float relu_alpha)
+    : conv_type(conv_type), data_order(data_order), batch_size(batch_size),
+      channels(channels), input_h(input_h), input_w(input_w),
+      kernel_n(kernel_n), kernel_h(kernel_h), kernel_w(kernel_w),
+      padding_h(padding_h), padding_w(padding_w), stride_h(stride_h),
+      stride_w(stride_w), relu_alpha(relu_alpha),
 
-Shape4D::Shape4D(size_t fst_dim, size_t snd_dim, size_t height, size_t width)
-    : fst_dim(fst_dim), snd_dim(snd_dim), height(height), width(width),
-      size(fst_dim * snd_dim * height * width) {}
+      input(batch_size, nchw_or_nhwc(channels, input_h),
+            nchw_or_nhwc(input_h, input_w), nchw_or_nhwc(input_w, channels),
+            false),
+      threshold(batch_size, false),
+      // NOTE: the kernel is, regardless of data_order, always in the shape:
+      // (KN, KH, KW, PC, B), where PC is packed channels, and B=2
+      kernel(kernel_n, kernel_h, kernel_w, int64s_for_bits(channels), 2,
+             false) {}
 
-Shape5D::Shape5D(size_t fst_dim, size_t snd_dim, size_t trd_dim, size_t height,
-                 size_t width)
-    : fst_dim(fst_dim), snd_dim(snd_dim), trd_dim(trd_dim), height(height),
-      width(width), size(fst_dim * snd_dim * trd_dim * height * width) {}
-
-Shape2D packed_size(Parameters &p, Shape2D base) {
-  const int packed_height = base.height + 2 * p.padding_size.height;
-  const int packed_width = base.width + 2 * p.padding_size.width;
-  return Shape2D(packed_height, packed_width);
-}
-
-size_t pckd_chans(Parameters &p) {
-  return (p.num_channels % CNTBITS) ? ((p.num_channels / CNTBITS) + 1)
-                                    : (p.num_channels / CNTBITS);
-}
-
-Shape4D y_shape(Parameters &p) {
-  auto packed_input_size = packed_size(p, p.input_size);
-  uint32_t output_height =
-      (packed_input_size.height - p.kernel_size.height) /
-      p.stride_size.height + 1;
-  uint32_t output_width =
-      (packed_input_size.width - p.kernel_size.width) / p.stride_size.width + 1;
-
-  // TODO: in this input this is num_channels. In the output, it is kernel
-  // number. Does this make sense?
-  return Shape4D(p.batch_size, p.kernel_number, output_height, output_width);
-}
-
-Data::Data(Parameters p)
-    : Parameters(p), packed_input_size(packed_size(p, input_size)),
-      packed_kernel_size(packed_size(p, kernel_size)),
-      packed_channels(pckd_chans(p)),
-      x(batch_size, num_channels, input_size.height, input_size.width, true),
-      quant_threshold(max(kernel_number, batch_size), true),
-      quant_weights(kernel_number, packed_kernel_size.height,
-                    packed_kernel_size.width, packed_channels, BITS, true),
-      // This only needs to be allocated when conv_type == BTN, but there it's
-      // always allocated for convenience.
-      btn_cnt(kernel_number, true), y(y_shape(p), true) {
-  // TODO: ask for this
-  // +1 on `x` is required as ternarize_* does an off-by-one access
-  // This is required only when doing a BTN
-}
+Data::Data(ConvolutionType conv_type, DataOrder data_order, InfraParameters p,
+           float relu_alpha)
+    : Data(conv_type, data_order, p.batch_size, p.channels, p.input_height,
+           p.input_width, p.kernel_number, p.kernel_height, p.kernel_width,
+           p.padding_size, p.padding_size, p.stride_size, p.stride_size,
+           relu_alpha) {}

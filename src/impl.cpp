@@ -1,7 +1,7 @@
 #include "impl.hpp"
 
-Implementation::Implementation(string name, ConvFunc func)
-    : name(name), fn(func) {}
+Implementation::Implementation(string name, DataOrder data_order, ConvFunc func)
+    : name(name), data_order(data_order), fn(func) {}
 
 Registry::Registry() {}
 

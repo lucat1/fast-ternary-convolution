@@ -1,5 +1,6 @@
 #include "impl/baseline_nhwc/im2row.hpp"
 
+namespace baseline_nhwc {
 // NOTE Specialize this for ternary?
 
 // Reshape (N, H, W, C, B) into (N, OH, OW, KH, KW, C, B) using im2row.
@@ -56,4 +57,5 @@ Tensor7D<int64_t> im2row(const Tensor5D<int64_t>& data,
     }
   }
   return reshaped_data;
+}
 }
