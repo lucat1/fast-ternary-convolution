@@ -1,6 +1,5 @@
 #include "bench.hpp"
 #include "impl.hpp"
-#include "impl/baseline/tab.hpp"
 #include "impl/baseline_original/tab.hpp"
 #include "impl/baseline_nchw/tab.hpp"
 #include "impl/baseline_nhwc/tab.hpp"
@@ -19,7 +18,6 @@ using namespace std;
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
     {"baseline_original", DataOrder::NCHW, baseline_original::conv},
-      {"baseline", DataOrder::NCHW, baseline::conv},
       {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
       {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
   };
