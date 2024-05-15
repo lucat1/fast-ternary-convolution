@@ -1,0 +1,5 @@
+py-cpuinfo
+pandas
+matplotlib
+py-cpuinfo
+pandas
