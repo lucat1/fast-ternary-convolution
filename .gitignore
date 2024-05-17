@@ -41,3 +41,5 @@ compile_commands.json
 tnn
 benchmarks/*
 benchmark.csv
+*.egg-info
+**__pycache__/
