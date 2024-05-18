@@ -44,4 +44,4 @@ Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
 
   return output;
 }
-}
+} // namespace baseline_nhwc
