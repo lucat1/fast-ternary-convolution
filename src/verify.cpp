@@ -36,7 +36,7 @@ size_t compare_nhwc(Tensor4D<float> &x, Tensor4D<float> &y) {
   return 1;
 }
 
-// uint32_t num_channels;
+// uint32_t channels;
 // uint32_t batch_size;
 // size_t input_height;
 // size_t input_width;
@@ -151,11 +151,11 @@ void verify(Registry r) {
       // -- what we're already doing for TNN
       // else
       //   baseline::binarize_NCHW_to_NHWC(
-      //       data.weights.data, 0, 0, data.kernel_number, data.num_channels,
+      //       data.weights.data, 0, 0, data.kernel_number, data.channels,
       //       data.kernel_size.height, data.kernel_size.width,
       //       data.quant_weights.data);
       // if (conv_type == ConvolutionType::BTN)
-      //   baseline::btn_cnt_w2(data.quant_weights.data, data.num_channels,
+      //   baseline::btn_cnt_w2(data.quant_weights.data, data.channels,
       //                        data.kernel_number, data.kernel_size.height,
       //                        data.kernel_size.width, data.btn_cnt.data);
 

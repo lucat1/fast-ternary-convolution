@@ -33,7 +33,7 @@ def get_work_for_function(benchmark_info: pd.Series) -> Tuple[int, int]:
     if func == Function.TERNARIZE.value:
         return ternarize_w(
             benchmark_info.batch_size,
-            benchmark_info.num_channels,
+            benchmark_info.channels,
             benchmark_info.input_height,
             benchmark_info.input_width)
 
@@ -50,7 +50,7 @@ def get_work_for_function(benchmark_info: pd.Series) -> Tuple[int, int]:
     if func == Function.BINARIZE.value:
         return binarize_count(
                 benchmark_info.batch_size,
-                benchmark_info.num_channels,
+                benchmark_info.channels,
                 benchmark_info.input_height,
                 benchmark_info.input_width)
 
@@ -102,7 +102,7 @@ def get_data_movement_for_function(benchmark_info: pd.Series) -> int:
     if func == Function.TERNARIZE.value:
         return ternarize_q(
             benchmark_info.batch_size,
-            benchmark_info.num_channels,
+            benchmark_info.channels,
             benchmark_info.input_height,
             benchmark_info.input_width)
 
@@ -120,7 +120,7 @@ def get_data_movement_for_function(benchmark_info: pd.Series) -> int:
     # if func == Function.BINARIZE.value:
     #     return binarize_count(
     #             benchmark_info.batch_size,
-    #             benchmark_info.num_channels,
+    #             benchmark_info.channels,
     #             benchmark_info.input_height,
     #             benchmark_info.input_width)
     #

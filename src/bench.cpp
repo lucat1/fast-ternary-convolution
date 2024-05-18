@@ -104,7 +104,7 @@ map<MeasurementFunction, uint64_t> average(vector<vector<Interval>> raw) {
 
 const constexpr size_t conv_type_space = 3;
 const constexpr size_t cycles_space = 12;
-const constexpr size_t num_channels_space = 5;
+const constexpr size_t channels_space = 5;
 const constexpr size_t batch_size_space = 2;
 const constexpr size_t kernel_number_space = 4;
 const constexpr size_t input_height_space = 3;
@@ -115,7 +115,7 @@ const constexpr size_t padding_size_space = 1;
 const constexpr size_t stride_size_space = 1;
 
 void print_line(ofstream &csv, string impl_name, ConvolutionType ct,
-                MeasurementFunction mf, uint64_t cycles, uint32_t num_channels,
+                MeasurementFunction mf, uint64_t cycles, uint32_t channels,
                 int batch_size, uint32_t kernel_number, size_t input_height,
                 size_t input_width, size_t kernel_height, size_t kernel_width,
                 size_t padding_size, size_t stride_size) {
@@ -128,8 +128,8 @@ void print_line(ofstream &csv, string impl_name, ConvolutionType ct,
 #ifdef PRINT_ALL
          << setw(9) << measurement_function_name(mf) << " "
 #endif
-         << setw(cycles_space) << cycles << " " << setw(num_channels_space)
-         << num_channels << " " << setw(batch_size_space) << batch_size << " "
+         << setw(cycles_space) << cycles << " " << setw(channels_space)
+         << channels << " " << setw(batch_size_space) << batch_size << " "
          << setw(kernel_number_space) << kernel_number << " "
          << setw(input_height_space) << input_height << " "
          << setw(input_width_space) << input_width << " "
@@ -140,7 +140,7 @@ void print_line(ofstream &csv, string impl_name, ConvolutionType ct,
   }
 
   csv << impl_name << "," << convolution_name(ct) << ","
-      << measurement_function_name(mf) << "," << cycles << "," << num_channels
+      << measurement_function_name(mf) << "," << cycles << "," << channels
       << "," << batch_size << "," << kernel_number << "," << input_height << ","
       << input_width << "," << kernel_height << "," << kernel_width << ","
       << padding_size << "," << stride_size << endl;
@@ -162,7 +162,7 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
        << " "
 #endif
        << setw(cycles_space) << "cycles"
-       << " " << setw(num_channels_space) << "c"
+       << " " << setw(channels_space) << "c"
        << " " << setw(batch_size_space) << "b"
        << " " << setw(kernel_number_space) << "kn"
        << " " << setw(input_height_space) << "h"
@@ -172,7 +172,7 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
        << " " << setw(padding_size_space) << "p"
        << " " << setw(stride_size_space) << "s" << endl;
 
-  csv << "name,ct,fn,cycles,num_channels,batch_size,kernel_number,input_"
+  csv << "name,ct,fn,cycles,channels,batch_size,kernel_number,input_"
          "height,input_width,kernel_height,kernel_width,padding_size,stride_"
          "size"
       << endl;
@@ -193,7 +193,7 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
       // }
     }
     cout << std::string(impl_name_space + conv_type_space + cycles_space +
-                            num_channels_space + batch_size_space +
+                            channels_space + batch_size_space +
                             kernel_number_space + input_height_space +
                             input_width_space + kernel_height_space +
                             kernel_width_space + padding_size_space +

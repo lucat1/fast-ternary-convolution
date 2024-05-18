@@ -6,11 +6,11 @@ from typing import Tuple
 
 def binarize_count(
         batch_size: int,
-        num_channels: int,
+        channels: int,
         input_height: int,
         input_width: int) -> Tuple[int, int]:
     """Total operation count for binarize_NCHW_to_NHWC."""
-    pri_channel = num_channels / CNTBITS
+    pri_channel = channels / CNTBITS
 
     iops = 0
     flops = 0
@@ -26,7 +26,7 @@ def binarize_count(
     # qx[..] = p1
 
     # input[..] < quant_threshold[in]
-    iops += batch_size * input_height * input_width * (num_channels % CNTBITS)
+    iops += batch_size * input_height * input_width * (channels % CNTBITS)
     # NOTE: account for assignments
     # qx[..] = p1
     return (ceil(iops), ceil(flops))

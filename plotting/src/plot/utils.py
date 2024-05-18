@@ -27,7 +27,7 @@ def output_to_dict(cmd_output: str) -> dict[str, str]:
 
 def get_input_size(benchmark_info: pd.Series) -> int:
     # return (
-    #     8*benchmark_info.num_channels*benchmark_info.batch_size
+    #     8*benchmark_info.channels*benchmark_info.batch_size
     #         *benchmark_info.input_height*benchmark_info.input_width
     # )
     return (benchmark_info.input_height*benchmark_info.input_width)
@@ -77,10 +77,10 @@ def get_experiment_masks(df:pd.DataFrame)-> list[tuple[pd.DataFrame,str]]:
     masks = []
     masks.append(((df["kernel_height"] == 3) & (df["kernel_width"] == 3) 
                  & (df["stride_size"] == 1) & (df["input_height"] <= 56)
-                 & (df["num_channels"] <=256),"Varying tensor shape")
+                 & (df["channels"] <=256),"Varying tensor shape")
     )
-    masks.append((df["num_channels"] == 80,"Varying conv stride"))
-    masks.append((df["num_channels"] == 512,"Varying kernel size"))
+    masks.append((df["channels"] == 80,"Varying conv stride"))
+    masks.append((df["channels"] == 512,"Varying kernel size"))
     #TODO: Will add this mask later
     #masks.append((df["input_height"] == 1,"Varying kernel number"))
     return masks

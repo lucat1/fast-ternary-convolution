@@ -29,7 +29,7 @@ def conv_op_count(benchmark_info: pd.Series) -> Tuple[int, int]:
         case (ConvType.TNN | ConvType.TBN):
             ternarize_iops, ternarize_flops = ternarize_w(
                 benchmark_info.batch_size,
-                benchmark_info.num_channels,
+                benchmark_info.channels,
                 benchmark_info.input_height,
                 benchmark_info.input_width)
             iops += ternarize_iops
@@ -49,7 +49,7 @@ def conv_op_count(benchmark_info: pd.Series) -> Tuple[int, int]:
         case (ConvType.BTN | ConvType.BNN):
             binarize_iops, binarize_flops = binarize_count(
                 benchmark_info.batch_size,
-                benchmark_info.num_channels,
+                benchmark_info.channels,
                 benchmark_info.input_height,
                 benchmark_info.input_width)
             iops += binarize_iops

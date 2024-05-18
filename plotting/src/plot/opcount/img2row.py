@@ -6,7 +6,7 @@ from typing import Tuple
 
 def img2row_NHWCB_to_N_OHOW_KHKWC_assign_count(
         batch_size: int,
-        num_channels: int,
+        channels: int,
         input_height: int,
         input_width: int,
         kernel_height: int,
@@ -20,12 +20,12 @@ def img2row_NHWCB_to_N_OHOW_KHKWC_assign_count(
         output_width * \
         kernel_height * \
         kernel_width * \
-        num_channels
+        channels
 
 
 def img2row_count(
         batch_size: int,
-        num_channels: int,
+        channels: int,
         input_height: int,
         input_width: int,
         kernel_height: int,

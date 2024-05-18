@@ -17,10 +17,10 @@ def packed_input_dims(params: pd.Series) -> PackedDims:
     """Get packed data dimensions."""
     packed_height = params.input_height + 2 * params.padding_size
     packed_width = params.input_width + 2 * params.padding_size
-    if params.num_channels % CNTBITS != 0:
-        packed_channels = params.num_channels // CNTBITS + 1
+    if params.channels % CNTBITS != 0:
+        packed_channels = params.channels // CNTBITS + 1
     else:
-        packed_channels = params.num_channels // CNTBITS
+        packed_channels = params.channels // CNTBITS
     return PackedDims(packed_height, packed_width, packed_channels)
 
 @dataclass
