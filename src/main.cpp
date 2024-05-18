@@ -58,16 +58,16 @@ int main(int argc, char *argv[]) {
       measure = true;
       break;
     case 'h':
-      cout << "USAGE " << argv[0] << ":" << endl;
-      cout << "\t-i <impl,>\t\tRun only on the sleected implementations" << endl
+      cerr << "USAGE " << argv[0] << ":" << endl;
+      cerr << "\t-i <impl,>\t\tRun only on the sleected implementations" << endl
            << "\t\t\t\tMultiple can be specified separated by a comma." << endl;
-      cout << "\t-p <params.csv>\t\tProvide parameters for the benchmark"
+      cerr << "\t-p <params.csv>\t\tProvide parameters for the benchmark"
            << endl;
-      cout << "\t-o <out.csv>\t\tSpecify the output locatin for the benchark "
+      cerr << "\t-o <out.csv>\t\tSpecify the output locatin for the benchark "
               "data"
            << endl;
-      cout << "\t-t\t\t\tEnable testing" << endl;
-      cout << "\t-b\t\t\tEnable benchmarking" << endl;
+      cerr << "\t-t\t\t\tEnable testing" << endl;
+      cerr << "\t-b\t\t\tEnable benchmarking" << endl;
       exit(0);
       break;
     case 'i':
@@ -83,12 +83,15 @@ int main(int argc, char *argv[]) {
       assert(!p.fail());
 
       // Ignore the first line
-      getline(p, __str);
+      if (!getline(p, __str)) {
+        cerr << "Error reading csv file header" << endl;
+        return 1;
+      }
 
-      while (!p.eof()) {
-        p >> param;
+      while (p >> param) {
         params.push_back(param);
       };
+      p.close();
       break;
     case 'o':
       bench_out = string(optarg);

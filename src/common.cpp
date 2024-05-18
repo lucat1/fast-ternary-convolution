@@ -2,6 +2,7 @@
 #include <map>
 
 #include <fstream>
+#include <sstream>
 #include <vector>
 
 map<ConvolutionType, string> __ctn = {{ConvolutionType::TNN, "TNN"},
@@ -21,34 +22,39 @@ InfraParameters::InfraParameters(uint32_t channels, size_t batch_size,
       kernel_height(kernel_height), kernel_width(kernel_width),
       padding_size(padding_size), stride_size(stride_size) {}
 
-// From: https://en.cppreference.com/w/cpp/locale/ctype_char
-
-// This ctype facet classifies commas and endlines as whitespace
-struct csv_whitespace : ctype<char> {
-  static const mask *make_table() {
-    // make a copy of the "C" locale table
-    static vector<mask> v(classic_table(), classic_table() + table_size);
-    v[','] |= space;  // comma will be classified as whitespace
-    v[' '] &= ~space; // space will not be classified as whitespace
-    return &v[0];
-  }
-
-  csv_whitespace(::size_t refs = 0) : ctype(make_table(), false, refs) {}
-};
-
 fstream &operator>>(fstream &is, InfraParameters &params) {
-  auto prev = is.imbue(std::locale(is.getloc(), new csv_whitespace));
+  std::string line;
+  if (std::getline(is, line)) {
+    std::stringstream ss(line);
+    std::string item;
 
-  is >> params.channels;
-  is >> params.batch_size;
-  is >> params.input_height;
-  is >> params.input_width;
-  is >> params.kernel_number;
-  is >> params.kernel_height;
-  is >> params.kernel_width;
-  is >> params.padding_size;
-  is >> params.stride_size;
-
-  is.imbue(prev);
+    if (std::getline(ss, item, ',')) {
+      params.channels = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.batch_size = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.input_height = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.input_width = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.kernel_number = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.kernel_height = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.kernel_width = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.padding_size = std::stoi(item);
+    }
+    if (std::getline(ss, item, ',')) {
+      params.stride_size = std::stoi(item);
+    }
+  }
   return is;
 }

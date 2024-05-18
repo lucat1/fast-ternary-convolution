@@ -1,4 +1,4 @@
-num_channels,batch_size,input_height,input_width,kernel_number,kernel_height,kernel_width,padding_size,stride_size
+channels,batch_size,input_height,input_width,kernel_number,kernel_height,kernel_width,padding_size,stride_size
 16,1,56,56,64,3,3,2,2
 32,1,56,56,64,3,3,2,2
 64,1,56,56,64,3,3,2,2
