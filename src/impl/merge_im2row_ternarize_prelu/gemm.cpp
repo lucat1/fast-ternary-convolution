@@ -1,10 +1,11 @@
-#include "impl/baseline_nhwc/gemm.hpp"
+#include "impl/merge_im2row_ternarize_prelu/gemm.hpp"
 #include "common.hpp"
 
-namespace baseline_nhwc {
+namespace merge_im2row_ternarize_prelu {
 // Multiply two matrices containing ternary values together (Algorithm 3).
-Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
-                               const Tensor5D<int64_t> &kernel) {
+Tensor4D<float> ternary_gemm(const Tensor7D<int64_t> &activation,
+                             const Tensor5D<int64_t> &kernel,
+                             const float relu_alpha) {
   // our sizes
   const size_t batch_size = activation.dim1;
   const size_t output_height = activation.dim2;
@@ -23,8 +24,8 @@ Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
   assert(K == kernel.dim2 * kernel.dim3 * kernel.dim4 * kernel.dim5);
 
   // NOTE In the original code he initializes this to 0. Why?
-  Tensor4D<int64_t> output(batch_size, output_height, output_width,
-                           kernel_number, false);
+  Tensor4D<float> output(batch_size, output_height, output_width, kernel_number,
+                         false);
 
   for (size_t im = 0; im < M; im++) {
     for (size_t in = 0; in < N; in++) {
@@ -38,10 +39,10 @@ Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
         cntp1 += popcnt64(p2);
         cntp2 += popcnt64(p1 & p2);
       }
-      output.set_123_4(cntp1 - cntp2 - cntp2, im, in);
+      output.set_123_4((cntp1 - cntp2 - cntp2) * relu_alpha, im, in);
     }
   }
 
   return output;
 }
-} // namespace baseline_nhwc
+} // namespace merge_im2row_ternarize_prelu
