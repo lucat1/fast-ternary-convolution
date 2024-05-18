@@ -1,6 +1,10 @@
 #pragma once
 #include "alloc.hpp"
 
+// Toggle inlining of get and set methods
+// NOTE: this is already enabled when you compile with `make` or `make optimize`
+// #define INLINE
+
 // TODO Remove unused getters/setters
 
 // NOTE It may be a good idea to simplify the index computations when we inline
@@ -38,8 +42,29 @@ public:
     }
   }
 
-  T get(const size_t i, const size_t j, const size_t k, const size_t l,
-        const size_t m) const {
+#ifdef INLINE
+  inline
+#endif
+      T *
+      addr(const size_t i, const size_t j, const size_t k, const size_t l,
+           const size_t m) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+    assert(l < dim4);
+    assert(m < dim5);
+
+    return &data[(i * (dim2 * dim3 * dim4 * dim5)) +
+                 (j * (dim3 * dim4 * dim5)) + (k * (dim4 * dim5)) +
+                 (l * (dim5)) + m];
+  }
+
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i, const size_t j, const size_t k, const size_t l,
+          const size_t m) const {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -52,15 +77,34 @@ public:
 
   // Get element from the tensor interpreting it as a 2D tensor where the last 4
   // dimensions are merged.
-  T get_1_2345(const size_t i, const size_t j) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get_1_2345(const size_t i, const size_t j) const {
     assert(i < dim1);
     assert(j < dim2 * dim3 * dim4 * dim5);
 
     return data[i * dim2 * dim3 * dim4 * dim5 + j];
   }
 
-  void set(const T value, const size_t i, const size_t j, const size_t k,
-           const size_t l, const size_t m) {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get_123_4_5(const size_t i, const size_t j, const size_t k) const {
+    assert(i < dim1 * dim2 * dim3);
+    assert(j < dim4);
+    assert(k < dim5);
+    return data[i * dim4 * dim5 + j * dim5 + k];
+  }
+
+#ifdef INLINE
+  inline
+#endif
+      void
+      set(const T value, const size_t i, const size_t j, const size_t k,
+          const size_t l, const size_t m) {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -96,6 +140,104 @@ public:
   Tensor5D &operator=(Tensor5D &&) = delete;
 };
 
+template <typename T> class Tensor3D {
+public:
+  // cannot be const as move constructor may set it to nullptr
+  T *data;
+  const size_t dim1;
+  const size_t dim2;
+  const size_t dim3;
+
+  // Construct a new five dimensional tensor.
+  // Input:
+  //  dim{i}: the size of the i-th dimension
+  //  zero: if true, initializes the memory with zero.
+  Tensor3D(const size_t dim1, const size_t dim2, const size_t dim3,
+           const bool zero)
+      : data(zero ? alloc::calloc<T>(dim1 * dim2 * dim3)
+                  : alloc::alloc<T>(dim1 * dim2 * dim3)),
+        dim1(dim1), dim2(dim2), dim3(dim3) {}
+
+  // Destructor: automatically cleans up memory when the object leaves the
+  // scope.
+  ~Tensor3D() {
+    // pointer may be zero due to the move constructor moving the data out
+    if (data != nullptr) {
+      alloc::free(data);
+    }
+  }
+
+#ifdef INLINE
+  inline
+#endif
+      T *
+      addr(const size_t i, const size_t j, const size_t k) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+
+    return &data[(i * (dim2 * dim3)) + (j * (dim3)) + k];
+  }
+
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i, const size_t j, const size_t k) const {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+
+    return data[(i * (dim2 * dim3)) + (j * (dim3)) + k];
+  }
+
+  // Get an element from the tensor by interpreting it as a 1D tensor where
+  // dimensions 1, 2 and 3 are merged
+#ifdef INLINE
+  inline
+#endif
+      T
+      get_123(const size_t i) const {
+    assert(i < dim1 * dim2 * dim3);
+    return data[i];
+  }
+
+#ifdef INLINE
+  inline
+#endif
+      void
+      set(const T value, const size_t i, const size_t j, const size_t k) {
+    assert(i < dim1);
+    assert(j < dim2);
+    assert(k < dim3);
+
+    data[(i * (dim2 * dim3)) + (j * (dim3)) + k] = value;
+  }
+
+  // Rule of Five: either define all of the essential operations, or none.
+  // - default constructor: unnecessary
+  // - do not allow copying (expensive; do it manually if needed)
+  // - no move assignment: want dimensions to stay const if possible
+  // - move constructor: not sure whether it will be used, but at least the
+  //   compiler needs it (cannot guarantee NRVO)
+
+  // Default constructor
+  Tensor3D() = delete;
+  // Copy constructor
+  Tensor3D(const Tensor3D &) = delete;
+  // Copy assignment
+  Tensor3D &operator=(const Tensor3D &) = delete;
+  // Move constructor
+  Tensor3D(Tensor3D &&other)
+      : data(other.data), dim1(other.dim1), dim2(other.dim2), dim3(other.dim3) {
+    // if we do not change this to nullptr, destructing this and other will
+    // (probably) lead to a double free.
+    other.data = nullptr;
+  }
+  // Move assignment
+  Tensor3D &operator=(Tensor3D &&) = delete;
+};
+
 // Implements a four dimensional tensor for basic types.
 template <typename T> class Tensor4D {
 public:
@@ -115,7 +257,12 @@ public:
                   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4)),
         dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4) {}
 
-  T get(const size_t i, const size_t j, const size_t k, const size_t l) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i, const size_t j, const size_t k,
+          const size_t l) const {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -125,8 +272,12 @@ public:
                 l];
   }
 
-  void set(const T value, const size_t i, const size_t j, const size_t k,
-           const size_t l) {
+#ifdef INLINE
+  inline
+#endif
+      void
+      set(const T value, const size_t i, const size_t j, const size_t k,
+          const size_t l) {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -138,7 +289,11 @@ public:
 
   // Set an element in the tensor by interpreting it as a 2D tensor where the
   // first 3 dimensions have been merged.
-  void set_123_4(const T value, const size_t i, const size_t j) {
+#ifdef INLINE
+  inline
+#endif
+      void
+      set_123_4(const T value, const size_t i, const size_t j) {
     assert(i < dim1 * dim2 * dim3);
     assert(j < dim4);
 
@@ -168,10 +323,8 @@ public:
   Tensor4D &operator=(Tensor4D &&) = delete;
 };
 
-
 // Reshapes a tensor from (N, H, W, C) to (N, C, H, W)
-template <typename T>
-Tensor4D<T> reshape_nhwc_nchw(const Tensor4D<T> &src) {
+template <typename T> Tensor4D<T> reshape_nhwc_nchw(const Tensor4D<T> &src) {
   const size_t N = src.dim1;
   const size_t H = src.dim2;
   const size_t W = src.dim3;
@@ -209,14 +362,22 @@ public:
                   : alloc::alloc<T>(dim1 * dim2)),
         dim1(dim1), dim2(dim2) {}
 
-  T get(const size_t i, const size_t j) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i, const size_t j) const {
     assert(i < dim1);
     assert(j < dim2);
 
     return data[i * dim2 + j];
   }
 
-  void set(const T value, const size_t i, const size_t j) {
+#ifdef INLINE
+  inline
+#endif
+      void
+      set(const T value, const size_t i, const size_t j) {
     assert(i < dim1);
     assert(j < dim2);
 
@@ -259,7 +420,11 @@ public:
       : data(zero ? alloc::calloc<T>(size) : alloc::alloc<T>(size)),
         size(size) {}
 
-  T get(const size_t i) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i) const {
     assert(i < size);
     return data[i];
   }
@@ -321,8 +486,12 @@ public:
     }
   }
 
-  T get(const size_t i, const size_t j, const size_t k, const size_t l,
-        const size_t m, const size_t n, const size_t o) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get(const size_t i, const size_t j, const size_t k, const size_t l,
+          const size_t m, const size_t n, const size_t o) const {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
@@ -339,14 +508,22 @@ public:
 
   // Get an element from the tensor by interpreting it as a 2D tensor where
   // dimensions 1, 2 and 3 are merged, and 4, 5, 6 and 7 are merged.
-  T get_123_4567(const size_t i, const size_t j) const {
+#ifdef INLINE
+  inline
+#endif
+      T
+      get_123_4567(const size_t i, const size_t j) const {
     assert(i < dim1 * dim2 * dim3);
     assert(j < dim4 * dim5 * dim6 * dim7);
     return data[i * dim4 * dim5 * dim6 * dim7 + j];
   }
 
-  void set(const T value, const size_t i, const size_t j, const size_t k,
-           const size_t l, const size_t m, const size_t n, const size_t o) {
+#ifdef INLINE
+  inline
+#endif
+      void
+      set(const T value, const size_t i, const size_t j, const size_t k,
+          const size_t l, const size_t m, const size_t n, const size_t o) {
     assert(i < dim1);
     assert(j < dim2);
     assert(k < dim3);
