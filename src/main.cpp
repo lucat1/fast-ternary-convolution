@@ -1,9 +1,12 @@
 #include "bench.hpp"
 #include "impl.hpp"
-#include "impl/baseline_original/tab.hpp"
 #include "impl/baseline_nchw/tab.hpp"
 #include "impl/baseline_nhwc/tab.hpp"
+#include "impl/baseline_original/tab.hpp"
+#include "impl/indirect_nhwc/tab.hpp"
 #include "impl/merge_im2row_ternarize/tab.hpp"
+#include "impl/more_indirect_nhwc/tab.hpp"
+#include "impl/more_indirect_prelu_nhwc/tab.hpp"
 #include "verify.hpp"
 
 #include <algorithm>
@@ -18,8 +21,13 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
-    {"merge_im2row_ternarize", DataOrder::NHWC, merge_im2row_ternarize::conv},
-    {"baseline_original", DataOrder::NCHW, baseline_original::conv},
+      {"merge_im2row_ternarize", DataOrder::NHWC, merge_im2row_ternarize::conv},
+      {"indirect_nhwc", DataOrder::NHWC, indirect_nhwc::conv},
+      {"more_indirect_prelu_nhwc", DataOrder::NHWC,
+       more_indirect_prelu_nhwc::conv},
+      {"more_indirect_nhwc", DataOrder::NHWC, more_indirect_nhwc::conv},
+      {"baseline_original", DataOrder::NCHW, baseline_original::conv},
+      {"indirect_nhwc", DataOrder::NHWC, indirect_nhwc::conv},
       {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
       {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
   };

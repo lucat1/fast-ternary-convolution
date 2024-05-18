@@ -1,6 +1,9 @@
 #!/bin/sh -ex
 
 # make clean
-make
-taskset -a -c 0 ./tnn -t -b -p parameters/batch_size_md.csv -o benchmarks/batch_size_md.csv
-taskset -a -c 0 ./tnn -t -b -p parameters/batch_size_lg.csv -o benchmarks/batch_size_lg.csv
+make optimize
+
+for file in $(ls parameters); do
+  echo "running $file..."
+  taskset -a -c 0 ./tnn -t -b -p parameters/$file -o benchmarks/$file
+done

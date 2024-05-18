@@ -192,8 +192,16 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
                    bc.kernel_width, bc.padding_size, bc.stride_size);
       // }
     }
+    cout << std::string(impl_name_space + conv_type_space + cycles_space +
+                            num_channels_space + batch_size_space +
+                            kernel_number_space + input_height_space +
+                            input_width_space + kernel_height_space +
+                            kernel_width_space + padding_size_space +
+                            stride_size_space + 2 * 12,
+                        '-')
+         << endl;
+    csv.close();
   }
-  csv.close();
 }
 
 void measure_overhead() {
