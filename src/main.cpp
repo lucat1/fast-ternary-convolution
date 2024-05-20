@@ -8,6 +8,7 @@
 #include "impl/merge_im2row_ternarize_prelu/tab.hpp"
 #include "impl/more_indirect_nhwc/tab.hpp"
 #include "impl/more_indirect_prelu_nhwc/tab.hpp"
+#include "impl/optmerge_im2row_ternarize/tab.hpp"
 #include "verify.hpp"
 
 #include <algorithm>
@@ -22,6 +23,8 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
+      {"optmerge_im2row_ternarize", DataOrder::NHWC,
+       optmerge_im2row_ternarize::conv},
       {"merge_im2row_ternarize", DataOrder::NHWC, merge_im2row_ternarize::conv},
       {"merge_im2row_ternarize_prelu", DataOrder::NHWC,
        merge_im2row_ternarize_prelu::conv},
