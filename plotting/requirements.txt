@@ -1,4 +1,0 @@
-py-cpuinfo
-pandas
-matplotlib
-pandas

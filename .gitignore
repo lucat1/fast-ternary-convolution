@@ -44,5 +44,7 @@ benchmark.csv
 *.egg-info
 **__pycache__/
 
+# Plots
+plots/*
 #img
 *.png
