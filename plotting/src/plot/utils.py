@@ -30,7 +30,7 @@ def get_input_size(benchmark_info: pd.Series) -> int:
     #     8*benchmark_info.channels*benchmark_info.batch_size
     #         *benchmark_info.input_height*benchmark_info.input_width
     # )
-    return (benchmark_info.input_height*benchmark_info.input_width)
+    return (benchmark_info.batch_size * benchmark_info.input_height*benchmark_info.input_width * benchmark_info.channels)
 
 def get_batch_size(benchmark_info: pd.Series) -> int:
     return benchmark_info.batch_size
@@ -38,7 +38,7 @@ def get_batch_size(benchmark_info: pd.Series) -> int:
 
 def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Function):
     # x_label="input_size"
-    ax.set_xlabel("Batch size")
+    ax.set_xlabel("Input size")
     ax.set_ylabel('Performance [ops/cycle]',
             rotation='horizontal',
             loc='top',
@@ -57,6 +57,7 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
 
     title = f"{machine.model} @ {machine.base_frequency}"
     ax.set_title(title)
+    ax.legend()
     plt.suptitle(function)
     
     plt.savefig(sav_loc)

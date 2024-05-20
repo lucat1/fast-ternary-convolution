@@ -34,8 +34,11 @@ def get_machine_info() -> MachInfo:
     num_cores = info.get('count')
     # model = info['brand_raw']
     model = "Intel Core i5-8265U"
-    L1_cache_size = info.get('l1_data_cache_size') // num_cores
-    L2_cache_size = info.get('l2_cache_size') // num_cores
+    
+    L1_cache_size = info.get('l1_data_cache_size')
+    L1_cache_size = L1_cache_size // num_cores if L1_cache_size is not None else L1_cache_size
+    L2_cache_size = info.get('l2_cache_size')
+    L2_cache_size = L2_cache_size // num_cores if L2_cache_size is not None else L2_cache_size
     L3_cache_size = info.get('l3_cache_size')
     # base_frequency = info.get('hz_advertised_friendly')
     base_frequency = "1.6GHz"

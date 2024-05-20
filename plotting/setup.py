@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='plot',
     version='0.1.0',
-    install_requires=[],
+    install_requires=["py-cpuinfo","pandas","matplotlib"],
     packages=find_packages('src'),
     package_dir={'': 'src'},
     author='ASL Team 19',
