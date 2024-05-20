@@ -43,3 +43,6 @@ benchmarks/*
 benchmark.csv
 *.egg-info
 **__pycache__/
+
+#img
+*.png
