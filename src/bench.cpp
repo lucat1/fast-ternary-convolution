@@ -200,8 +200,8 @@ void bench(Registry r, vector<InfraParameters> *params, string output) {
                             stride_size_space + 2 * 12,
                         '-')
          << endl;
-    csv.close();
   }
+  csv.close();
 }
 
 void measure_overhead() {
