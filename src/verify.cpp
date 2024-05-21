@@ -227,6 +227,7 @@ void verify(Registry r) {
         failed++;
         cout << "[" << (passed + failed) << "/" << total << "] Failed test case"
              << endl;
+        exit(1);
       }
       m->reset();
       //}
