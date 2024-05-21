@@ -2,96 +2,77 @@
 #include "common.hpp"
 
 // inner loop
-inline std::tuple<int64_t, int64_t>
-iil(const Tensor4D<float> &data, const Tensor1D<float> &thresholds,
-    int64_t *onebit, size_t in, size_t padded_data_h, size_t padding_h,
-    size_t padded_data_w, size_t padding_w, size_t ic, size_t bits) {
-  int64_t first_bits = 0;
-  int64_t second_bits = 0;
-  for (size_t bit = 0; bit < bits; bit++) {
-    // NOTE I wonder whether we can apply strength reduction
-    // here
-    float current_value =
-        data.get(in, padded_data_h - padding_h, padded_data_w - padding_w,
-                 ic * CNTBITS + bit);
-
-    // NOTE Do scalar replacement on thresholds
-    if (current_value > thresholds.get(in)) {
-      // Pack 1: 01 => only need to set second bit
-      second_bits |= onebit[bit];
-    } else if (current_value < -thresholds.get(in)) {
-      // Pack -1: 11 => need to set both bits
-      first_bits |= onebit[bit];
-      second_bits |= onebit[bit];
-    }
-    // else: Pack 0: 00 => no bits need to be set
-  }
-  return {first_bits, second_bits};
-}
-
-inline void copy_all_channels(Tensor7D<int64_t> &quantized_reshaped, size_t in,
-                              size_t io_h, size_t io_w, size_t ik_h,
-                              size_t ik_w, size_t offst_io_h, size_t offst_io_w,
-                              size_t offst_ik_h, size_t offst_ik_w,
-                              size_t full_blocks_c, size_t channels) {
-  size_t fbcpp = full_blocks_c + (channels % 64 ? 1 : 0);
-  for (size_t ic = 0; ic < fbcpp; ic++) {
-    int64_t v0 =
-        quantized_reshaped.get(in, io_h - offst_io_h, io_w - offst_io_w,
-                               ik_h + offst_ik_h, ik_w + offst_ik_w, ic, 0);
-    quantized_reshaped.set(v0, in, io_h, io_w, ik_h, ik_w, ic, 0);
-    int64_t v1 =
-        quantized_reshaped.get(in, io_h - offst_io_h, io_w - offst_io_w,
-                               ik_h + offst_ik_h, ik_w + offst_ik_w, ic, 1);
-    quantized_reshaped.set(v1, in, io_h, io_w, ik_h, ik_w, ic, 1);
-  }
-}
-
-inline void compute(const Tensor4D<float> &data,
-                    const Tensor1D<float> &thresholds, int64_t *onebit,
-                    Tensor7D<int64_t> &quantized_reshaped, size_t in,
-                    size_t io_h, size_t io_w, size_t ik_h, size_t ik_w,
-                    size_t padding_h, size_t padding_w, size_t stride_h,
-                    size_t stride_w, size_t packed_h, size_t packed_w,
-                    size_t full_blocks_c, size_t channels) {
-  // index into data, assuming it is padded (it is not)
-  const size_t padded_data_h = io_h * stride_h + ik_h;
-  const size_t padded_data_w = io_w * stride_w + ik_w;
-
-  for (size_t ic = 0; ic < full_blocks_c; ic++) {
-    // Account for lack of padding
-    if (!((padded_data_h < padding_h) ||
-          (padded_data_h >= (packed_h - padding_h)) ||
-          (padded_data_w < padding_w) ||
-          (padded_data_w >= (packed_w - padding_w)))) {
-      auto bits = iil(data, thresholds, onebit, in, padded_data_h, padding_h,
-                      padded_data_w, padding_w, ic, CNTBITS);
-      // Store the ternarized and packed data
-      quantized_reshaped.set(std::get<0>(bits), in, io_h, io_w, ik_h, ik_w, ic,
-                             0);
-      quantized_reshaped.set(std::get<1>(bits), in, io_h, io_w, ik_h, ik_w, ic,
-                             1);
-    }
+#define iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+            padded_data_w, padding_w, ic, bits, first_bits, second_bits)       \
+  {                                                                            \
+    for (size_t bit = 0; bit < bits; bit++) {                                  \
+      float current_value =                                                    \
+          tensor4d_get(data, in, padded_data_h - padding_h,                    \
+                       padded_data_w - padding_w, ic * CNTBITS + bit);         \
+      if (current_value > tensor1d_get(thresholds, in)) {                      \
+        second_bits |= onebit[bit];                                            \
+      } else if (current_value < -tensor1d_get(thresholds, in)) {              \
+        first_bits |= onebit[bit];                                             \
+        second_bits |= onebit[bit];                                            \
+      }                                                                        \
+    }                                                                          \
   }
 
-  // Process rest of the channels (< 64)
-  if (channels % 64) {
-    // Account for lack of padding in data
-    if (!((padded_data_h < padding_h) ||
-          (padded_data_h >= (packed_h - padding_h)) ||
-          (padded_data_w < padding_w) ||
-          (padded_data_w >= (packed_w - padding_w)))) {
-      auto bits = iil(data, thresholds, onebit, in, padded_data_h, padding_h,
-                      padded_data_w, padding_w, full_blocks_c, (channels % 64));
-
-      // Store the ternarized and packed data
-      quantized_reshaped.set(std::get<0>(bits), in, io_h, io_w, ik_h, ik_w,
-                             full_blocks_c, 0);
-      quantized_reshaped.set(std::get<1>(bits), in, io_h, io_w, ik_h, ik_w,
-                             full_blocks_c, 1);
-    }
+#define copy_all_channels(quantized_reshaped, in, io_h, io_w, ik_h, ik_w,      \
+                          offst_io_h, offst_io_w, offst_ik_h, offst_ik_w,      \
+                          full_blocks_c, channels)                             \
+  {                                                                            \
+    size_t fbcpp = full_blocks_c + (channels % 64 ? 1 : 0);                    \
+    for (size_t ic = 0; ic < fbcpp; ic++) {                                    \
+      int64_t v0 = tensor7d_get(quantized_reshaped, in, io_h - offst_io_h,     \
+                                io_w - offst_io_w, ik_h + offst_ik_h,          \
+                                ik_w + offst_ik_w, ic, 0);                     \
+      tensor7d_set(quantized_reshaped, v0, in, io_h, io_w, ik_h, ik_w, ic, 0); \
+      int64_t v1 = tensor7d_get(quantized_reshaped, in, io_h - offst_io_h,     \
+                                io_w - offst_io_w, ik_h + offst_ik_h,          \
+                                ik_w + offst_ik_w, ic, 1);                     \
+      tensor7d_set(quantized_reshaped, v1, in, io_h, io_w, ik_h, ik_w, ic, 1); \
+    }                                                                          \
   }
-}
+
+#define compute(data, thresholds, onebit, quantized_reshaped, in, io_h, io_w,  \
+                ik_h, ik_w, padding_h, padding_w, stride_h, stride_w,          \
+                packed_h, packed_w, full_blocks_c, channels)                   \
+  {                                                                            \
+    const size_t padded_data_h = io_h * stride_h + ik_h;                       \
+    const size_t padded_data_w = io_w * stride_w + ik_w;                       \
+    for (size_t ic = 0; ic < full_blocks_c; ic++) {                            \
+      if (!((padded_data_h < padding_h) ||                                     \
+            (padded_data_h >= (packed_h - padding_h)) ||                       \
+            (padded_data_w < padding_w) ||                                     \
+            (padded_data_w >= (packed_w - padding_w)))) {                      \
+        int64_t first_bits = 0;                                                \
+        int64_t second_bits = 0;                                               \
+        iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+            padded_data_w, padding_w, ic, CNTBITS, first_bits, second_bits);   \
+        tensor7d_set(quantized_reshaped, first_bits, in, io_h, io_w, ik_h,     \
+                     ik_w, ic, 0);                                             \
+        tensor7d_set(quantized_reshaped, second_bits, in, io_h, io_w, ik_h,    \
+                     ik_w, ic, 1);                                             \
+      }                                                                        \
+    }                                                                          \
+    if (channels % 64) {                                                       \
+      if (!((padded_data_h < padding_h) ||                                     \
+            (padded_data_h >= (packed_h - padding_h)) ||                       \
+            (padded_data_w < padding_w) ||                                     \
+            (padded_data_w >= (packed_w - padding_w)))) {                      \
+        int64_t first_bits = 0;                                                \
+        int64_t second_bits = 0;                                               \
+        iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+            padded_data_w, padding_w, full_blocks_c, (channels % 64),          \
+            first_bits, second_bits);                                          \
+        tensor7d_set(quantized_reshaped, first_bits, in, io_h, io_w, ik_h,     \
+                     ik_w, full_blocks_c, 0);                                  \
+        tensor7d_set(quantized_reshaped, second_bits, in, io_h, io_w, ik_h,    \
+                     ik_w, full_blocks_c, 1);                                  \
+      }                                                                        \
+    }                                                                          \
+  }
 
 namespace optmerge_im2row_ternarize {
 Tensor7D<int64_t>

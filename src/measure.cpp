@@ -14,6 +14,7 @@ map<MeasurementFunction, string> __mfs = {
     {MeasurementFunction::BINARIZE, "BINARIZE"},
     {MeasurementFunction::BTN_CNT, "BTN_CNT"},
     {MeasurementFunction::IMG2ROW, "IMG2ROW"},
+    {MeasurementFunction::TERNARIZE_IMG2ROW, "TERNA2ROW"},
     {MeasurementFunction::TNN_GEMM, "TNN_GEMM"},
     {MeasurementFunction::TBN_GEMM, "TBN_GEMM"},
     {MeasurementFunction::BTN_GEMM, "BTN_GEMM"},
