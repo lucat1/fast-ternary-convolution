@@ -18,6 +18,7 @@ enum class MeasurementFunction : uint8_t {
   BTN_CNT,
 
   IMG2ROW,
+  TERNARIZE_IMG2ROW,
 
   TNN_GEMM,
   TBN_GEMM,

@@ -1,6 +1,28 @@
 #pragma once
 #include "alloc.hpp"
 
+// performance macros
+#define tensor1d_get(t, i) (t.data[i])
+#define tensor4d_get(t, i, j, k, l)                                            \
+  (t.data[((i) * (t.dim2 * t.dim3 * t.dim4)) + ((j) * (t.dim3 * t.dim4)) +     \
+          ((k) * t.dim4) + (l)])
+#define tensor7d_get(t, i, j, k, l, m, n, o)                                   \
+  (t.data[((i) * (t.dim2 * t.dim3 * t.dim4 * t.dim5 * t.dim6 * t.dim7)) +      \
+          ((j) * (t.dim3 * t.dim4 * t.dim5 * t.dim6 * t.dim7)) +               \
+          ((k) * (t.dim4 * t.dim5 * t.dim6 * t.dim7)) +                        \
+          ((l) * (t.dim5 * t.dim6 * t.dim7)) + ((m) * (t.dim6 * t.dim7)) +     \
+          ((n) * t.dim7) + (o)])
+
+#define tensor4d_set(t, v, i, j, k, l)                                         \
+  (t.data[((i) * (t.dim2 * t.dim3 * t.dim4)) + ((j) * (t.dim3 * t.dim4)) +     \
+          ((k) * t.dim4) + (l)] = (v))
+#define tensor7d_set(t, v, i, j, k, l, m, n, o)                                \
+  (t.data[((i) * (t.dim2 * t.dim3 * t.dim4 * t.dim5 * t.dim6 * t.dim7)) +      \
+          ((j) * (t.dim3 * t.dim4 * t.dim5 * t.dim6 * t.dim7)) +               \
+          ((k) * (t.dim4 * t.dim5 * t.dim6 * t.dim7)) +                        \
+          ((l) * (t.dim5 * t.dim6 * t.dim7)) + ((m) * (t.dim6 * t.dim7)) +     \
+          ((n) * t.dim7) + (o)] = (v))
+
 // Toggle inlining of get and set methods
 // NOTE: this is already enabled when you compile with `make` or `make optimize`
 // #define INLINE
@@ -33,10 +55,11 @@ public:
                   : alloc::alloc<T>(dim1 * dim2 * dim3 * dim4 * dim5)),
         dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4), dim5(dim5) {}
 
-  // Destructor: automatically cleans up memory when the object leaves the
-  // scope.
+  // Destructor: automatically cleans up memory when the object
+  // leaves the scope.
   ~Tensor5D() {
-    // pointer may be zero due to the move constructor moving the data out
+    // pointer may be zero due to the move constructor moving
+    // the data out
     if (data != nullptr) {
       alloc::free(data);
     }
@@ -75,8 +98,8 @@ public:
                 (k * (dim4 * dim5)) + (l * (dim5)) + m];
   }
 
-  // Get element from the tensor interpreting it as a 2D tensor where the last 4
-  // dimensions are merged.
+  // Get element from the tensor interpreting it as a 2D tensor
+  // where the last 4 dimensions are merged.
 #ifdef INLINE
   inline
 #endif
@@ -115,11 +138,15 @@ public:
          (k * (dim4 * dim5)) + (l * (dim5)) + m] = value;
   }
 
-  // Rule of Five: either define all of the essential operations, or none.
+  // Rule of Five: either define all of the essential
+  // operations, or none.
   // - default constructor: unnecessary
-  // - do not allow copying (expensive; do it manually if needed)
-  // - no move assignment: want dimensions to stay const if possible
-  // - move constructor: not sure whether it will be used, but at least the
+  // - do not allow copying (expensive; do it manually if
+  // needed)
+  // - no move assignment: want dimensions to stay const if
+  // possible
+  // - move constructor: not sure whether it will be used, but
+  // at least the
   //   compiler needs it (cannot guarantee NRVO)
 
   // Default constructor
@@ -132,8 +159,8 @@ public:
   Tensor5D(Tensor5D &&other)
       : data(other.data), dim1(other.dim1), dim2(other.dim2), dim3(other.dim3),
         dim4(other.dim4), dim5(other.dim5) {
-    // if we do not change this to nullptr, destructing this and other will
-    // (probably) lead to a double free.
+    // if we do not change this to nullptr, destructing this and
+    // other will (probably) lead to a double free.
     other.data = nullptr;
   }
   // Move assignment
@@ -158,10 +185,11 @@ public:
                   : alloc::alloc<T>(dim1 * dim2 * dim3)),
         dim1(dim1), dim2(dim2), dim3(dim3) {}
 
-  // Destructor: automatically cleans up memory when the object leaves the
-  // scope.
+  // Destructor: automatically cleans up memory when the object
+  // leaves the scope.
   ~Tensor3D() {
-    // pointer may be zero due to the move constructor moving the data out
+    // pointer may be zero due to the move constructor moving
+    // the data out
     if (data != nullptr) {
       alloc::free(data);
     }
@@ -191,8 +219,8 @@ public:
     return data[(i * (dim2 * dim3)) + (j * (dim3)) + k];
   }
 
-  // Get an element from the tensor by interpreting it as a 1D tensor where
-  // dimensions 1, 2 and 3 are merged
+  // Get an element from the tensor by interpreting it as a 1D
+  // tensor where dimensions 1, 2 and 3 are merged
 #ifdef INLINE
   inline
 #endif
@@ -214,11 +242,15 @@ public:
     data[(i * (dim2 * dim3)) + (j * (dim3)) + k] = value;
   }
 
-  // Rule of Five: either define all of the essential operations, or none.
+  // Rule of Five: either define all of the essential
+  // operations, or none.
   // - default constructor: unnecessary
-  // - do not allow copying (expensive; do it manually if needed)
-  // - no move assignment: want dimensions to stay const if possible
-  // - move constructor: not sure whether it will be used, but at least the
+  // - do not allow copying (expensive; do it manually if
+  // needed)
+  // - no move assignment: want dimensions to stay const if
+  // possible
+  // - move constructor: not sure whether it will be used, but
+  // at least the
   //   compiler needs it (cannot guarantee NRVO)
 
   // Default constructor
@@ -230,8 +262,8 @@ public:
   // Move constructor
   Tensor3D(Tensor3D &&other)
       : data(other.data), dim1(other.dim1), dim2(other.dim2), dim3(other.dim3) {
-    // if we do not change this to nullptr, destructing this and other will
-    // (probably) lead to a double free.
+    // if we do not change this to nullptr, destructing this and
+    // other will (probably) lead to a double free.
     other.data = nullptr;
   }
   // Move assignment
@@ -287,8 +319,8 @@ public:
         value;
   }
 
-  // Set an element in the tensor by interpreting it as a 2D tensor where the
-  // first 3 dimensions have been merged.
+  // Set an element in the tensor by interpreting it as a 2D
+  // tensor where the first 3 dimensions have been merged.
 #ifdef INLINE
   inline
 #endif
@@ -478,8 +510,8 @@ public:
         dim1(dim1), dim2(dim2), dim3(dim3), dim4(dim4), dim5(dim5), dim6(dim6),
         dim7(dim7) {}
 
-  // Destructor: automatically cleans up memory when the object leaves the
-  // scope.
+  // Destructor: automatically cleans up memory when the object
+  // leaves the scope.
   ~Tensor7D() {
     if (data != nullptr) {
       alloc::free(data);
@@ -506,8 +538,9 @@ public:
                 (m * (dim6 * dim7)) + (n * dim7) + o];
   }
 
-  // Get an element from the tensor by interpreting it as a 2D tensor where
-  // dimensions 1, 2 and 3 are merged, and 4, 5, 6 and 7 are merged.
+  // Get an element from the tensor by interpreting it as a 2D
+  // tensor where dimensions 1, 2 and 3 are merged, and 4, 5, 6
+  // and 7 are merged.
 #ifdef INLINE
   inline
 #endif
