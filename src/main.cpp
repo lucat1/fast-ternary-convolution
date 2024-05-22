@@ -9,6 +9,7 @@
 #include "impl/more_indirect_nhwc/tab.hpp"
 #include "impl/more_indirect_prelu_nhwc/tab.hpp"
 #include "impl/optmerge_im2row_ternarize/tab.hpp"
+#include "impl/ternary_nhwc/tab.hpp"
 #include "verify.hpp"
 
 #include <algorithm>
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
       {"baseline_original", DataOrder::NCHW, baseline_original::conv},
       {"indirect_nhwc", DataOrder::NHWC, indirect_nhwc::conv},
       {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
+      {"ternary_nhwc", DataOrder::NHWC, ternary_nhwc::conv},
       {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
   };
   vector<string> filter;
