@@ -1,11 +1,11 @@
-#include "impl/baseline_nhwc/tab.hpp"
-#include "impl/baseline_nhwc/gemm.hpp"
+#include "impl/merge_gemm_prelu_branch/tab.hpp"
 #include "impl/baseline_nhwc/im2row.hpp"
-#include "impl/baseline_nhwc/prelu.hpp"
 #include "impl/baseline_nhwc/quantize.hpp"
+#include "impl/merge_gemm_prelu_branch/gemm.hpp"
 #include "measure.hpp"
 
-namespace baseline_nhwc {
+// Based of off baseline_nhwc.
+namespace merge_gemm_prelu_branch {
 
 // input: NHWC
 // kernel: NHWCB
@@ -15,26 +15,21 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
                      const size_t stride_h, const size_t stride_w,
                      float relu_alpha) {
   // quantization + packing
-  measure_point(MeasurementFunction::TERNARIZE_IMG2ROW,
-                MeasurementEvent::START);
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::START);
   Tensor5D<int64_t> quantized =
-      ternarize(input, thresholds, padding_h, padding_w);
+      baseline_nhwc::ternarize(input, thresholds, padding_h, padding_w);
+  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::END);
 
   // im2row
-  Tensor7D<int64_t> reshaped =
-      im2row(quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
-  measure_point(MeasurementFunction::TERNARIZE_IMG2ROW, MeasurementEvent::END);
+  Tensor7D<int64_t> reshaped = baseline_nhwc::im2row(
+      quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
 
   // gemm
   measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::START);
-  auto gemm_result = ternary_gemm(reshaped, kernel);
-
-  // activation
-  auto result = prelu(gemm_result, relu_alpha);
-
+  auto result = ternary_gemm(reshaped, kernel, relu_alpha);
   measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
 
   return result;
 }
 
-} // namespace baseline_nhwc
+} // namespace merge_gemm_prelu_branch

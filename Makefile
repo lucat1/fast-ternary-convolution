@@ -25,10 +25,10 @@ SUB_DIRS := $(filter-out src, $(patsubst src/%,%, $(shell find src -type d)))
 OBJ_DIRS := $(INT_DIR) $(addprefix build/, $(SUB_DIRS))
 .PHONY: test debug clean format run
 
+compile: $(TARGET)
+
 optimize: OPTFLAGS += -DNDEBUG -DINLINE
 optimize: compile
-
-compile: $(TARGET)
 
 run: $(TARGET)
 	@echo -e "RUN\t$(TARGET)"
