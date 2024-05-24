@@ -2,7 +2,7 @@ SRC_DIR  = src
 INT_DIR  = build
 TARGET   = tnn
 
-CXX = clang++
+CXX = g++
 ## -MMD creates dependency list, but ignores system includes
 ## -MF specifies where to create the dependency file name
 ## -MP creates phony targets for headers (deals with deleted headers after
