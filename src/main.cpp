@@ -1,9 +1,14 @@
 #include "bench.hpp"
+#include "common.hpp"
 #include "impl.hpp"
 #include "impl/baseline_nchw/tab.hpp"
 #include "impl/baseline_nhwc/tab.hpp"
 #include "impl/baseline_original/tab.hpp"
 #include "impl/indirect_nhwc/tab.hpp"
+#include "impl/merge_gemm_prelu/tab.hpp"
+#include "impl/merge_gemm_prelu_blocked/tab.hpp"
+#include "impl/merge_gemm_prelu_blocked_loop_order/tab.hpp"
+#include "impl/merge_gemm_prelu_branch/tab.hpp"
 #include "impl/merge_im2row_ternarize/tab.hpp"
 #include "impl/merge_im2row_ternarize_prelu/tab.hpp"
 #include "impl/more_indirect_nhwc/tab.hpp"
@@ -38,7 +43,13 @@ int main(int argc, char *argv[]) {
       {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
       {"ternary_nhwc", DataOrder::NHWC, ternary_nhwc::conv},
       {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
-  };
+      {"merge_gemm_prelu", DataOrder::NHWC, merge_gemm_prelu::conv},
+      {"merge_gemm_prelu_branch", DataOrder::NHWC,
+       merge_gemm_prelu_branch::conv},
+      {"merge_gemm_prelu_blocked", DataOrder::NHWC,
+       merge_gemm_prelu_blocked::conv},
+      {"merge_gemm_prelu_blocked_loop_order", DataOrder::NHWC,
+       merge_gemm_prelu_blocked_loop_order::conv}};
   vector<string> filter;
   bool test = false;
   bool measure = false;
