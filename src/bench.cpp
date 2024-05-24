@@ -79,11 +79,13 @@ vector<vector<Interval>> one_run(Implementation impl, Data &data) {
 
 map<MeasurementFunction, uint64_t> average(vector<vector<Interval>> raw) {
   map<MeasurementFunction, vector<Interval>> by_func;
+
   for (auto one_run : raw) {
     for (auto interval : one_run) {
-      if (!by_func.contains(interval.func))
-        by_func.insert({interval.func, {}});
-      by_func[interval.func].push_back(interval);
+      MeasurementFunction fn = interval.func;
+      if (!by_func.contains(fn))
+        by_func.insert({fn, {}});
+      by_func[fn].push_back(interval);
     }
   }
 
