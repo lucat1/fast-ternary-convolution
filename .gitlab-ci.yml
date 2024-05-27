@@ -1,0 +1,10 @@
+stages:
+  - format
+
+
+format_code:
+  stage: format
+  script:
+    - make format
+  only:
+    - *
