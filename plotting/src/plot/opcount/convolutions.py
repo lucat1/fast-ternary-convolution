@@ -5,7 +5,13 @@ from typing import Tuple
 from plot.dimensions import output_dims
 from plot.utils import BITS, POPCNT_OPS
 
-def tnn_gemm_count(m: int, n: int, k: int) -> Tuple[int, int]:
+def tnn_gemm_q(m: int, n: int, k: int) -> int:
+    iter = m*n
+    inner = iter*k
+    # 4 i64 loads (inner) 1 i64 store (counts double)
+    return 8*(4*inner + 2*iter)
+
+def tnn_gemm_w(m: int, n: int, k: int) -> Tuple[int, int]:
     k_bits = k*BITS
 
     iops = 0

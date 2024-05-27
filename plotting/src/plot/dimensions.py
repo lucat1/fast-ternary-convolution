@@ -34,8 +34,8 @@ class OutputDims:
 def output_dims(params: pd.Series) -> OutputDims:
     """Get output data dimensions."""
     packed_dims = packed_input_dims(params)
-    output_height = (packed_dims.height - params.kernel_height + 1) // params.stride_size
-    output_width = (packed_dims.width - params.kernel_width + 1) // params.stride_size
+    output_height = (packed_dims.height - params.kernel_height) // params.stride_size + 1
+    output_width = (packed_dims.width - params.kernel_width) // params.stride_size + 1
     return OutputDims(output_height, output_width)
 
 @dataclass

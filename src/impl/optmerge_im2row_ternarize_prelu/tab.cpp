@@ -1,9 +1,9 @@
-#include "impl/merge_im2row_ternarize_prelu/tab.hpp"
-#include "impl/merge_im2row_ternarize/quantize_im2row.hpp"
+#include "impl/optmerge_im2row_ternarize_prelu/tab.hpp"
 #include "impl/merge_im2row_ternarize_prelu/gemm.hpp"
+#include "impl/optmerge_im2row_ternarize/quantize_im2row.hpp"
 #include "measure.hpp"
 
-namespace merge_im2row_ternarize_prelu {
+namespace optmerge_im2row_ternarize_prelu {
 
 // input: NCHW
 // kernel: NHWCB
@@ -15,16 +15,17 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   // quantization + packing + reshaping
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::START);
   Tensor7D<int64_t> quantized_reshaped =
-      merge_im2row_ternarize::ternarize_im2row(input, thresholds, padding_h,
-                                               padding_w, kernel.dim2,
-                                               kernel.dim3, stride_h, stride_w);
+      optmerge_im2row_ternarize::ternarize_im2row(
+          input, thresholds, padding_h, padding_w, kernel.dim2, kernel.dim3,
+          stride_h, stride_w);
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::END);
 
-  // gemm + activation
+  // gemm
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
-  auto result = ternary_gemm(quantized_reshaped, kernel, relu_alpha);
+  auto result = merge_im2row_ternarize_prelu::ternary_gemm(quantized_reshaped,
+                                                           kernel, relu_alpha);
   measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
   return result;
 }
 
-} // namespace merge_im2row_ternarize_prelu
+} // namespace optmerge_im2row_ternarize_prelu

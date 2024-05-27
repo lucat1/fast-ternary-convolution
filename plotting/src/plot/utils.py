@@ -7,9 +7,22 @@ from plot.machine_info import MachInfo
 import pandas as pd
 from pathlib import Path
 
-POPCNT_OPS = 1
+POPCNT_OPS = 3
 CNTBITS = 64
 BITS = 2
+
+EXPERIMENT_NAMES = {
+    "optmerge_im2row_ternarize": "Merge im2row+ternarize (optimized)",
+    "merge_im2row_ternarize": "Merge im2row+ternarize",
+    "indirect_nhwc": "Indirect convolutions (NHWC)",
+    "more_indirect_prelu_nhwc": "More Indirect convolutions + PReLU (NHWC)",
+    "more_indirect_nhwc": "More Indirect Convolutions (NHWC)",
+    "indirect_nhwc": "Indirect Convolutions (NHWC)",
+    "baseline_original": "Baseline (original)",
+    "baseline_nhwc": "Baseline (NHWC)",
+    "ternary_nhwc": "Ternary operators (NHWC)",
+    "baseline_nchw": "Baseline (NCHW)"
+}
 
 def run_cmd(cmd: list[str]) -> str:
     """Run a given command and get output."""
@@ -37,12 +50,6 @@ def get_batch_size(benchmark_info: pd.Series) -> int:
 
 
 def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Function):
-    # x_label="input_size"
-    ax.set_xlabel("Input size")
-    ax.set_ylabel('Performance [ops/cycle]',
-            rotation='horizontal',
-            loc='top',
-            labelpad=-112)
     # ax.legend(loc='upper center',
     #         bbox_to_anchor=(0.5, 1.17),
     #         ncol=15,
@@ -54,8 +61,10 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
 
-    title = f"{machine.model} @ {machine.base_frequency}"
+    title = f"{machine.model}"
     ax.set_title(title)
     ax.legend()
     plt.suptitle(function)
@@ -85,3 +94,22 @@ def get_experiment_masks(df:pd.DataFrame)-> list[tuple[pd.DataFrame,str]]:
     #TODO: Will add this mask later
     #masks.append((df["input_height"] == 1,"Varying kernel number"))
     return masks
+
+def get_experiment_names(experiments: pd.Series) -> dict[str,str]:
+    mapping = {}
+    for elem in experiments:
+        if elem in EXPERIMENT_NAMES:
+            mapping[elem] = EXPERIMENT_NAMES[elem]
+        else:
+            mapping[elem] = elem
+    return mapping
+
+
+def frequency_to_number(frequency: str) -> float:
+    number, unit = frequency.split()
+    number = float(number)
+    if unit == "GHz":
+        return number * 10**9
+    if unit == "MHz":
+        return number * 10**6
+    raise ValueError(f"Invalid frequency given: {frequency}")

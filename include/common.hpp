@@ -47,7 +47,7 @@ template <typename T> void print_vec(std::string name, T *v, int size) {
 #endif // CLANG
 
 // used for pretty-printing
-const constexpr uint32_t impl_name_space = 30;
+const constexpr uint32_t impl_name_space = 45;
 
 // The bits of the container integer: int64_t
 const constexpr uint32_t CNTBITS = 64;

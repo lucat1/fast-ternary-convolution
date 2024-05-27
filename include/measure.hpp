@@ -7,40 +7,25 @@
 
 using namespace std;
 
+namespace measurement_point {
+
+static const string conv = "conv";
+static const string ternarize = "ternarize";
+static const string im2row = "im2row";
+static const string ternarize_im2row = "terna2row";
+static const string gemm = "gemm";
+static const string im2rowgemm = "im2rowgemm";
+static const string prelu = "prelu";
+static const string gemmprelu = "gemmprelu";
+
+static const string alloc = "alloc";
+
+} // namespace measurement_point
+
 enum class MeasurementEvent : uint8_t { START, END };
 const std::array<MeasurementEvent, 2> measurement_event_types = {
     MeasurementEvent::START, MeasurementEvent::END};
 string measurement_event_name(MeasurementEvent me);
-
-enum class MeasurementFunction : uint8_t {
-  TERNARIZE,
-  BINARIZE,
-  BTN_CNT,
-
-  IMG2ROW,
-  TERNARIZE_IMG2ROW,
-
-  TNN_GEMM,
-  TBN_GEMM,
-  BTN_GEMM,
-  BNN_GEMM,
-
-  ALLOC,
-  ALLOC2,
-  FREE,
-
-  PRELU,
-
-  CONV,
-};
-const std::array<MeasurementFunction, 10> measurement_function_types = {
-    MeasurementFunction::TERNARIZE, MeasurementFunction::BINARIZE,
-    MeasurementFunction::BTN_CNT,   MeasurementFunction::IMG2ROW,
-    MeasurementFunction::TNN_GEMM,  MeasurementFunction::TBN_GEMM,
-    MeasurementFunction::BTN_GEMM,  MeasurementFunction::BNN_GEMM,
-    MeasurementFunction::PRELU,     MeasurementFunction::CONV,
-};
-string measurement_function_name(MeasurementFunction mf);
 
 #ifdef MEASURE_INTERNAL
 #define measure_point(measurement_func, measurement_type)                      \
@@ -54,33 +39,35 @@ string measurement_function_name(MeasurementFunction mf);
 
 class MeasurementPoint {
 public:
-  MeasurementFunction func;
+  string func;
   MeasurementEvent event;
   uint64_t time;
 
-  MeasurementPoint(MeasurementFunction func, MeasurementEvent event,
-                   uint64_t time);
+  MeasurementPoint(string func, MeasurementEvent event, uint64_t time);
 };
 
 class Interval {
 public:
-  MeasurementFunction func;
+  string func;
   uint64_t start_time;
   uint64_t end_time;
 
-  Interval(MeasurementFunction func, uint64_t start_time, uint64_t end_time);
+  Interval(string func, uint64_t start_time, uint64_t end_time);
 };
 
 class Measure {
 private:
   static Measure *instance;
   vector<MeasurementPoint> measurements;
+  size_t mem;
 
 public:
   Measure();
   static Measure *get_instance();
 
-  void track(MeasurementFunction func, MeasurementEvent event);
+  void track(const string func, const MeasurementEvent event);
+  void track_memory(size_t bytes);
   vector<Interval> intervals();
+  size_t memory();
   void reset();
 };
