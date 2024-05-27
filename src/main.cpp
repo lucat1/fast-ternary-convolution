@@ -15,6 +15,7 @@
 #include "impl/more_indirect_prelu_nhwc/tab.hpp"
 #include "impl/optmerge_im2row_ternarize/tab.hpp"
 #include "impl/optmerge_im2row_ternarize_blocked_gemm/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_memcpy/tab.hpp"
 #include "impl/optmerge_im2row_ternarize_unrolled_gemm/tab.hpp"
 #include "impl/ternary_nhwc/tab.hpp"
 #include "verify.hpp"
@@ -31,6 +32,8 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
+      {"optmerge_im2row_ternarize_memcpy", DataOrder::NHWC,
+       optmerge_im2row_ternarize_memcpy::conv},
       {"optmerge_im2row_ternarize_blocked_gemm", DataOrder::NHWC,
        optmerge_im2row_ternarize_blocked_gemm::conv},
       {"optmerge_im2row_ternarize_unrolled_gemm", DataOrder::NHWC,
