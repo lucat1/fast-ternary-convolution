@@ -15,19 +15,21 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
                      const size_t stride_h, const size_t stride_w,
                      float relu_alpha) {
   // quantization + packing
-  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::START);
+  measure_point(measurement_point::ternarize, MeasurementEvent::START);
   Tensor5D<int64_t> quantized =
       baseline_nhwc::ternarize(input, thresholds, padding_h, padding_w);
-  measure_point(MeasurementFunction::TERNARIZE, MeasurementEvent::END);
+  measure_point(measurement_point::ternarize, MeasurementEvent::END);
 
   // im2row
+  measure_point(measurement_point::im2row, MeasurementEvent::START);
   Tensor7D<int64_t> reshaped = baseline_nhwc::im2row(
       quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
+  measure_point(measurement_point::im2row, MeasurementEvent::END);
 
   // gemm
-  measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::START);
+  measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
   auto result = ternary_gemm(reshaped, kernel, relu_alpha);
-  measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
+  measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
 
   return result;
 }

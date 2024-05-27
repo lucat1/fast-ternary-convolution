@@ -9,32 +9,11 @@ map<MeasurementEvent, string> __mes = {{MeasurementEvent::START, "START"},
 
 string measure_event_name(MeasurementEvent me) { return __mes[me]; }
 
-map<MeasurementFunction, string> __mfs = {
-    {MeasurementFunction::TERNARIZE, "TERNARIZE"},
-    {MeasurementFunction::BINARIZE, "BINARIZE"},
-    {MeasurementFunction::BTN_CNT, "BTN_CNT"},
-    {MeasurementFunction::IMG2ROW, "IMG2ROW"},
-    {MeasurementFunction::TERNARIZE_IMG2ROW, "TERNA2ROW"},
-    {MeasurementFunction::TNN_GEMM, "TNN_GEMM"},
-    {MeasurementFunction::TBN_GEMM, "TBN_GEMM"},
-    {MeasurementFunction::BTN_GEMM, "BTN_GEMM"},
-    {MeasurementFunction::BNN_GEMM, "BNN_GEMM"},
-    {MeasurementFunction::PRELU, "PRELU"},
-    {MeasurementFunction::CONV, "CONV"},
-
-    {MeasurementFunction::ALLOC, "ALLOC"},
-    {MeasurementFunction::ALLOC2, "ALLOC2"},
-    {MeasurementFunction::FREE, "FREE"},
-};
-
-string measurement_function_name(MeasurementFunction mf) { return __mfs[mf]; }
-
-MeasurementPoint::MeasurementPoint(MeasurementFunction func,
-                                   MeasurementEvent event, uint64_t time)
+MeasurementPoint::MeasurementPoint(string func, MeasurementEvent event,
+                                   uint64_t time)
     : func(func), event(event), time(time) {}
 
-Interval::Interval(MeasurementFunction func, uint64_t start_time,
-                   uint64_t end_time)
+Interval::Interval(string func, uint64_t start_time, uint64_t end_time)
     : func(func), start_time(start_time), end_time(end_time) {}
 
 Measure *Measure::instance = nullptr;
@@ -47,11 +26,14 @@ Measure *Measure::get_instance() {
 }
 
 Measure::Measure() : measurements({}) {
-  measurements.reserve(measurement_event_types.size() *
-                       measurement_function_types.size());
+  measurements.reserve(25 * measurement_event_types.size());
 }
 
-void Measure::track(MeasurementFunction func, MeasurementEvent event) {
+void Measure::track_memory(size_t bytes) { mem += bytes; }
+
+size_t Measure::memory() { return mem; }
+
+void Measure::track(const string func, const MeasurementEvent event) {
   uint64_t time;
   switch (event) {
   case MeasurementEvent::START:
@@ -114,4 +96,7 @@ vector<Interval> Measure::intervals() {
   return intervals;
 }
 
-void Measure::reset() { measurements.clear(); }
+void Measure::reset() {
+  measurements.clear();
+  mem = 0;
+}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "measure.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -16,8 +17,12 @@ static constexpr size_t ALIGNMENT = 32;
 #define alloc_size(n) (n * sizeof(T) + 31 + 8)
 
 template <typename T> T *alloc(size_t n) {
+  size_t bytes = alloc_size(n);
+  Measure::get_instance()->track_memory(bytes);
+
+  measure_point(measurement_point::alloc, MeasurementEvent::START);
 #ifdef ALIGN
-  size_t raw_addr = (size_t)malloc(alloc_size(n));
+  size_t raw_addr = (size_t)malloc(bytes);
   assert(raw_addr != (size_t) nullptr);
   size_t *aligned_addr = static_cast<size_t *>((void *)raw_addr);
   if (raw_addr % ALIGNMENT > 0)
@@ -30,9 +35,10 @@ template <typename T> T *alloc(size_t n) {
 
   *original_addr_ptr = (size_t)raw_addr;
 #else
-  T *data_ptr = static_cast<T *>(malloc(alloc_size(n)));
+  T *data_ptr = static_cast<T *>(malloc(bytes));
   assert(data_ptr != nullptr);
 #endif
+  measure_point(measurement_point::alloc, MeasurementEvent::END);
   return data_ptr;
 }
 

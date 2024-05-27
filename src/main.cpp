@@ -14,6 +14,8 @@
 #include "impl/more_indirect_nhwc/tab.hpp"
 #include "impl/more_indirect_prelu_nhwc/tab.hpp"
 #include "impl/optmerge_im2row_ternarize/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_blocked_gemm/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_unrolled_gemm/tab.hpp"
 #include "impl/ternary_nhwc/tab.hpp"
 #include "verify.hpp"
 
@@ -29,7 +31,13 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
+      {"optmerge_im2row_ternarize_blocked_gemm", DataOrder::NHWC,
+       optmerge_im2row_ternarize_blocked_gemm::conv},
+      {"optmerge_im2row_ternarize_unrolled_gemm", DataOrder::NHWC,
+       optmerge_im2row_ternarize_unrolled_gemm::conv},
       {"optmerge_im2row_ternarize", DataOrder::NHWC,
+       optmerge_im2row_ternarize::conv},
+      {"optmerge_im2row_ternarize_prelu", DataOrder::NHWC,
        optmerge_im2row_ternarize::conv},
       {"merge_im2row_ternarize", DataOrder::NHWC, merge_im2row_ternarize::conv},
       {"merge_im2row_ternarize_prelu", DataOrder::NHWC,
@@ -53,6 +61,7 @@ int main(int argc, char *argv[]) {
   vector<string> filter;
   bool test = false;
   bool measure = false;
+  bool convonly = false;
 
   stringstream f;
   fstream p;
@@ -65,13 +74,16 @@ int main(int argc, char *argv[]) {
 
   int opt;
   // : means the previous option requires an argument
-  while ((opt = getopt(argc, argv, "i:p:o:thb")) != -1) {
+  while ((opt = getopt(argc, argv, "i:p:o:thbc")) != -1) {
     switch (opt) {
     case 't':
       test = true;
       break;
     case 'b':
       measure = true;
+      break;
+    case 'c':
+      convonly = true;
       break;
     case 'h':
       cerr << "USAGE " << argv[0] << ":" << endl;
@@ -84,6 +96,8 @@ int main(int argc, char *argv[]) {
            << endl;
       cerr << "\t-t\t\t\tEnable testing" << endl;
       cerr << "\t-b\t\t\tEnable benchmarking" << endl;
+      cerr << "\t-c\t\t\tOnly print benchmark data for the whole convolution"
+           << endl;
       exit(0);
       break;
     case 'i':
@@ -128,7 +142,7 @@ int main(int argc, char *argv[]) {
     if (test)
       verify(r);
     if (measure)
-      bench(r, params.size() == 0 ? nullptr : &params, bench_out);
+      bench(r, params.size() == 0 ? nullptr : &params, bench_out, convonly);
   }
   return 0;
 }

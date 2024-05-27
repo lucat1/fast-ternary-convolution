@@ -7,37 +7,34 @@ class ConvType(Enum):
     BNN = "BNN"
 
 class Function(Enum):
-    TERNARIZE = "TERNARIZE"
-    BINARIZE = "BINARIZE"
-    IMG2ROW = "IMG2ROW"
-    ALLOC = "ALLOC"
-    ALLOC2 = "ALLOC2"
-    FREE = "FREE"
-    PRELU = "PRELU"
-    CONV = "CONV"
-    TNN_GEMM = "TNN_GEMM"
-    TBN_GEMM = "TBN_GEMM"
-    BTN_GEMM = "BTN_GEMM"
-    BNN_GEMM = "BNN_GEMM"
+    TERNARIZE = "ternarize"
+    BINARIZE = "binarize"
+    TERNA2ROW = "terna2row"
+    IM2ROW = "im2row"
+    ALLOC = "alloc"
+    FREE = "free"
+    PRELU = "prelu"
+    CONV = "conv"
+    GEMM = "gemm"
+    GEMMPRELU = "gemmprelu"
+
 
     def fancy(self) -> str:
         if self == Function.TERNARIZE:
             return 'Ternarize'
         if self == Function.BINARIZE:
             return 'Binarize'
-        elif self == Function.IMG2ROW:
+        elif self == Function.IM2ROW:
             return 'Image to Row'
+        elif self == Function.TERNA2ROW:
+            return 'Ternarize + Image to Row'
+        elif self == Function.GEMMPRELU:
+            return 'GEMM + PreLU'
         elif self == Function.PRELU:
             return 'PreLU'
         elif self == Function.CONV:
             return 'Convolution'
-        elif self == Function.TNN_GEMM:
+        elif self == Function.GEMM:
             return 'Ternary General Matrix Multiply'
-        elif self == Function.TBN_GEMM:
-            return 'Ternary-Binary General Matrix Multiply'
-        elif self == Function.BTN_GEMM:
-            return 'Binary-Ternary General Matrix Multiply'
-        elif self == Function.BNN_GEMM:
-            return 'Binary General Matrix Multiply'
         else:
             return ''

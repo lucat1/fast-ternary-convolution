@@ -3,30 +3,19 @@
 from math import ceil
 from typing import Tuple
 
+def prelu_q(n: int, out_h: int, out_w: int, c: int) -> int:
+    iter = n*out_h*out_w*c
+    # there's one read and one write (counts double)
+    return 4*3*iter
 
-def PreLU_f32_compare_count(n: int, c: int, h: int, w: int) -> int:
-    """Compute the number of f32 compares for PreLU."""
-    return n * c * h * w
-
-
-def PreLU_f32_mul_count(n: int, c: int, h: int, w: int) -> int:
-    """Get the approximate number of muls in PreLU."""
-    return n * c * h * w // 2
-
-
-def PreLU_assign_count(n: int, c: int, h: int, w: int) -> int:
-    """Compute the number of f32 compares for PreLU."""
-    return n * c * h * w
-
-
-def prelu_count(n: int, c: int, h: int, w: int) -> Tuple[int, int]:
+def prelu_w(n: int, c: int, out_h: int, out_w: int) -> Tuple[int, int]:
     """Total operation count for activation."""
     iops = 0
     flops = 0
 
     # current > 0
-    flops += n * c * h * w
+    flops += n * c * out_h * out_w
     # current * alpha
-    flops += .5 * n * c * h * w
+    flops += .5 * n * c * out_h * out_w
 
     return (ceil(iops), ceil(flops))
