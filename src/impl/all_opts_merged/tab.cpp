@@ -1,6 +1,7 @@
 #include "impl/all_opts_merged/tab.hpp"
 #include "impl/all_opts_merged/gemm.hpp"
 #include "impl/all_opts_merged/quantize_im2row.hpp"
+#include "impl/baseline_nhwc/prelu.hpp"
 #include "measure.hpp"
 
 namespace all_opts_merged {
