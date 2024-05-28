@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
       {"tern2row_memcpy", DataOrder::NHWC, tern2row_memcpy::conv},
       {"tern2row_cpy", DataOrder::NHWC, tern2row_cpy::conv},
       {"tern2row", DataOrder::NHWC, tern2row::conv},
-      
+
       {"more_indirect", DataOrder::NHWC, more_indirect::conv},
       {"indirect", DataOrder::NHWC, indirect::conv},
 
@@ -81,13 +81,13 @@ int main(int argc, char *argv[]) {
       {"nhwc_tmacro1", DataOrder::NHWC, nhwc_tmacro1::conv},
       {"ternary_nhwc", DataOrder::NHWC, ternary_nhwc::conv},
       {"nhwc", DataOrder::NHWC, nhwc::conv},
-      
+
       {"nchw_tmacro2_sinline", DataOrder::NCHW, nchw_tmacro2_sinline::conv},
       {"nchw_tmacro1_sinline", DataOrder::NCHW, nchw_tmacro1_sinline::conv},
       {"nchw_tmacro2", DataOrder::NCHW, nchw_tmacro2::conv},
       {"nchw_tmacro1", DataOrder::NCHW, nchw_tmacro1::conv},
       {"nchw", DataOrder::NCHW, nchw::conv},
-      
+
       {"original", DataOrder::NCHW, original::conv},
   };
   vector<string> filter;
