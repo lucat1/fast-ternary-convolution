@@ -1,6 +1,5 @@
 #pragma once
 #include "tensor.hpp"
-#include "tensor_macros0.hpp"
 
 namespace all_opts_merged {
 Tensor7D<int64_t>
