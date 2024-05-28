@@ -24,6 +24,7 @@
 #include <cassert>
 #include <fstream>
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -31,6 +32,28 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+  cout << setw(impl_name_space) << "asserts"
+       << " :: "
+#ifdef NDEBUG
+       << "didsabled" << endl;
+#else
+       << "enabled" << endl;
+#endif
+  cout << setw(impl_name_space) << "inlines"
+       << " :: "
+#ifdef INLINE
+       << "enabled" << endl;
+#else
+       << "didsabled" << endl;
+#endif
+  cout << setw(impl_name_space) << "internal measurement"
+       << " :: "
+#ifdef MEASURE_INTERNAL
+       << "enabled" << endl;
+#else
+       << "didsabled" << endl;
+#endif
+
   vector<Implementation> impls = {
       {"optmerge_im2row_ternarize_memcpy", DataOrder::NHWC,
        optmerge_im2row_ternarize_memcpy::conv},

@@ -231,6 +231,6 @@ void measure_overhead() {
   }
 
   cycles = overhead = (cycles) / (runs * measurement_size);
-  cout << setw(impl_name_space) << "meas. overhead"
+  cout << setw(impl_name_space) << "measurement overhead"
        << " :: " << cycles << " cycles/call" << endl;
 }

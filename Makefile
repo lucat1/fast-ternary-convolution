@@ -27,7 +27,7 @@ OBJ_DIRS := $(INT_DIR) $(addprefix build/, $(SUB_DIRS))
 
 compile: $(TARGET)
 
-optimize: OPTFLAGS += -DNDEBUG -DINLINE
+optimize: OPTFLAGS += -DINLINE -DNDEBUG 
 optimize: compile
 
 run: $(TARGET)
