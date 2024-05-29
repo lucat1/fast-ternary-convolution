@@ -36,9 +36,9 @@ void print_array(int64_t *a, size_t len) {
       activation1 = _mm512_loadu_epi64(activation.data + K * im + ik);         \
       activation2 = _mm512_loadu_epi64(activation.data + K * im + ik + 8);     \
       activation_lo = _mm512_unpacklo_epi64(activation1, activation2);         \
-      activation_hi = _mm512_unpackhi_epi64(activation1, activation2);       \
+      activation_hi = _mm512_unpackhi_epi64(activation1, activation2);         \
       kernel1 = _mm512_loadu_epi64(kernel.data + K * in + ik);                 \
-      kernel2 = _mm512_loadu_epi64(kernel.data + K * in + ik + 8);         \
+      kernel2 = _mm512_loadu_epi64(kernel.data + K * in + ik + 8);             \
       kernel_lo = _mm512_unpacklo_epi64(kernel1, kernel2);                     \
       kernel_hi = _mm512_unpackhi_epi64(kernel1, kernel2);                     \
       p1 = _mm512_xor_epi64(activation_lo, kernel_lo);                         \
