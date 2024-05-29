@@ -6,14 +6,22 @@
 // Based of off nhwc.
 namespace all_opts_merged {
 
-int array_equals(int64_t *a, int64_t *b, int len) {
-  for (int i = 0; i < len; i++) {
+int array_equals(int64_t *a, int64_t *b, size_t len) {
+  for (size_t i = 0; i < len; i++) {
     if (a[i] != b[i]) {
-      std::cout << "a is " << a[i] << " while b is " << b[i] << std::endl;
+      std::cout << "a is " << a[i] << " while b is " << b[i] << " at position "
+                << i << std::endl;
       return 0;
     }
   }
   return 1;
+}
+
+void print_array(int64_t *a, size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    std::cout << a[i];
+  }
+  std::cout << std::endl;
 }
 
 #define inner_loop_vectorized(activation, kernel, K, im, in, output, alpha)    \
@@ -22,25 +30,19 @@ int array_equals(int64_t *a, int64_t *b, int len) {
     __m512i cntp1_vec = _mm512_setzero_si512();                                \
     __m512i cntp2_vec = _mm512_setzero_si512();                                \
     __m512i p1, p2;                                                            \
-    __m512i gather_offsets1 =                                                  \
-        _mm512_set_epi64(7 * BITS, 6 * BITS, 5 * BITS, 4 * BITS, 3 * BITS,     \
-                         2 * BITS, 1 * BITS, 0);                               \
-    __m512i gather_offsets2 = _mm512_set_epi64(                                \
-        7 * BITS + 1, 6 * BITS + 1, 5 * BITS + 1, 4 * BITS + 1, 3 * BITS + 1,  \
-        2 * BITS + 1, 1 * BITS + 1, 1);                                        \
-    __m512i activation1, activation2, kernel1, kernel2;                        \
+    __m512i activation1, activation2, activation_lo, activation_hi, kernel1,   \
+        kernel2, kernel_lo, kernel_hi;                                         \
     for (; ik + 7 * BITS < K; ik += 8 * BITS) {                                \
-      activation1 = _mm512_i64gather_epi64(gather_offsets1,                    \
-                                           activation.data + K * im + ik, 8);  \
-      activation2 = _mm512_i64gather_epi64(gather_offsets2,                    \
-                                           activation.data + K * im + ik, 8);  \
-      kernel1 = _mm512_i64gather_epi64(gather_offsets1,                        \
-                                       kernel.data + K * in + ik, 8);          \
-      kernel2 = _mm512_i64gather_epi64(gather_offsets2,                        \
-                                       kernel.data + K * in + ik, 8);          \
-      /* Correct until here */                                                 \
-      p1 = _mm512_xor_epi64(activation1, kernel1);                             \
-      p2 = _mm512_and_epi64(activation2, kernel2);                             \
+      activation1 = _mm512_loadu_epi64(activation.data + K * im + ik);         \
+      activation2 = _mm512_loadu_epi64(activation.data + K * im + ik + 8);     \
+      activation_lo = _mm512_unpacklo_epi64(activation1, activation2);         \
+      activation_hi = _mm512_unpackhi_epi64(activation1, activation2);       \
+      kernel1 = _mm512_loadu_epi64(kernel.data + K * in + ik);                 \
+      kernel2 = _mm512_loadu_epi64(kernel.data + K * in + ik + 8);         \
+      kernel_lo = _mm512_unpacklo_epi64(kernel1, kernel2);                     \
+      kernel_hi = _mm512_unpackhi_epi64(kernel1, kernel2);                     \
+      p1 = _mm512_xor_epi64(activation_lo, kernel_lo);                         \
+      p2 = _mm512_and_epi64(activation_hi, kernel_hi);                         \
       cntp1_vec = _mm512_add_epi64(cntp1_vec, _mm512_popcnt_epi64(p2));        \
       cntp2_vec = _mm512_add_epi64(                                            \
           cntp2_vec, _mm512_popcnt_epi64(_mm512_and_epi64(p1, p2)));           \
