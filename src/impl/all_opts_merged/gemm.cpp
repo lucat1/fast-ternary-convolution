@@ -6,10 +6,11 @@
 // Based of off nhwc.
 namespace all_opts_merged {
 
-int array_equals(int64_t *a, int64_t *b, int len) {
-  for (int i = 0; i < len; i++) {
+int array_equals(int64_t *a, int64_t *b, size_t len) {
+  for (size_t i = 0; i < len; i++) {
     if (a[i] != b[i]) {
-      std::cout << "a is " << a[i] << " while b is " << b[i] << std::endl;
+      std::cout << "a is " << a[i] << " while b is " << b[i] << " at position "
+                << i << std::endl;
       return 0;
     }
   }
