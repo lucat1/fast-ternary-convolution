@@ -2,10 +2,44 @@
 #include "common.hpp"
 
 // inner loop
-#define iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+#define iil(data, thresholds_data, onebit, in, padded_data_h, padding_h,       \
             padded_data_w, padding_w, ic, bits, first_bits, second_bits)       \
   {                                                                            \
+    const float cur_thres = thresholds_data[in];                               \
     for (size_t bit = 0; bit < bits; bit++) {                                  \
+      float current_value =                                                    \
+          tensor4d_get(data, in, padded_data_h - padding_h,                    \
+                       padded_data_w - padding_w, ic * CNTBITS + bit);         \
+      if (current_value > cur_thres) {                                         \
+        second_bits |= onebit[bit];                                            \
+      } else if (current_value < -cur_thres) {                                 \
+        first_bits |= onebit[bit];                                             \
+        second_bits |= onebit[bit];                                            \
+      }                                                                        \
+    }                                                                          \
+  }
+
+// vectorized version of inner loop
+#define iil_vectorized(data, thresholds_data, onebit, in, padded_data_h,       \
+                       padding_h, padded_data_w, padding_w, ic, bits,          \
+                       first_bits, second_bits)                                \
+  {                                                                            \
+    size_t bit = 0;                                                            \
+    const float cur_thres = thresholds_data[in];                               \
+    /* (t.data[((i) * (t.dim2 * t.dim3 * t.dim4)) + ((j) * (t.dim3 * t.dim4))  \
+     * + ((k) * t.dim4) + (l)]) */                                             \
+    for (; bit < bits - 7; bit += 8) {                                         \
+      float current_value =                                                    \
+          tensor4d_get(data, in, padded_data_h - padding_h,                    \
+                       padded_data_w - padding_w, ic * CNTBITS + bit);         \
+      if (current_value > cur_thres) {                                         \
+        second_bits |= onebit[bit];                                            \
+      } else if (current_value < -cur_thres) {                                 \
+        first_bits |= onebit[bit];                                             \
+        second_bits |= onebit[bit];                                            \
+      }                                                                        \
+    }                                                                          \
+    for (; bit < bits; bit++) {                                                \
       float current_value =                                                    \
           tensor4d_get(data, in, padded_data_h - padding_h,                    \
                        padded_data_w - padding_w, ic * CNTBITS + bit);         \
@@ -32,8 +66,8 @@
     memcpy(dest, src, bytes);                                                  \
   }
 
-#define compute(data, thresholds, onebit, quantized_reshaped, in, io_h, io_w,  \
-                ik_h, ik_w, padding_h, padding_w, stride_h, stride_w,          \
+#define compute(data, thresholds_data, onebit, quantized_reshaped, in, io_h,   \
+                io_w, ik_h, ik_w, padding_h, padding_w, stride_h, stride_w,    \
                 packed_h, packed_w, full_blocks_c, channels)                   \
   {                                                                            \
     const size_t padded_data_h = io_h * stride_h + ik_h;                       \
@@ -45,7 +79,7 @@
             (padded_data_w >= (packed_w - padding_w)))) {                      \
         int64_t first_bits = 0;                                                \
         int64_t second_bits = 0;                                               \
-        iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+        iil(data, thresholds_data, onebit, in, padded_data_h, padding_h,       \
             padded_data_w, padding_w, ic, CNTBITS, first_bits, second_bits);   \
         tensor7d_set(quantized_reshaped, first_bits, in, io_h, io_w, ik_h,     \
                      ik_w, ic, 0);                                             \
@@ -60,7 +94,7 @@
             (padded_data_w >= (packed_w - padding_w)))) {                      \
         int64_t first_bits = 0;                                                \
         int64_t second_bits = 0;                                               \
-        iil(data, thresholds, onebit, in, padded_data_h, padding_h,            \
+        iil(data, thresholds_data, onebit, in, padded_data_h, padding_h,       \
             padded_data_w, padding_w, full_blocks_c, (channels % 64),          \
             first_bits, second_bits);                                          \
         tensor7d_set(quantized_reshaped, first_bits, in, io_h, io_w, ik_h,     \
@@ -78,6 +112,7 @@ ternarize_im2row(const Tensor4D<float> &data, const Tensor1D<float> &thresholds,
                  const size_t kernel_h, const size_t kernel_w,
                  const size_t stride_h, const size_t stride_w) {
   int64_t onebit[CNTBITS];
+  const float *const thresholds_data = thresholds.data;
   for (size_t i = 0; i < CNTBITS; i++) {
     // cast is important - otherwise we get wrong results
     onebit[i] = (int64_t)1 << i;
@@ -128,7 +163,7 @@ ternarize_im2row(const Tensor4D<float> &data, const Tensor1D<float> &thresholds,
           }
 
           for (size_t ik_w = start_ik_w; ik_w < kernel_w; ik_w++) {
-            compute(data, thresholds, onebit, quantized_reshaped, in, io_h,
+            compute(data, thresholds_data, onebit, quantized_reshaped, in, io_h,
                     io_w, ik_h, ik_w, padding_h, padding_w, stride_h, stride_w,
                     packed_h, packed_w, full_blocks_c, channels);
           }
