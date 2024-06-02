@@ -1,5 +1,6 @@
 #include "impl/all_opts_merged/quantize_im2row.hpp"
 #include "common.hpp"
+#include <immintrin.h>
 
 // inner loop
 #define iil(data, thresholds_data, onebit, in, padded_data_h, padding_h,       \
@@ -27,10 +28,20 @@
     const float cur_thres = thresholds_data[in];                               \
     /* (t.data[((i) * (t.dim2 * t.dim3 * t.dim4)) + ((j) * (t.dim3 * t.dim4))  \
      * + ((k) * t.dim4) + (l)]) */                                             \
-    for (; bit < bits - 7; bit += 8) {                                         \
-      float current_value =                                                    \
-          tensor4d_get(data, in, padded_data_h - padding_h,                    \
-                       padded_data_w - padding_w, ic * CNTBITS + bit);         \
+    __m512i first_bits_vec = _mm512_setzero_si512(),                           \
+            second_bits_vec = _mm512_setzero_si512(), cur_value_vec, one_bits; \
+    __m512 threshold = _mm512_set1_ps(cur_thres),                              \
+           neg_threshold = _mm512_set1_ps(-cur_thres);                         \
+    __m512 cur_value_vec;                                                      \
+    for (; bit < 25; bit += 8) {                                               \
+      one_bits = _mm512_loadu_epi64(onebit + bit);                             \
+                                                                               \
+      cur_value_vec = _mm512_loadu_ps(data);                                   \
+      __mmask16 first_mask =                                                   \
+          _mm512_cmp_ps_mask(cur_value_vec, threshold, _CMP_GT_OQ);            \
+      __mmask16 second_mask =                                                  \
+          _mm512_cmp_ps_mask(cur_value_vec, neg_threshold, _CMP_LT_OQ);        \
+                                                                               \
       if (current_value > cur_thres) {                                         \
         second_bits |= onebit[bit];                                            \
       } else if (current_value < -cur_thres) {                                 \
@@ -38,7 +49,7 @@
         second_bits |= onebit[bit];                                            \
       }                                                                        \
     }                                                                          \
-    for (; bit < bits; bit++) {                                                \
+    _mm512_reduce_or_epi64() for (; bit < bits; bit++) {                       \
       float current_value =                                                    \
           tensor4d_get(data, in, padded_data_h - padding_h,                    \
                        padded_data_w - padding_w, ic * CNTBITS + bit);         \
