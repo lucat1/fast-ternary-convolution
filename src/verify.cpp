@@ -3,7 +3,7 @@
 #include "direct.hpp"
 #include "problem_data.hpp"
 
-#include "impl/baseline_nchw/quantize.hpp"
+#include "impl/nchw/quantize.hpp"
 #include "measure.hpp"
 #include "problem_data.hpp"
 #include "tensor.hpp"
@@ -79,7 +79,7 @@ public:
       : Data(conv_type, data_order, p, relu_alpha),
         // The real kernel is always in shape (KN, PC, KH, KW) beacuse that's
         // what direct_conv expects. It always gets quantized using the
-        // baseline_nchw ternarize function
+        // nchw ternarize function
         real_kernel(kernel_n, channels, kernel_h, kernel_w, false),
         kernel_threshold(kernel.dim1, false) {
     distribution = std::uniform_int_distribution<int>(-1, 1);
@@ -133,8 +133,8 @@ void verify(Registry r) {
       //     data.real_kernel.data, 0, 0, data.kernel_threshold.data,
       //     data.kernel_n, data.channels, data.kernel_h, data.kernel_w,
       //     data.kernel.data);
-      Tensor5D<int64_t> kernel = baseline_nchw::ternarize(
-          data.real_kernel, data.kernel_threshold, 0, 0);
+      Tensor5D<int64_t> kernel =
+          nchw::ternarize(data.real_kernel, data.kernel_threshold, 0, 0);
       // Sanity checks on the kernel size, before copying data over
       assert(kernel.dim1 == data.kernel.dim1);
       assert(kernel.dim2 == data.kernel.dim2);
