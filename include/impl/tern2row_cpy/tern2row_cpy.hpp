@@ -1,5 +1,6 @@
 #pragma once
 #include "tensor.hpp"
+#include "tensor_macros0.hpp"
 
 namespace tern2row_cpy {
 Tensor7D<int64_t>
