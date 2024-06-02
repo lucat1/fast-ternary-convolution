@@ -18,7 +18,6 @@
       } else if (current_value < -cur_thres) {                                 \
         first_bits |= onebit[bit];                                             \
         second_bits |= onebit[bit];                                            \
-      }                                                                        \
     }                                                                          \
   }
 
