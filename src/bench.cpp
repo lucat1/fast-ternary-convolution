@@ -62,7 +62,7 @@ public:
 
 vector<pair<vector<Interval>, size_t>> one_run(Implementation impl,
                                                Data &data) {
-  size_t num_runs = 30;
+  size_t num_runs = 10;
   vector<pair<vector<Interval>, size_t>> measurement_intervals;
   auto m = Measure::get_instance();
 

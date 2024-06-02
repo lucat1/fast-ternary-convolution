@@ -57,3 +57,37 @@ measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::START);
 auto gemm_result = ternary_gemm(reshaped, kernel);
 measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
 ```
+
+## Implementation overview
+- **original**: original implementation using vectors (nchw)
+- **nchw**: simple implementation using tensors (nchw)
+- **nhwc**: simple implementation using tensors (nhwc)
+- **ternary_nhwc**: nhwc using ternary operators for prelu/ternarize
+  - overall seems to be slightly worse
+  - seems to be slightly worse in ternarize, maybe sometimes a tiny bit faster in prelu
+- **nchw_tmacro1**: replace getters and setters of **t**ensors with simple macros
+- **nchw_tmacro2**: manually eliminate redundant computation in indicies
+- **nchw_tmacro1_sinline**: use inline keyword for **s**teps like ternarize, gemm, prelu, etc.
+- **nchw_tmacro2_sinline**: same as above, but for tmacro2
+- **nhwc_tmacro1**: nhwc order
+- **nhwc_tmacro2**: nhwc order
+- **nhwc_tmacro1_sinline**: nhwc order
+- **nhwc_tmacro2_sinline**: nhwc order
+- **indirect**: essentially merge im2row + gemm? @Luca please double check
+- **more_indirect**: @Luca please fill out
+  - possible optimization: merge with ternarize? precompute statically?
+  - does this have any benefits besides performance? mention that in report?
+- **tern2row**: naively merge ternarize and im2row
+  - leads to massive slowdown due to unnecessary recomputation
+- **tern2row_cpy**: avoid recomputation by copying already computed elements
+  - uses a loop for copying, has the edge of memcpy in daniel_plots*.csv
+  - seems to be very slightly better than not merging
+- **tern2row_memcpy**: copy using memcpy instead of a loop
+  - loses to a loop, maybe because memcpy adds overhead (and we don't copy a lot of data at once?)
+- **t2r_gemmLU**: merge gemm and PreLU (based on tern2row_cpy)
+- **t2r_gemmLU_lord**: conditionally swaps the loop order
+  - reasoning: slides on model ATLAS: want to reuse the smaller matrix
+  - just naively switching to N-M makes it worse
+  - M<N=> N-M: whenever this branch is taken (if batch_size * oh * ow < kn according to Luca), performance seems to get a bit worse
+  - Why? Unsure. Maybe it has to do with how the second matrix is passed in? i.e. N-K instead K-N? (not sure about this)
+- **t2r_gemmLU_block**: Block gemmLU

@@ -12,16 +12,16 @@ CNTBITS = 64
 BITS = 2
 
 EXPERIMENT_NAMES = {
-    "optmerge_im2row_ternarize": "Merge im2row+ternarize (optimized)",
-    "merge_im2row_ternarize": "Merge im2row+ternarize",
-    "indirect_nhwc": "Indirect convolutions (NHWC)",
-    "more_indirect_prelu_nhwc": "More Indirect convolutions + PReLU (NHWC)",
-    "more_indirect_nhwc": "More Indirect Convolutions (NHWC)",
-    "indirect_nhwc": "Indirect Convolutions (NHWC)",
-    "baseline_original": "Baseline (original)",
-    "baseline_nhwc": "Baseline (NHWC)",
-    "ternary_nhwc": "Ternary operators (NHWC)",
-    "baseline_nchw": "Baseline (NCHW)"
+    # "optmerge_im2row_ternarize": "Merge im2row+ternarize (optimized)",
+    # "merge_im2row_ternarize": "Merge im2row+ternarize",
+    # "indirect_nhwc": "Indirect convolutions (NHWC)",
+    # "more_indirect_prelu_nhwc": "More Indirect convolutions + PReLU (NHWC)",
+    # "more_indirect_nhwc": "More Indirect Convolutions (NHWC)",
+    # "indirect_nhwc": "Indirect Convolutions (NHWC)",
+    # "baseline_original": "Baseline (original)",
+    # "nhwc": "Baseline (NHWC)",
+    # "ternary_nhwc": "Ternary operators (NHWC)",
+    # "nchw": "Baseline (NCHW)"
 }
 
 def run_cmd(cmd: list[str]) -> str:
@@ -43,13 +43,13 @@ def get_input_size(benchmark_info: pd.Series) -> int:
     #     8*benchmark_info.channels*benchmark_info.batch_size
     #         *benchmark_info.input_height*benchmark_info.input_width
     # )
-    return (benchmark_info.batch_size * benchmark_info.input_height*benchmark_info.input_width * benchmark_info.channels)
+    return (benchmark_info.batch_size * benchmark_info.input_height*benchmark_info.input_width * benchmark_info.channels * benchmark_info.kernel_width * benchmark_info.kernel_height)
 
 def get_batch_size(benchmark_info: pd.Series) -> int:
     return benchmark_info.batch_size
 
 
-def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Function):
+def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Function, file: str):
     # ax.legend(loc='upper center',
     #         bbox_to_anchor=(0.5, 1.17),
     #         ncol=15,
@@ -62,10 +62,10 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.set_xscale("log")
-    ax.set_yscale("log")
+    #ax.set_yscale("log")
 
     title = f"{machine.model}"
-    ax.set_title(title)
+    ax.set_title(f"{title} ({file})")
     ax.legend()
     plt.suptitle(function)
     

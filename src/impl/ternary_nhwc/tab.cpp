@@ -1,6 +1,6 @@
 #include "impl/ternary_nhwc/tab.hpp"
-#include "impl/baseline_nhwc/gemm.hpp"
-#include "impl/baseline_nhwc/im2row.hpp"
+#include "impl/nhwc/gemm.hpp"
+#include "impl/nhwc/im2row.hpp"
 #include "impl/ternary_nhwc/prelu.hpp"
 #include "impl/ternary_nhwc/quantize.hpp"
 #include "measure.hpp"
@@ -22,13 +22,13 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
 
   // im2row
   measure_point(measurement_point::im2row, MeasurementEvent::START);
-  Tensor7D<int64_t> reshaped = baseline_nhwc::im2row(
-      quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
+  Tensor7D<int64_t> reshaped =
+      nhwc::im2row(quantized, kernel.dim2, kernel.dim3, stride_h, stride_w);
   measure_point(measurement_point::im2row, MeasurementEvent::END);
 
   // gemm
   measure_point(measurement_point::gemm, MeasurementEvent::START);
-  auto gemm_result = baseline_nhwc::ternary_gemm(reshaped, kernel);
+  auto gemm_result = nhwc::ternary_gemm(reshaped, kernel);
   measure_point(measurement_point::gemm, MeasurementEvent::END);
 
   // activation
