@@ -15,7 +15,6 @@
       } else if (current_value < -cur_thres) {                                 \
         first_bits |= onebit[bit];                                             \
         second_bits |= onebit[bit];                                            \
-      }                                                                        \
     }                                                                          \
   }
 
@@ -47,8 +46,6 @@
         second_bits |= onebit[bit];                                            \
       } else if (current_value < -tensor1d_get(thresholds, in)) {              \
         first_bits |= onebit[bit];                                             \
-        second_bits |= onebit[bit];                                            \
-      }                                                                        \
     }                                                                          \
   }
 
