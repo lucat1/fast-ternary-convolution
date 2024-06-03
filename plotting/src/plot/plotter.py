@@ -132,9 +132,9 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                 xs, ys_runtime, ys_performance = [], [], []
                 for _, data_point in experiment_data.iterrows():
                     xs.append(get_input_size(data_point))
-                    #cost = Baseline(data_point).cost()
+                    cost = Baseline(data_point).cost()
                     ys_runtime.append(data_point.cycles / machine_frequency)
-                    ys_performance.append((0) / data_point.cycles)
+                    ys_performance.append((cost.iops+cost.flops) / data_point.cycles)
                 if len(xs) == 0:
                     continue
                 xs, ys_runtime = unzip_data_points(xs,ys_runtime)

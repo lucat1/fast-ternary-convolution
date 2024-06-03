@@ -61,8 +61,16 @@ class Impl(ABC):
 
     def cost(self) -> Cost:
         fn = self.p.fn
+        if fn == Function.TERNARIZE.value:
+            return self.ternarize()
+        if fn == Function.IM2ROW.value:
+            return self.im2row()
         if fn == Function.TERNA2ROW.value:
             return self.ternarize_im2row()
+        elif fn == Function.GEMM.value:
+            return self.gemm_prelu()
+        elif fn == Function.PRELU.value:
+            return self.prelu()
         elif fn == Function.GEMMPRELU.value:
             return self.gemm_prelu()
         elif fn == Function.CONV.value:
