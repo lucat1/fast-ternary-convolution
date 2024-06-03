@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 from plot.datatypes import ConvType,Function
 from plot.impls.baseline import Baseline
-from plot.opcount.util import get_work_for_function, get_data_movement_for_function
 from plot.utils import set_plot_params,unzip_data_points,get_input_size,frequency_to_number,get_experiment_names
 from plot.machine_info import get_machine_info
 from pathlib import Path
