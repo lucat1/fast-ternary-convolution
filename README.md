@@ -91,3 +91,9 @@ measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
   - M<N=> N-M: whenever this branch is taken (if batch_size * oh * ow < kn according to Luca), performance seems to get a bit worse
   - Why? Unsure. Maybe it has to do with how the second matrix is passed in? i.e. N-K instead K-N? (not sure about this)
 - **t2r_gemmLU_block**: Block gemmLU
+  - we should ideally have autotune to find the blocking parameters
+- **t2r_gemmLU_unroll**: Unroll the most inner loop in SSA style
+  - seems to be worse than block
+  - hypothesis: by unrolling manually, we take away freedom from compiler to optimize it
+  - suscpicions further confirmed by disabling loop-unrolling via compiler flag: block and unroll appear to be similarly bad (although rerun this and confirm)
+  - we should check the assembly for the report
