@@ -94,7 +94,7 @@ def gemm_kernel_macro_256() -> Macro:
     iN = VarRef("iN")
     alpha = VarRef("alpha")
     computation = gemm_kernel_256(activation, kernel, output, N, K, iM, iN, alpha)
-    return Macro(name="gemm_kernel_256", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
+    return Macro(name="gemm_kernel", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
 
 def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, iK: Expr | Ref, cntp1: Ref, cntp2: Ref) -> Block:
     p1actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
@@ -194,7 +194,7 @@ def gemm_kernel_macro_512() -> Macro:
     iN = VarRef("iN")
     alpha = VarRef("alpha")
     computation = gemm_kernel_512(activation, kernel, output, N, K, iM, iN, alpha)
-    return Macro(name="gemm_kernel_512", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
+    return Macro(name="gemm_kernel", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
 
 def innermost_256_libpopcnt(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, iK: Expr | Ref, cntp1v: Ref, cntp2v: Ref) -> Block:
     p1actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
@@ -287,4 +287,4 @@ def gemm_kernel_macro_256_libpopcnt() -> Macro:
     iN = VarRef("iN")
     alpha = VarRef("alpha")
     computation = gemm_kernel_256_libpopcnt(activation, kernel, output, N, K, iM, iN, alpha)
-    return Macro(name="gemm_kernel_256", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
+    return Macro(name="gemm_kernel", args=[activation, kernel, output, N, K, BITS, iM, iN, alpha], computation=computation)
