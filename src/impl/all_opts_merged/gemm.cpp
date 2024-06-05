@@ -6,75 +6,47 @@
 // Based of off nhwc.
 namespace all_opts_merged {
 
-int array_equals(int64_t *a, int64_t *b, size_t len) {
-  for (size_t i = 0; i < len; i++) {
+int array_equals(int64_t *a, int64_t *b, int len) {
+  for (int i = 0; i < len; i++) {
     if (a[i] != b[i]) {
-      std::cout << "a is " << a[i] << " while b is " << b[i] << " at position "
-                << i << std::endl;
+      std::cout << "a is " << a[i] << " while b is " << b[i] << std::endl;
       return 0;
     }
   }
   return 1;
 }
 
-void print_array(int64_t *a, size_t len) {
-  for (size_t i = 0; i < len; i++) {
-    std::cout << a[i];
-  }
-  std::cout << std::endl;
-}
-
 #define inner_loop_vectorized(activation, kernel, K, im, in, output, alpha)    \
   {                                                                            \
     size_t ik = 0;                                                             \
-    __m512i cntp1_vec1 = _mm512_setzero_si512(),                               \
-            cntp1_vec2 = _mm512_setzero_si512();                               \
-    __m512i cntp2_vec1 = _mm512_setzero_si512(),                               \
-            cntp2_vec2 = _mm512_setzero_si512();                               \
-    __m512i p11, p21, p12, p22;                                                \
-    __m512i activation11, activation21, activation_lo1, activation_hi1,        \
-        kernel11, kernel21, kernel_lo1, kernel_hi1, activation12,              \
-        activation22, activation_lo2, activation_hi2, kernel12, kernel22,      \
-        kernel_lo2, kernel_hi2;                                                \
-    for (; ik + 15 * BITS < K; ik += 16 * BITS) {                              \
-      activation11 = _mm512_loadu_epi64(activation.data + K * im + ik);        \
-      activation21 = _mm512_loadu_epi64(activation.data + K * im + ik + 8);    \
-      kernel11 = _mm512_loadu_epi64(kernel.data + K * in + ik);                \
-      kernel21 = _mm512_loadu_epi64(kernel.data + K * in + ik + 8);            \
-                                                                               \
-      activation12 =                                                           \
-          _mm512_loadu_epi64(activation.data + K * im + ik + 2 * 8);           \
-      activation22 =                                                           \
-          _mm512_loadu_epi64(activation.data + K * im + ik + 3 * 8);           \
-      kernel12 = _mm512_loadu_epi64(kernel.data + K * in + ik + 2 * 8);        \
-      kernel22 = _mm512_loadu_epi64(kernel.data + K * in + ik + 3 * 8);        \
-                                                                               \
-      activation_lo1 = _mm512_unpacklo_epi64(activation11, activation21);      \
-      activation_hi1 = _mm512_unpackhi_epi64(activation11, activation21);      \
-      activation_lo2 = _mm512_unpacklo_epi64(activation12, activation22);      \
-      activation_hi2 = _mm512_unpackhi_epi64(activation12, activation22);      \
-                                                                               \
-      kernel_lo1 = _mm512_unpacklo_epi64(kernel11, kernel21);                  \
-      kernel_hi1 = _mm512_unpackhi_epi64(kernel11, kernel21);                  \
-      kernel_lo2 = _mm512_unpacklo_epi64(kernel12, kernel22);                  \
-      kernel_hi2 = _mm512_unpackhi_epi64(kernel12, kernel22);                  \
-                                                                               \
-      p11 = _mm512_xor_epi64(activation_lo1, kernel_lo1);                      \
-      p21 = _mm512_and_epi64(activation_hi1, kernel_hi1);                      \
-      p12 = _mm512_xor_epi64(activation_lo2, kernel_lo2);                      \
-      p22 = _mm512_and_epi64(activation_hi2, kernel_hi2);                      \
-                                                                               \
-      cntp1_vec1 = _mm512_add_epi64(cntp1_vec1, _mm512_popcnt_epi64(p21));     \
-      cntp2_vec1 = _mm512_add_epi64(                                           \
-          cntp2_vec1, _mm512_popcnt_epi64(_mm512_and_epi64(p11, p21)));        \
-      cntp1_vec2 = _mm512_add_epi64(cntp1_vec2, _mm512_popcnt_epi64(p22));     \
-      cntp2_vec2 = _mm512_add_epi64(                                           \
-          cntp2_vec2, _mm512_popcnt_epi64(_mm512_and_epi64(p12, p22)));        \
+    __m512i cntp1_vec = _mm512_setzero_si512();                                \
+    __m512i cntp2_vec = _mm512_setzero_si512();                                \
+    __m512i p1, p2;                                                            \
+    __m512i gather_offsets1 =                                                  \
+        _mm512_set_epi64(7 * BITS, 6 * BITS, 5 * BITS, 4 * BITS, 3 * BITS,     \
+                         2 * BITS, 1 * BITS, 0);                               \
+    __m512i gather_offsets2 = _mm512_set_epi64(                                \
+        7 * BITS + 1, 6 * BITS + 1, 5 * BITS + 1, 4 * BITS + 1, 3 * BITS + 1,  \
+        2 * BITS + 1, 1 * BITS + 1, 1);                                        \
+    __m512i activation1, activation2, kernel1, kernel2;                        \
+    for (; ik + 7 * BITS < K; ik += 8 * BITS) {                                \
+      activation1 = _mm512_i64gather_epi64(gather_offsets1,                    \
+                                           activation.data + K * im + ik, 8);  \
+      activation2 = _mm512_i64gather_epi64(gather_offsets2,                    \
+                                           activation.data + K * im + ik, 8);  \
+      kernel1 = _mm512_i64gather_epi64(gather_offsets1,                        \
+                                       kernel.data + K * in + ik, 8);          \
+      kernel2 = _mm512_i64gather_epi64(gather_offsets2,                        \
+                                       kernel.data + K * in + ik, 8);          \
+      /* Correct until here */                                                 \
+      p1 = _mm512_xor_epi64(activation1, kernel1);                             \
+      p2 = _mm512_and_epi64(activation2, kernel2);                             \
+      cntp1_vec = _mm512_add_epi64(cntp1_vec, _mm512_popcnt_epi64(p2));        \
+      cntp2_vec = _mm512_add_epi64(                                            \
+          cntp2_vec, _mm512_popcnt_epi64(_mm512_and_epi64(p1, p2)));           \
     }                                                                          \
-    int cntp1 = _mm512_reduce_add_epi64(cntp1_vec1) +                          \
-                _mm512_reduce_add_epi64(cntp1_vec2);                           \
-    int cntp2 = _mm512_reduce_add_epi64(cntp2_vec1) +                          \
-                _mm512_reduce_add_epi64(cntp2_vec2);                           \
+    int cntp1 = _mm512_reduce_add_epi64(cntp1_vec);                            \
+    int cntp2 = _mm512_reduce_add_epi64(cntp2_vec);                            \
     for (; ik < K; ik += BITS) {                                               \
       int64_t p1 =                                                             \
           activation.get_123_4567(im, ik) ^ kernel.get_1_2345(in, ik);         \
