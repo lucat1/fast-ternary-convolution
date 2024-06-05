@@ -4,7 +4,7 @@
 // Their intrinsic popcnt functions are different from MSVC
 #define GCC
 // #define CLANG
-#define MEASURE_INTERNAL
+//#define MEASURE_INTERNAL
 
 #include <array>
 #include <cstdint>
