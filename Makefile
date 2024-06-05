@@ -8,10 +8,11 @@ CXX = g++
 ## -MP creates phony targets for headers (deals with deleted headers after
 ##  obj file has been compiled)
 ## -MT specifies the dependency target (path qualified obj file name)
-OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20
+EXTRA = -DN_BLOCK_SIZE=1 -DM_BLOCK_SIZE=512 -DK_BLOCK_SIZE=16
+OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 
 # TODO: Add more warn flags?
 WARNFLAGS = -Wall -Wextra -Werror
-CXXFLAGS = -Iinclude -MT $@ -MMD -MP -MF $(@:.o=.d) $(OPTFLAGS) $(WARNFLAGS)
+CXXFLAGS = -Iinclude -MT $@ -MMD -MP -MF $(@:.o=.d) $(OPTFLAGS) $(WARNFLAGS) $(EXTRA)
 
 CPP_FILES := $(wildcard $(SRC_DIR)/**/**/*.cpp) $(wildcard $(SRC_DIR)/**/*.cpp) $(wildcard $(SRC_DIR)/*.cpp)
 CPP_HEADER_FILES := $(wildcard $(SRC_DIR)/**/**/*.hpp) $(wildcard $(SRC_DIR)/**/*.hpp) $(wildcard $(SRC_DIR)/*.hpp)
