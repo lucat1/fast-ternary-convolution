@@ -4,8 +4,9 @@
 // Their intrinsic popcnt functions are different from MSVC
 #define GCC
 // #define CLANG
-//#define MEASURE_INTERNAL
+#define MEASURE_INTERNAL
 
+#include "libpopcnt.h"
 #include <array>
 #include <cstdint>
 #include <iostream>
@@ -35,14 +36,12 @@ template <typename T> void print_vec(std::string name, T *v, int size) {
 // CLANG may use popcntintrin.h, but clang may share the same
 // __builtin_popcountll(a) as GCC
 #include <popcntintrin.h>
-#define popcnt64(a) _mm_popcnt_u64(a)
 #else
 #ifdef GCC
 // GCC on GNU/Linux may use the nmmintrin.h and immintrin.h for x86_64 CPUs, no
 // need to include them on ARM CPU
 #include <immintrin.h>
 #include <nmmintrin.h>
-#define popcnt64(a) __builtin_popcountll(a)
 #endif
 #endif // CLANG
 
