@@ -115,7 +115,7 @@ ternarize_im2row(const Tensor4D<float> &data, const Tensor1D<float> &thresholds,
 
   Tensor7D<int64_t> quantized_reshaped(n, out_h, out_w, kernel_h, kernel_w,
                                        packed_c, 2, true);
-  int64_t * quantized_reshaped_data = quantized_reshaped.data;
+  int64_t *quantized_reshaped_data = quantized_reshaped.data;
   for (size_t in = 0; in < n; in++) {
     for (size_t io_h = 0; io_h < out_h; io_h++) {
       size_t start_ik_h =
