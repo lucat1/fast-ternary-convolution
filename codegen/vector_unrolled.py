@@ -40,7 +40,7 @@ def gemm_kernel_256(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, off(uK))),
             op=Op.lte,
             stride=off(uK),
@@ -50,7 +50,7 @@ def gemm_kernel_256(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(Literal(f"{uK_cleanup}"), Op.times, BITS))),
             op=Op.lte,
             stride=Expr(Literal(f"{uK_cleanup}"), Op.times, BITS),
@@ -138,7 +138,7 @@ def gemm_kernel_512(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, off(uK))),
             op=Op.lte,
             stride=off(uK),
@@ -148,7 +148,7 @@ def gemm_kernel_512(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(Literal(f"{uK_cleanup}"), Op.times, BITS))),
             stride=Expr(Literal(f"{uK_cleanup}"), Op.times, BITS),
             block=Block(computes)

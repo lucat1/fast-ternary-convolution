@@ -60,7 +60,7 @@ def gemm_kernel(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, iM: E
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(Literal(f"{uK}"), Op.times, BITS))),
             op=Op.lte,
             stride=Expr(Literal(f"{uK}"), Op.times, BITS),

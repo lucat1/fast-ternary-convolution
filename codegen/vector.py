@@ -64,7 +64,7 @@ def gemm_kernel_256(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(four, Op.times, BITS))),
             op=Op.lte,
             stride=Expr(four, Op.times, BITS),
@@ -162,7 +162,7 @@ def gemm_kernel_512(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, i
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(eight, Op.times, BITS))),
             op=Op.lte,
             stride=Expr(eight, Op.times, BITS),
@@ -255,7 +255,7 @@ def gemm_kernel_256_libpopcnt(activation: Ref, kernel: Ref, output: Ref, N: Ref,
         Loop(
             i=iK.ref,
             lower=None,
-            check=Cast(Type.i32, K),
+            check=Cast(Type.i32, iK.ref),
             upper=Expr(Cast(Type.i32, K), Op.minus, Cast(Type.i32, Expr(four, Op.times, BITS))),
             op=Op.lte,
             stride=Expr(four, Op.times, BITS),

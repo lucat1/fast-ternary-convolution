@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Optional, Set
+from typing import List, Optional, Set, cast
 
 class Type(Enum):
     size = "size_t"
@@ -121,9 +121,6 @@ class Code(ABC):
     def gen(self) -> str:
         pass
 
-    def free_variables(self) -> Set[str]:
-        return set()
-
 class InstructionKind(Enum):
     load = 0
     compute = 1
@@ -136,14 +133,13 @@ class Instruction(Code):
         self.dst = dst
         self.src = src
         self.typ = typ
-        assert kind == InstructionKind.store or self.typ is not None
 
     def gen(self) -> str:
-        if self.kind == InstructionKind.store:
-            return f"{self.dst.gen()} = ({self.src.gen()});"
-        else:
-            assert self.typ is not None
-            return f"{self.typ.value} {self.dst.gen()} = ({self.src.gen()});"
+        return f"{self.dst.gen()} = ({self.src.gen()});"
+
+    def declr(self) -> Optional[str]:
+        if self.typ is not None:
+            return f"{self.typ.value} {self.dst.gen()};"
 
 class Declr(Code):
     def __init__(self, typ: Type, dst: Ref, size: Optional[Ref | Expr | Literal] = None) -> None:
@@ -154,6 +150,9 @@ class Declr(Code):
         self.typ = typ
 
     def gen(self) -> str:
+        return ""
+
+    def declr(self) -> Optional[str]:
         if self.size is not None:
             return f"{self.typ.value} {self.dst.gen()}[{self.size.gen()}];"
         else:
@@ -164,6 +163,10 @@ class Computation():
     @property
     def is_cf(self) -> bool:
         return False
+
+    @property
+    def declrs(self) -> List[str]:
+        return []
 
     @property
     def steps(self) -> List[Code]:
@@ -262,6 +265,24 @@ class Block(Computation):
     def filter(self, comp: List[Computation], kind: InstructionKind) -> List[Instruction]:
         return [step for instr in comp for step in instr.steps if step.kind == kind]
 
+    def declrs(self) -> List[str]:
+        def m(i: Instruction) -> str | None:
+            return i.declr()
+
+        def f(d: str | None) -> bool:
+            return d is not None
+
+        def extract(comp) -> List[str]:
+            if isinstance(comp, List):
+                loads = list(filter(f, map(m, self.filter(comp, InstructionKind.load))))
+                computes = list(filter(f, map(m, self.filter(comp, InstructionKind.compute))))
+                stores = list(filter(f, map(m, self.filter(comp, InstructionKind.store))))
+                return cast(List[str], loads + computes + stores)
+            else:
+                return comp.declrs()
+
+        return [ele for comp in self.components for ele in extract(comp)]
+
     def gen(self) -> str:
         out = ""
         for comp in self.components:
@@ -283,8 +304,7 @@ class Block(Computation):
                 out += '\n'
                 out += comp.gen()
 
-        out = '  '.join(('\n' + out).splitlines(True))
-        return "{" + out + "\n}"
+        return '  '.join(('\n' + out).splitlines(True))[1:]
 
 class Loop(Computation):
     def __init__(self, i: Ref, lower: Expr | Ref | Literal | None, upper: Expr | Ref | Literal, stride: Expr | Ref | Literal, block: Block, op: Op = Op.lt, check: Optional[Expr | Ref | Literal] = None) -> None:
@@ -303,14 +323,17 @@ class Loop(Computation):
     def is_cf(self) -> bool:
         return True
 
+    def declrs(self) -> List[str]:
+        return self.block.declrs() + [f"size_t {self.i.gen()};"]
+
     @property
     def steps(self) -> List[Code]:
       return []
 
     def gen(self) -> str:
         block = self.block.gen()
-        lower = f"size_t {self.i.gen()} = {self.lower.gen()}" if self.lower is not None else ""
-        return f"for({lower}; ({self.check.gen()}) {self.op.value} ({self.upper.gen()}); {self.i.gen()} += {self.stride.gen()})\n" + block + '\n'
+        lower = f"{self.i.gen()} = {self.lower.gen()}" if self.lower is not None else ""
+        return f"for({lower}; ({self.check.gen()}) {self.op.value} ({self.upper.gen()}); {self.i.gen()} += {self.stride.gen()})\n{{" + block + '\n}'
 
 class Macro():
     def __init__(self, name: str, args: List[Ref], computation: Computation) -> None:
@@ -320,7 +343,11 @@ class Macro():
 
     def gen(self) -> str:
         macro = f"#define {self.name}({', '.join(map(lambda a: a.gen(), self.args))})"
-        lines = [macro] + (f"do " + self.computation.gen() + " while(0);").split('\n')
+        declrs = set(self.computation.declrs())
+        body = '\n'.join(declrs)
+        body = '  '.join(('\n' + body).splitlines(True))
+        body += '\n' + self.computation.gen()
+        lines = [macro] + ("do {" + body + "\n} while(0);").split('\n') 
         longest = max([len(line) for line in lines] + [80])
         lines = [line.ljust(longest+2) + '\\' for line in lines]
         return '\n'.join(lines)

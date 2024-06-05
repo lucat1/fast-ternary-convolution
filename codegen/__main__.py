@@ -6,13 +6,13 @@ from codegen.vector_unrolled import gemm_kernel_macro_256 as unrolled_256, gemm_
 
 if __name__ == "__main__":
     # code = straight_macro()
-    code = unrolled_macro(4)
+    # code = unrolled_macro(8)
     # code = vector_256()
     # code = unrolled_256(2, 2)
     # code = vector_512()
-    # code = unrolled_512(16, 16)
+    # code = unrolled_512(4, 4)
 
-    # code = vector_256_popcnt()
+    code = vector_256_popcnt()
 
     print(code.gen())
     # only for debugging with python3 -m codegen | vi
