@@ -10,7 +10,7 @@
             cntp2_vec1 = _mm512_setzero_si512(),                               \
             cntp1_vec2 = _mm512_setzero_si512(),                               \
             cntp2_vec2 = _mm512_setzero_si512();                               \
-    __m512i p11, p21,p12, p22;                                                 \
+    __m512i p11, p21, p12, p22;                                                \
     __m512i activation11, activation21, activation_lo1, activation_hi1,        \
         kernel11, kernel21, kernel_lo1, kernel_hi1, activation12,              \
         activation22, activation_lo2, activation_hi2, kernel12, kernel22,      \

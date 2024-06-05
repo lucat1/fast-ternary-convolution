@@ -2,8 +2,7 @@
 #include "common.hpp"
 #include <immintrin.h>
 
-
-#define gemm_kernel_512(activation, kernel, K, iM, iN, output,alpha,N) \
+#define gemm_kernel_512(activation, kernel, K, iM, iN, output, alpha, N)       \
   do {                                                                         \
     int64_t comp28;                                                            \
     __m512i comp17;                                                            \
