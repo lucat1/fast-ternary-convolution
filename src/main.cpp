@@ -18,8 +18,8 @@
 #include "impl/t2r_gemmLU/tab.hpp"
 #include "impl/t2r_gemmLU_autoblock/tab.hpp"
 #include "impl/t2r_gemmLU_block/tab.hpp"
-#include "impl/t2r_gemmLU_unroll/tab.hpp"
 #include "impl/t2r_gemmLU_lord/tab.hpp"
+#include "impl/t2r_gemmLU_unroll/tab.hpp"
 #include "impl/tern2row/tab.hpp"
 #include "impl/tern2row_cpy/tab.hpp"
 #include "impl/tern2row_memcpy/tab.hpp"
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
       {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
 
-            {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
+      {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
       {"t2r_gemmLU_lord", DataOrder::NHWC, t2r_gemmLU_lord::conv},
       {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
