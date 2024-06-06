@@ -12,9 +12,9 @@ namespace alloc {
 
 using namespace std;
 
-static constexpr size_t ALIGNMENT = 32;
+static constexpr size_t ALIGNMENT = 64;
 
-#define alloc_size(n) (n * sizeof(T) + 31 + 8)
+#define alloc_size(n) (n * sizeof(T) + ALIGNMENT + sizeof(size_t))
 
 template <typename T> T *alloc(size_t n) {
   size_t bytes = alloc_size(n);
@@ -25,13 +25,14 @@ template <typename T> T *alloc(size_t n) {
   size_t raw_addr = (size_t)malloc(bytes);
   assert(raw_addr != (size_t) nullptr);
   size_t *aligned_addr = static_cast<size_t *>((void *)raw_addr);
-  if (raw_addr % ALIGNMENT > 0)
+  if ((raw_addr + sizeof(size_t)) % ALIGNMENT > 0)
     aligned_addr = static_cast<size_t *>(static_cast<void *>(
-        (void *)(raw_addr + (ALIGNMENT - raw_addr % ALIGNMENT))));
+        (void *)(raw_addr +
+                 (ALIGNMENT - ((raw_addr + sizeof(size_t)) % ALIGNMENT)))));
 
-  assert((size_t)aligned_addr % ALIGNMENT == 0);
   size_t *original_addr_ptr = &aligned_addr[0];
   T *data_ptr = static_cast<T *>(static_cast<void *>(&aligned_addr[1]));
+  assert((size_t)data_ptr % ALIGNMENT == 0);
 
   *original_addr_ptr = (size_t)raw_addr;
 #else
