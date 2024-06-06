@@ -92,8 +92,13 @@ int main(int argc, char *argv[]) {
       {"t2r_avx512u_ur_gemmLU_block", DataOrder::NHWC,
        t2r_avx512u_ur_gemmLU_block::conv},
 
-      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
       {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
+
+      {"avx2_lessunpack_popout", DataOrder::NHWC, avx2_lessunpack_popout::conv},
+      {"avx2_popout", DataOrder::NHWC, avx2_popout::conv},
+      {"avx2_lessunpack", DataOrder::NHWC, avx2_lessunpack::conv},
+      {"avx2", DataOrder::NHWC, avx2::conv},
+
       {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},

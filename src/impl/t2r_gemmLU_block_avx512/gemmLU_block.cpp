@@ -3,131 +3,147 @@
 #include "tensor_macros1.hpp"
 
 #define gemm_kernel_512(activation, kernel, output, N, K, BITS, iM, iN, alpha) \
-  {                                                                            \
+  do {                                                                         \
+    int64_t comp15;                                                            \
+    __m512i comp3;                                                             \
+    __m512i load1;                                                             \
+    __m512i comp9;                                                             \
+    int64_t comp29;                                                            \
+    __m512i comp6;                                                             \
+    __m512i comp2;                                                             \
+    __m512i comp1;                                                             \
+    int64_t load16;                                                            \
+    float comp25;                                                              \
+    int comp16;                                                                \
+    __m512i comp11;                                                            \
+    __m512i comp7;                                                             \
+    int64_t load9;                                                             \
+    int64_t load12;                                                            \
+    int comp13;                                                                \
+    __m512i load3;                                                             \
+    int64_t load14;                                                            \
+    int64_t comp27;                                                            \
+    int comp30;                                                                \
+    int comp32;                                                                \
+    __m512i comp10;                                                            \
+    int comp19;                                                                \
+    int64_t comp14;                                                            \
+    int64_t comp23;                                                            \
+    int load8;                                                                 \
+    __m512i load4;                                                             \
+    __m512i comp8;                                                             \
+    __m512i comp4;                                                             \
+    int comp31;                                                                \
+    int64_t comp17;                                                            \
+    int load7;                                                                 \
+    int64_t load10;                                                            \
+    __m512i comp5;                                                             \
+    __m512i load6;                                                             \
+    __m512i load5;                                                             \
+    int comp22;                                                                \
+    size_t iK;                                                                 \
+    int64_t load11;                                                            \
+    int comp20;                                                                \
+    int64_t comp26;                                                            \
+    int comp21;                                                                \
+    __m512i load2;                                                             \
+    int comp12;                                                                \
+    int64_t comp24;                                                            \
+    int comp28;                                                                \
+    int64_t load15;                                                            \
+    int64_t load13;                                                            \
+    int comp18;                                                                \
                                                                                \
-    __m512i load1 = (_mm512_setzero_si512());                                  \
-    __m512i load2 = (_mm512_setzero_si512());                                  \
-    __m512i load7 = (_mm512_setzero_si512());                                  \
-    __m512i load8 = (_mm512_setzero_si512());                                  \
-    int32_t load13 = (0);                                                      \
-    int32_t load14 = (0);                                                      \
-    int32_t load19 = (0);                                                      \
-    int32_t load20 = (0);                                                      \
-    size_t iK = (0);                                                           \
-    for (; (int)iK <= (int)K - ((2 * (8 * (int)BITS)));                        \
-         iK += (2 * (8 * BITS))) {                                             \
+    load1 = (_mm512_setzero_si512());                                          \
+    load2 = (_mm512_setzero_si512());                                          \
+    load7 = (0);                                                               \
+    load8 = (0);                                                               \
+    iK = (0);                                                                  \
+    for (; (((int)(iK))) <=                                                    \
+           (((((int)(K))) - (((int)(((1) * (((8) * (BITS)))))))));             \
+         iK += ((1) * (((8) * (BITS))))) {                                     \
                                                                                \
-      __m512i load3 = (_mm512_loadu_si512(                                     \
+      load3 = (_mm512_loadu_si512(                                             \
           (__m512i *)(activation +                                             \
-                      (((iM * K) + ((iK + (0 * (8 * BITS))) + 0))))));         \
-      __m512i load4 = (_mm512_loadu_si512((                                    \
-          __m512i *)(kernel + (((iN * K) + ((iK + (0 * (8 * BITS))) + 0)))))); \
-      __m512i load5 = (_mm512_loadu_si512(                                     \
+                      (((((iM) * (K))) +                                       \
+                        (((((iK) + (((0) * (((8) * (BITS))))))) + (0))))))));  \
+      load4 = (_mm512_loadu_si512(                                             \
+          (__m512i *)(kernel +                                                 \
+                      (((((iN) * (K))) +                                       \
+                        (((((iK) + (((0) * (((8) * (BITS))))))) + (0))))))));  \
+      load5 = (_mm512_loadu_si512(                                             \
           (__m512i *)(activation +                                             \
-                      (((iM * K) + ((iK + (0 * (8 * BITS))) + 8))))));         \
-      __m512i load6 = (_mm512_loadu_si512((                                    \
-          __m512i *)(kernel + (((iN * K) + ((iK + (0 * (8 * BITS))) + 8)))))); \
-      __m512i load9 = (_mm512_loadu_si512(                                     \
-          (__m512i *)(activation +                                             \
-                      (((iM * K) + ((iK + (1 * (8 * BITS))) + 0))))));         \
-      __m512i load10 = (_mm512_loadu_si512((                                   \
-          __m512i *)(kernel + (((iN * K) + ((iK + (1 * (8 * BITS))) + 0)))))); \
-      __m512i load11 = (_mm512_loadu_si512(                                    \
-          (__m512i *)(activation +                                             \
-                      (((iM * K) + ((iK + (1 * (8 * BITS))) + 8))))));         \
-      __m512i load12 = (_mm512_loadu_si512((                                   \
-          __m512i *)(kernel + (((iN * K) + ((iK + (1 * (8 * BITS))) + 8)))))); \
+                      (((((iM) * (K))) +                                       \
+                        (((((iK) + (((0) * (((8) * (BITS))))))) + (8))))))));  \
+      load6 = (_mm512_loadu_si512(                                             \
+          (__m512i *)(kernel +                                                 \
+                      (((((iN) * (K))) +                                       \
+                        (((((iK) + (((0) * (((8) * (BITS))))))) + (8))))))));  \
                                                                                \
-      __m512i comp1 = (_mm512_unpacklo_epi64(load3, load5));                   \
-      __m512i comp2 = (_mm512_unpackhi_epi64(load3, load5));                   \
-      __m512i comp3 = (_mm512_unpacklo_epi64(load4, load6));                   \
-      __m512i comp4 = (_mm512_unpackhi_epi64(load4, load6));                   \
-      __m512i comp5 = (_mm512_xor_epi64(comp1, comp3));                        \
-      __m512i comp6 = (_mm512_and_epi64(comp2, comp4));                        \
-      __m512i comp8 = (_mm512_popcnt_epi64(comp6));                            \
-      __m512i comp7 = (_mm512_and_epi64(comp5, comp6));                        \
-      __m512i comp9 = (_mm512_popcnt_epi64(comp7));                            \
-      __m512i comp10 = (_mm512_add_epi64(load1, comp8));                       \
-      __m512i comp11 = (_mm512_add_epi64(load2, comp9));                       \
-      __m512i comp12 = (_mm512_unpacklo_epi64(load9, load11));                 \
-      __m512i comp13 = (_mm512_unpackhi_epi64(load9, load11));                 \
-      __m512i comp14 = (_mm512_unpacklo_epi64(load10, load12));                \
-      __m512i comp15 = (_mm512_unpackhi_epi64(load10, load12));                \
-      __m512i comp16 = (_mm512_xor_epi64(comp12, comp14));                     \
-      __m512i comp17 = (_mm512_and_epi64(comp13, comp15));                     \
-      __m512i comp19 = (_mm512_popcnt_epi64(comp17));                          \
-      __m512i comp18 = (_mm512_and_epi64(comp16, comp17));                     \
-      __m512i comp20 = (_mm512_popcnt_epi64(comp18));                          \
-      __m512i comp21 = (_mm512_add_epi64(load7, comp19));                      \
-      __m512i comp22 = (_mm512_add_epi64(load8, comp20));                      \
+      comp1 = (_mm512_xor_epi64(load3, load4));                                \
+      comp3 = (_mm512_xor_epi64(load5, load6));                                \
+      comp2 = (_mm512_and_epi64(load3, load4));                                \
+      comp4 = (_mm512_and_epi64(load5, load6));                                \
+      comp5 = (_mm512_unpacklo_epi64(comp1, comp3));                           \
+      comp6 = (_mm512_unpackhi_epi64(comp2, comp4));                           \
+      comp8 = (_mm512_popcnt_epi64(comp6));                                    \
+      comp7 = (_mm512_and_epi64(comp5, comp6));                                \
+      comp9 = (_mm512_popcnt_epi64(comp7));                                    \
+      comp10 = (_mm512_add_epi64(load1, comp8));                               \
+      comp11 = (_mm512_add_epi64(load2, comp9));                               \
       load1 = (comp10);                                                        \
       load2 = (comp11);                                                        \
-      load7 = (comp21);                                                        \
-      load8 = (comp22);                                                        \
+    }                                                                          \
+    for (; (((int)(iK))) < (((((int)(K))) - (((int)(((4) * (BITS)))))));       \
+         iK += ((4) * (BITS))) {                                               \
+                                                                               \
+      load9 = ((activation)[((((iM) * (K))) +                                  \
+                             (((((iK) + (((0) * (BITS))))) + (0))))]);         \
+      load10 = ((                                                              \
+          kernel)[((((iN) * (K))) + (((((iK) + (((0) * (BITS))))) + (0))))]);  \
+      load11 = ((activation)[((((iM) * (K))) +                                 \
+                              (((((iK) + (((0) * (BITS))))) + (1))))]);        \
+      load12 = ((                                                              \
+          kernel)[((((iN) * (K))) + (((((iK) + (((0) * (BITS))))) + (1))))]);  \
+                                                                               \
+      comp14 = (((load9) ^ (load10)));                                         \
+      comp15 = (((load11) & (load12)));                                        \
+      comp16 = (popcnt64(comp15));                                             \
+      comp17 = (((comp14) & (comp15)));                                        \
+      comp18 = (popcnt64(comp17));                                             \
+      comp19 = (((load7) + (comp16)));                                         \
+      comp20 = (((load8) + (comp18)));                                         \
+      load7 = (comp19);                                                        \
+      load8 = (comp20);                                                        \
     }                                                                          \
                                                                                \
-    for (; (iK + (1 * BITS)) < K; iK += (BITS * 2)) {                          \
+    comp12 = (_mm512_reduce_add_epi64(load1));                                 \
+    comp13 = (_mm512_reduce_add_epi64(load2));                                 \
+    comp21 = (((comp12) + (load7)));                                           \
+    comp22 = (((comp13) + (load8)));                                           \
+    for (; (iK) < (K); iK += BITS) {                                           \
                                                                                \
-      int64_t load15 = (activation[((iM * K) + ((iK + (0 * BITS)) + 0))]);     \
-      int64_t load16 = (kernel[((iN * K) + ((iK + (0 * BITS)) + 0))]);         \
-      int64_t load17 = (activation[((iM * K) + ((iK + (0 * BITS)) + 1))]);     \
-      int64_t load18 = (kernel[((iN * K) + ((iK + (0 * BITS)) + 1))]);         \
-      int64_t load21 = (activation[((iM * K) + ((iK + (1 * BITS)) + 0))]);     \
-      int64_t load22 = (kernel[((iN * K) + ((iK + (1 * BITS)) + 0))]);         \
-      int64_t load23 = (activation[((iM * K) + ((iK + (1 * BITS)) + 1))]);     \
-      int64_t load24 = (kernel[((iN * K) + ((iK + (1 * BITS)) + 1))]);         \
+      load13 = ((activation)[((((iM) * (K))) + (((iK) + (0))))]);              \
+      load14 = ((kernel)[((((iN) * (K))) + (((iK) + (0))))]);                  \
+      load15 = ((activation)[((((iM) * (K))) + (((iK) + (1))))]);              \
+      load16 = ((kernel)[((((iN) * (K))) + (((iK) + (1))))]);                  \
                                                                                \
-      int64_t comp27 = ((load15 ^ load16));                                    \
-      int64_t comp28 = ((load17 & load18));                                    \
-      int32_t comp29 = (popcnt64(comp28));                                     \
-      int64_t comp30 = ((comp27 & comp28));                                    \
-      int32_t comp31 = (popcnt64(comp30));                                     \
-      int32_t comp32 = ((load13 + comp29));                                    \
-      int32_t comp33 = ((load14 + comp31));                                    \
-      int64_t comp34 = ((load21 ^ load22));                                    \
-      int64_t comp35 = ((load23 & load24));                                    \
-      int32_t comp36 = (popcnt64(comp35));                                     \
-      int64_t comp37 = ((comp34 & comp35));                                    \
-      int32_t comp38 = (popcnt64(comp37));                                     \
-      int32_t comp39 = ((load19 + comp36));                                    \
-      int32_t comp40 = ((load20 + comp38));                                    \
-      load13 = (comp32);                                                       \
-      load14 = (comp33);                                                       \
-      load19 = (comp39);                                                       \
-      load20 = (comp40);                                                       \
+      comp26 = (((load13) ^ (load14)));                                        \
+      comp27 = (((load15) & (load16)));                                        \
+      comp28 = (popcnt64(comp27));                                             \
+      comp29 = (((comp26) & (comp27)));                                        \
+      comp30 = (popcnt64(comp29));                                             \
+      comp31 = (((comp21) + (comp28)));                                        \
+      comp32 = (((comp22) + (comp30)));                                        \
+      comp21 = (comp31);                                                       \
+      comp22 = (comp32);                                                       \
     }                                                                          \
                                                                                \
-    __m512i comp23 = (_mm512_add_epi64(load7, load1));                         \
-    __m512i comp24 = (_mm512_add_epi64(load8, load2));                         \
-    int32_t comp41 = ((load19 + load13));                                      \
-    int32_t comp42 = ((load20 + load14));                                      \
-    int32_t comp25 = (_mm512_reduce_add_epi64(comp23));                        \
-    int32_t comp26 = (_mm512_reduce_add_epi64(comp24));                        \
-    int32_t comp43 = ((comp25 + comp41));                                      \
-    int32_t comp44 = ((comp26 + comp42));                                      \
-    for (; iK < K; iK += BITS) {                                               \
-                                                                               \
-      int64_t load25 = (activation[((iM * K) + (iK + 0))]);                    \
-      int64_t load26 = (kernel[((iN * K) + (iK + 0))]);                        \
-      int64_t load27 = (activation[((iM * K) + (iK + 1))]);                    \
-      int64_t load28 = (kernel[((iN * K) + (iK + 1))]);                        \
-                                                                               \
-      int64_t comp48 = ((load25 ^ load26));                                    \
-      int64_t comp49 = ((load27 & load28));                                    \
-      int32_t comp50 = (popcnt64(comp49));                                     \
-      int64_t comp51 = ((comp48 & comp49));                                    \
-      int32_t comp52 = (popcnt64(comp51));                                     \
-      int32_t comp53 = ((comp43 + comp50));                                    \
-      int32_t comp54 = ((comp44 + comp52));                                    \
-      comp43 = (comp53);                                                       \
-      comp44 = (comp54);                                                       \
-    }                                                                          \
-                                                                               \
-    int64_t comp45 = ((comp43 - comp44));                                      \
-    int64_t comp46 = ((comp45 - comp44));                                      \
-    float comp47 = ((((comp46 > 0)) ? (comp46) : ((comp46 * alpha))));         \
-    output[((iM * N) + iN)] = (comp47);                                        \
-  }                                                                            \
+    comp23 = (((comp21) - (comp22)));                                          \
+    comp24 = (((comp23) - (comp22)));                                          \
+    comp25 = (((((comp24) > (0))) ? (comp24) : (((comp24) * (alpha)))));       \
+    (output)[((((iM) * (N))) + (iN))] = (comp25);                              \
+  } while (0);                                                                 \
   // vi: ft=c
 
 namespace t2r_gemmLU_block_avx512 {

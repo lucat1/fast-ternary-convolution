@@ -9,7 +9,7 @@ CXX = g++
 ##  obj file has been compiled)
 ## -MT specifies the dependency target (path qualified obj file name)
 EXTRA = -DN_BLOCK_SIZE=1 -DM_BLOCK_SIZE=512 -DK_BLOCK_SIZE=16
-OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq -Wno-uninitialized
+OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq -Wno-uninitialized -mavx512vl 
 # TODO: Add more warn flags?
 WARNFLAGS = -Wall -Wextra -Werror
 CXXFLAGS = -Iinclude -MT $@ -MMD -MP -MF $(@:.o=.d) $(WARNFLAGS) $(OPTFLAGS) $(EXTRA)
