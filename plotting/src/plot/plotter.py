@@ -31,7 +31,7 @@ csv_columns = ["name","ct","fn","cycles","channels",
 
 merged_funcs = {
     Function.TERNA2ROW: [Function.TERNARIZE, Function.IM2ROW],
-#    Function.GEMMPRELU: [Function.GEMM, Function.PRELU],
+    Function.GEMMPRELU: [Function.GEMM, Function.PRELU],
 }
 ignored_functions = [
     Function.ALLOC, Function.TERNARIZE, Function.IM2ROW
