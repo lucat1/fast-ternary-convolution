@@ -2,8 +2,12 @@
 #include "common.hpp"
 #include "impl.hpp"
 #include "impl/all_opts_merged/tab.hpp"
+
+#include "impl/avx2/tab.hpp"
+#include "impl/avx2_lessunpack/tab.hpp"
 #include "impl/avx2_lessunpack_popout/tab.hpp"
 #include "impl/avx2_popout/tab.hpp"
+
 #include "impl/indirect/tab.hpp"
 #include "impl/more_indirect/tab.hpp"
 #include "impl/nchw/tab.hpp"
@@ -68,6 +72,8 @@ int main(int argc, char *argv[]) {
 
       {"avx2_lessunpack_popout", DataOrder::NHWC, avx2_lessunpack_popout::conv},
       {"avx2_popout", DataOrder::NHWC, avx2_popout::conv},
+      {"avx2_lessunpack", DataOrder::NHWC, avx2_lessunpack::conv},
+      {"avx2", DataOrder::NHWC, avx2::conv},
 
       {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
