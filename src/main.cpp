@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "impl.hpp"
 #include "impl/all_opts_merged/tab.hpp"
+#include "impl/all_opts_merged_avx2/tab.hpp"
 
 #include "impl/avx2/tab.hpp"
 #include "impl/avx2_lessunpack/tab.hpp"
@@ -93,6 +94,7 @@ int main(int argc, char *argv[]) {
        t2r_avx512u_ur_gemmLU_block::conv},
 
       {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
+      {"all_opts_merged_avx2", DataOrder::NHWC, all_opts_merged_avx2::conv},
 
       {"avx2_lessunpack_popout", DataOrder::NHWC, avx2_lessunpack_popout::conv},
       {"avx2_popout", DataOrder::NHWC, avx2_popout::conv},
