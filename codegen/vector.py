@@ -140,6 +140,44 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
         Store(dst=cntp2, src=sumpopcntp1p2.ref),
     ])
 
+def innermost_512_libpopcnt(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, iK: Expr | Ref, cntp1v: Ref, cntp2v: Ref) -> Block:
+    p1actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
+    p2actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, eight))
+    p1keridx = Expr(Expr(iN, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
+    p2keridx = Expr(Expr(iN, Op.times, K), Op.plus, Expr(iK, Op.plus, eight))
+    a1 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p1actidx))
+    k1 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p1keridx))
+    a2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p2actidx))
+    k2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p2keridx))
+
+    xor1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a2.ref, k2.ref]))
+
+    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[and1.ref, and2.ref]))
+    p1andp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_si512", args=[p1.ref, p2.ref]))
+
+    cntp1vidx = Expr(iK, Op.div, Expr(eight, Op.times, BITS))
+    cntp2vidx = Expr(iK, Op.div, Expr(eight, Op.times, BITS))
+
+    return Block([
+        a1,
+        k1,
+        a2,
+        k2,
+        xor1,
+        xor2,
+        and1,
+        and2,
+        p1,
+        p2,
+        p1andp2,
+        Store(dst=ArrayRef(arr=cntp1v, idx=cntp1vidx), src=p2.ref),
+        Store(dst=ArrayRef(arr=cntp2v, idx=cntp2vidx), src=p1andp2.ref),
+    ])
+
 def gemm_kernel_512(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, alpha: Ref) -> Block:
     iK = Load(typ=Type.size, src=zero, dst=VarRef("iK"))
     cntp1v = Load(typ=Type.m512i, src=CallExpr(fn="_mm512_setzero_si512", args=[]))
