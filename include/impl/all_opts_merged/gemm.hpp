@@ -1,5 +1,5 @@
 #pragma once
-#include "tensor_macros0.hpp"
+#include "tensor_macros1.hpp"
 #include "tensor.hpp"
 #include <cstddef>
 

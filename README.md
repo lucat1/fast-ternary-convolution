@@ -97,3 +97,8 @@ measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
   - hypothesis: by unrolling manually, we take away freedom from compiler to optimize it
   - suscpicions further confirmed by disabling loop-unrolling via compiler flag: block and unroll appear to be similarly bad (although rerun this and confirm)
   - we should check the assembly for the report
+## Running vectorized Code
+Some parts of the code have been vectorized (currently only with AVX512). To compile the code, please use the following compiler flags
+```
+OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq
+```

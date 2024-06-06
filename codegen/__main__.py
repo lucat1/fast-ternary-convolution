@@ -10,9 +10,13 @@ if __name__ == "__main__":
     code = vector_256()
     # code = unrolled_256(2, 2)
     # code = vector_512()
-    # code = unrolled_512(16, 16)
+    # code = unrolled_512(4, 4)
+    code = unrolled_512(1, 4)
 
     # code = vector_256_popcnt()
+    #code = unrolled_256_popcnt(2, 4)
+    # code = vector_512_popcnt()
+    #code = unrolled_512_popcnt(1, 4)
 
     print(code.gen())
     # only for debugging with python3 -m codegen | vi

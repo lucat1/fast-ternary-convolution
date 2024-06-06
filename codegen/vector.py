@@ -11,13 +11,13 @@ def innermost_256(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
     a2 = Load(typ=Type.m256i, src=MRef(AVXLoadKind.load_si256, activation, p2actidx))
     k2 = Load(typ=Type.m256i, src=MRef(AVXLoadKind.load_si256, kernel, p2keridx))
 
-    alo = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[a1.ref, a2.ref]))
-    ahi = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[a1.ref, a2.ref]))
-    klo = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[k1.ref, k2.ref]))
-    khi = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[k1.ref, k2.ref]))
+    xor1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[a2.ref, k2.ref]))
 
-    p1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[alo.ref, klo.ref]))
-    p2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[ahi.ref, khi.ref]))
+    p1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[and1.ref, and2.ref]))
     p1andp2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[p1.ref, p2.ref]))
 
     popcntp2 = Compute(typ=Type.i32, expr=CallExpr(fn="popcnt", args=[RefExpr(p2.ref), CallExpr(fn="sizeof", args=[p1.ref])]))
@@ -30,10 +30,10 @@ def innermost_256(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
         k1,
         a2,
         k2,
-        alo,
-        ahi,
-        klo,
-        khi,
+        xor1,
+        xor2,
+        and1,
+        and2,
         p1,
         p2,
         popcntp2,
@@ -106,13 +106,13 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
     a2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p2actidx))
     k2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p2keridx))
 
-    alo = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[a1.ref, a2.ref]))
-    ahi = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[a1.ref, a2.ref]))
-    klo = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[k1.ref, k2.ref]))
-    khi = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[k1.ref, k2.ref]))
+    xor1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a2.ref, k2.ref]))
 
-    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[alo.ref, klo.ref]))
-    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[ahi.ref, khi.ref]))
+    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[and1.ref, and2.ref]))
     p1andp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[p1.ref, p2.ref]))
 
     popcntp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_popcnt_epi64", args=[p2.ref]))
@@ -125,10 +125,10 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
         k1,
         a2,
         k2,
-        alo,
-        ahi,
-        klo,
-        khi,
+        xor1,
+        xor2,
+        and1,
+        and2,
         p1,
         p2,
         popcntp2,
@@ -138,6 +138,44 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
         sumpopcntp1p2,
         Store(dst=cntp1, src=sumpopcntp2.ref),
         Store(dst=cntp2, src=sumpopcntp1p2.ref),
+    ])
+
+def innermost_512_libpopcnt(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, iK: Expr | Ref, cntp1v: Ref, cntp2v: Ref) -> Block:
+    p1actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
+    p2actidx = Expr(Expr(iM, Op.times, K), Op.plus, Expr(iK, Op.plus, eight))
+    p1keridx = Expr(Expr(iN, Op.times, K), Op.plus, Expr(iK, Op.plus, zero))
+    p2keridx = Expr(Expr(iN, Op.times, K), Op.plus, Expr(iK, Op.plus, eight))
+    a1 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p1actidx))
+    k1 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p1keridx))
+    a2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p2actidx))
+    k2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p2keridx))
+
+    xor1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a2.ref, k2.ref]))
+
+    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[and1.ref, and2.ref]))
+    p1andp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_si512", args=[p1.ref, p2.ref]))
+
+    cntp1vidx = Expr(iK, Op.div, Expr(eight, Op.times, BITS))
+    cntp2vidx = Expr(iK, Op.div, Expr(eight, Op.times, BITS))
+
+    return Block([
+        a1,
+        k1,
+        a2,
+        k2,
+        xor1,
+        xor2,
+        and1,
+        and2,
+        p1,
+        p2,
+        p1andp2,
+        Store(dst=ArrayRef(arr=cntp1v, idx=cntp1vidx), src=p2.ref),
+        Store(dst=ArrayRef(arr=cntp2v, idx=cntp2vidx), src=p1andp2.ref),
     ])
 
 def gemm_kernel_512(activation: Ref, kernel: Ref, output: Ref, N: Ref, K: Ref, iM: Expr | Ref, iN: Expr | Ref, alpha: Ref) -> Block:
@@ -206,13 +244,13 @@ def innermost_256_libpopcnt(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref
     a2 = Load(typ=Type.m256i, src=MRef(AVXLoadKind.load_si256, activation, p2actidx))
     k2 = Load(typ=Type.m256i, src=MRef(AVXLoadKind.load_si256, kernel, p2keridx))
 
-    alo = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[a1.ref, a2.ref]))
-    ahi = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[a1.ref, a2.ref]))
-    klo = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[k1.ref, k2.ref]))
-    khi = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[k1.ref, k2.ref]))
+    xor1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[a2.ref, k2.ref]))
 
-    p1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_xor_si256", args=[alo.ref, klo.ref]))
-    p2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[ahi.ref, khi.ref]))
+    p1 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_unpackhi_epi64", args=[and1.ref, and2.ref]))
     p1andp2 = Compute(typ=Type.m256i, expr=CallExpr(fn="_mm256_and_si256", args=[p1.ref, p2.ref]))
 
     cntp1vidx = Expr(iK, Op.div, Expr(four, Op.times, BITS))
@@ -223,10 +261,10 @@ def innermost_256_libpopcnt(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref
         k1,
         a2,
         k2,
-        alo,
-        ahi,
-        klo,
-        khi,
+        xor1,
+        xor2,
+        and1,
+        and2,
         p1,
         p2,
         p1andp2,
