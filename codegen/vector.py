@@ -106,13 +106,13 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
     a2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, activation, p2actidx))
     k2 = Load(typ=Type.m512i, src=MRef(AVXLoadKind.load_epi64, kernel, p2keridx))
 
-    alo = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[a1.ref, a2.ref]))
-    ahi = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[a1.ref, a2.ref]))
-    klo = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[k1.ref, k2.ref]))
-    khi = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[k1.ref, k2.ref]))
+    xor1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a1.ref, k1.ref]))
+    and1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a1.ref, k1.ref]))
+    xor2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[a2.ref, k2.ref]))
+    and2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[a2.ref, k2.ref]))
 
-    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_xor_epi64", args=[alo.ref, klo.ref]))
-    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[ahi.ref, khi.ref]))
+    p1 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpacklo_epi64", args=[xor1.ref, xor2.ref]))
+    p2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_unpackhi_epi64", args=[and1.ref, and2.ref]))
     p1andp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_and_epi64", args=[p1.ref, p2.ref]))
 
     popcntp2 = Compute(typ=Type.m512i, expr=CallExpr(fn="_mm512_popcnt_epi64", args=[p2.ref]))
@@ -125,10 +125,10 @@ def innermost_512(activation: Ref, kernel: Ref, K: Ref, iM: Expr | Ref, iN: Expr
         k1,
         a2,
         k2,
-        alo,
-        ahi,
-        klo,
-        khi,
+        xor1,
+        xor2,
+        and1,
+        and2,
         p1,
         p2,
         popcntp2,
