@@ -4,7 +4,7 @@
 
 /*gemm_kernel_512(activation_data, kernel_data, K, im, in, output_data,
                       alpha, N);*/
-#define gemm_kernel_512(activation, kernel, K, iM, iN, output,alpha,N) \
+#define gemm_kernel_512(activation, kernel, K, iM, iN, output, alpha, N)       \
   do {                                                                         \
     int64_t load40;                                                            \
     int64_t comp92;                                                            \
