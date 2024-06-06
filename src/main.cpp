@@ -2,38 +2,22 @@
 #include "common.hpp"
 #include "impl.hpp"
 #include "impl/all_opts_merged/tab.hpp"
-#include "impl/indirect/tab.hpp"
-#include "impl/more_indirect/tab.hpp"
-#include "impl/nchw/tab.hpp"
-#include "impl/nchw_tmacro1/tab.hpp"
-#include "impl/nchw_tmacro1_sinline/tab.hpp"
-#include "impl/nchw_tmacro2/tab.hpp"
-#include "impl/nchw_tmacro2_sinline/tab.hpp"
-#include "impl/nhwc/tab.hpp"
-#include "impl/nhwc_tmacro1/tab.hpp"
-#include "impl/nhwc_tmacro1_sinline/tab.hpp"
-#include "impl/nhwc_tmacro2/tab.hpp"
-#include "impl/nhwc_tmacro2_sinline/tab.hpp"
-#include "impl/original/tab.hpp"
-
-#include "impl/t2r_avx2u_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_permute_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_permute_ur_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_ur_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx512u_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx512u_ur_gemmLU_block/tab.hpp"
-
-#include "impl/t2r_gemmLU/tab.hpp"
-#include "impl/t2r_gemmLU_autoblock/tab.hpp"
-#include "impl/t2r_gemmLU_block/tab.hpp"
-#include "impl/t2r_gemmLU_block_avx2/tab.hpp"
-#include "impl/t2r_gemmLU_block_avx512/tab.hpp"
-#include "impl/t2r_gemmLU_lord/tab.hpp"
-#include "impl/t2r_gemmLU_unroll/tab.hpp"
-#include "impl/t2r_ur_gemmLU_block/tab.hpp"
-#include "impl/tern2row/tab.hpp"
-#include "impl/tern2row_cpy/tab.hpp"
-#include "impl/tern2row_memcpy/tab.hpp"
+#include "impl/baseline_nchw/tab.hpp"
+#include "impl/baseline_nhwc/tab.hpp"
+#include "impl/baseline_original/tab.hpp"
+#include "impl/indirect_nhwc/tab.hpp"
+#include "impl/merge_gemm_prelu/tab.hpp"
+#include "impl/merge_gemm_prelu_blocked/tab.hpp"
+#include "impl/merge_gemm_prelu_blocked_loop_order/tab.hpp"
+#include "impl/merge_gemm_prelu_branch/tab.hpp"
+#include "impl/merge_im2row_ternarize/tab.hpp"
+#include "impl/merge_im2row_ternarize_prelu/tab.hpp"
+#include "impl/more_indirect_nhwc/tab.hpp"
+#include "impl/more_indirect_prelu_nhwc/tab.hpp"
+#include "impl/optmerge_im2row_ternarize/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_blocked_gemm/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_memcpy/tab.hpp"
+#include "impl/optmerge_im2row_ternarize_unrolled_gemm/tab.hpp"
 #include "impl/ternary_nhwc/tab.hpp"
 #include "verify.hpp"
 
@@ -73,27 +57,13 @@ int main(int argc, char *argv[]) {
 
   // TODO: Double check that we actually register different functions
   vector<Implementation> impls = {
-      {"t2r_avx2u_gemmLU_block", DataOrder::NHWC, t2r_avx2u_gemmLU_block::conv},
-      {"t2r_avx2u_permute_gemmLU_block", DataOrder::NHWC,
-       t2r_avx2u_permute_gemmLU_block::conv},
-      {"t2r_avx2u_permute_ur_gemmLU_block", DataOrder::NHWC,
-       t2r_avx2u_permute_ur_gemmLU_block::conv},
-      {"t2r_avx2u_ur_gemmLU_block", DataOrder::NHWC,
-       t2r_avx2u_ur_gemmLU_block::conv},
-      {"t2r_avx512u_gemmLU_block", DataOrder::NHWC,
-       t2r_avx512u_ur_gemmLU_block::conv},
-      {"t2r_avx512u_ur_gemmLU_block", DataOrder::NHWC,
-       t2r_avx512u_ur_gemmLU_block::conv},
-
-      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
+<<<<<<< HEAD
       {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
+
       {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
-      {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
-      {"t2r_gemmLU_block_avx2", DataOrder::NHWC, t2r_gemmLU_block_avx2::conv},
-      {"t2r_gemmLU_block_avx512", DataOrder::NHWC,
-       t2r_gemmLU_block_avx512::conv},
       {"t2r_gemmLU_lord", DataOrder::NHWC, t2r_gemmLU_lord::conv},
+      {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
       {"tern2row_memcpy", DataOrder::NHWC, tern2row_memcpy::conv},
       {"tern2row_cpy", DataOrder::NHWC, tern2row_cpy::conv},
       {"tern2row", DataOrder::NHWC, tern2row::conv},
@@ -116,6 +86,38 @@ int main(int argc, char *argv[]) {
 
       {"original", DataOrder::NCHW, original::conv},
   };
+=======
+      {"optmerge_im2row_ternarize_memcpy", DataOrder::NHWC,
+       optmerge_im2row_ternarize_memcpy::conv},
+      {"optmerge_im2row_ternarize_blocked_gemm", DataOrder::NHWC,
+       optmerge_im2row_ternarize_blocked_gemm::conv},
+      {"optmerge_im2row_ternarize_unrolled_gemm", DataOrder::NHWC,
+       optmerge_im2row_ternarize_unrolled_gemm::conv},
+      {"optmerge_im2row_ternarize", DataOrder::NHWC,
+       optmerge_im2row_ternarize::conv},
+      {"optmerge_im2row_ternarize_prelu", DataOrder::NHWC,
+       optmerge_im2row_ternarize::conv},
+      {"merge_im2row_ternarize", DataOrder::NHWC, merge_im2row_ternarize::conv},
+      {"merge_im2row_ternarize_prelu", DataOrder::NHWC,
+       merge_im2row_ternarize_prelu::conv},
+      {"indirect_nhwc", DataOrder::NHWC, indirect_nhwc::conv},
+      {"more_indirect_prelu_nhwc", DataOrder::NHWC,
+       more_indirect_prelu_nhwc::conv},
+      {"more_indirect_nhwc", DataOrder::NHWC, more_indirect_nhwc::conv},
+      {"baseline_original", DataOrder::NCHW, baseline_original::conv},
+      {"indirect_nhwc", DataOrder::NHWC, indirect_nhwc::conv},
+      {"baseline_nhwc", DataOrder::NHWC, baseline_nhwc::conv},
+      {"ternary_nhwc", DataOrder::NHWC, ternary_nhwc::conv},
+      {"baseline_nchw", DataOrder::NCHW, baseline_nchw::conv},
+      {"merge_gemm_prelu", DataOrder::NHWC, merge_gemm_prelu::conv},
+      {"merge_gemm_prelu_branch", DataOrder::NHWC,
+       merge_gemm_prelu_branch::conv},
+      {"merge_gemm_prelu_blocked", DataOrder::NHWC,
+       merge_gemm_prelu_blocked::conv},
+      {"merge_gemm_prelu_blocked_loop_order", DataOrder::NHWC,
+       merge_gemm_prelu_blocked_loop_order::conv},
+      {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv}};
+>>>>>>> ff8cb70 (Add macro for unrolling)
   vector<string> filter;
   bool test = false;
   bool measure = false;
