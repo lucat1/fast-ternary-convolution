@@ -1,9 +1,9 @@
-#include "impl/gemm_avx512_manual/tab.hpp"
-#include "impl/gemm_avx512_manual/gemm_avx512_manual.hpp"
+#include "impl/avx2_lessunpack_popout/tab.hpp"
+#include "impl/avx2_lessunpack_popout/gemm_avx512_autogen.hpp"
 #include "impl/tern2row_cpy/tern2row_cpy.hpp"
 #include "measure.hpp"
 
-namespace gemm_avx512_manual {
+namespace avx2_lessunpack_popout {
 Tensor4D<float> conv(const Tensor4D<float> &input,
                      const Tensor1D<float> &thresholds, const size_t padding_h,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
@@ -20,10 +20,10 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
 
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
   Tensor4D<float> result =
-      gemm_avx512_manual(quantized_reshaped, kernel, relu_alpha);
+      gemm_avx512_autogen(quantized_reshaped, kernel, relu_alpha);
   measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
 
   return result;
 }
 
-} // namespace gemm_avx512_manual
+} // namespace avx2_lessunpack_popout

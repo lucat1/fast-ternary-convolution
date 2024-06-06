@@ -2,8 +2,8 @@
 #include "common.hpp"
 #include "impl.hpp"
 #include "impl/all_opts_merged/tab.hpp"
-#include "impl/gemm_avx512_autogen/tab.hpp"
-#include "impl/gemm_avx512_manual/tab.hpp"
+#include "impl/avx2_lessunpack_popout/tab.hpp"
+#include "impl/avx2_popout/tab.hpp"
 #include "impl/indirect/tab.hpp"
 #include "impl/more_indirect/tab.hpp"
 #include "impl/nchw/tab.hpp"
@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
   vector<Implementation> impls = {
       {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
 
-      {"gemm_avx512_autogen", DataOrder::NHWC, gemm_avx512_autogen::conv},
-      {"gemm_avx512_manual", DataOrder::NHWC, gemm_avx512_manual::conv},
+      {"avx2_lessunpack_popout", DataOrder::NHWC, avx2_lessunpack_popout::conv},
+      {"avx2_popout", DataOrder::NHWC, avx2_popout::conv},
 
       {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},

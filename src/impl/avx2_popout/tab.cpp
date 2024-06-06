@@ -1,9 +1,9 @@
-#include "impl/gemm_avx512_autogen/tab.hpp"
-#include "impl/gemm_avx512_autogen/gemm_avx512_autogen.hpp"
+#include "impl/avx2_popout/tab.hpp"
+#include "impl/avx2_popout/gemm_avx512_autogen.hpp"
 #include "impl/tern2row_cpy/tern2row_cpy.hpp"
 #include "measure.hpp"
 
-namespace gemm_avx512_autogen {
+namespace avx2_popout {
 Tensor4D<float> conv(const Tensor4D<float> &input,
                      const Tensor1D<float> &thresholds, const size_t padding_h,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
@@ -26,4 +26,4 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   return result;
 }
 
-} // namespace gemm_avx512_autogen
+} // namespace avx2_popout

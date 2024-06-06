@@ -206,7 +206,7 @@ def gemm_kernel_256_libpopcnt(activation: Ref, kernel: Ref, output: Ref, N: Ref,
         cntp2 = Load(typ=Type.i32, src=zero)
         comp = innermost(activation, kernel, K, iM, iN, Expr(iK.ref, Op.plus, Expr(Literal(f"{i}"), Op.times, BITS)), cntp1.ref, cntp2.ref)
         return ([cntp1, cntp2], comp)
-    _pre, _compute = list(zip(*[loop(i) for i in range(uK)]))
+    _pre, _compute = list(zip(*[loop(i) for i in range(uK_cleanup)]))
     pre: List[Computation] = [instr for instrs in _pre for instr in instrs]
     compute = [instr for block in _compute for instr in block.instrs]
 
@@ -264,7 +264,6 @@ def gemm_kernel_256_libpopcnt(activation: Ref, kernel: Ref, output: Ref, N: Ref,
     ])
 
 def gemm_kernel_macro_256_libpopcnt(uK: int, uK_cleanup: int) -> Macro:
-    assert uK_cleanup <= uK
     activation = VarRef("activation")
     kernel = VarRef("kernel")
     output = VarRef("output")
@@ -288,6 +287,7 @@ def gemm_kernel_512_libpopcnt(activation: Ref, kernel: Ref, output: Ref, N: Ref,
 
     def loop_avx(i: int):
         return innermost_512_libpopcnt(activation, kernel, K, iM, iN, Expr(iK.ref, Op.plus, off(i)), cntp1v.ref, cntp2v.ref)
+    assert uK_cleanup <= uK
     compute_avx = [instr for i in range(uK) for instr in loop_avx(i).instrs]
 
     def loop(i: int):
