@@ -48,6 +48,11 @@
 	  ((k) * ((dim4) * (dim5))) +			\
 	  ((l) * (dim5)) + (m)] = (value))
 
+#define tensor4d_addr(data, dim2, dim3, dim4, i, j, k, l)	\
+  (&(data)[((i) * ((dim2) * (dim3) * (dim4))) +			\
+	((j) * ((dim3) * (dim4))) +			\
+	((k) * (dim4)) + (l)])
+
 #define tensor4d_get(data, dim2, dim3, dim4, i, j, k, l)	\
   ((data)[((i) * ((dim2) * (dim3) * (dim4))) +			\
 	((j) * ((dim3) * (dim4))) +			\

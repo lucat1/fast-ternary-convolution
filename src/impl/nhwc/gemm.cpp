@@ -20,7 +20,7 @@ Tensor4D<int64_t> ternary_gemm(const Tensor7D<int64_t> &activation,
       activation.dim4 * activation.dim5 * activation.dim6 * activation.dim7;
   const size_t N = kernel_number;
   // sanity check: K (from activation) == KH * KW * C * BITS (from weights)
-  //assert(K == kernel.dim2 * kernel.dim3 * kernel.dim4 * kernel.dim5);
+  // assert(K == kernel.dim2 * kernel.dim3 * kernel.dim4 * kernel.dim5);
 
   // NOTE In the original code he initializes this to 0. Why?
   Tensor4D<int64_t> output(batch_size, output_height, output_width,

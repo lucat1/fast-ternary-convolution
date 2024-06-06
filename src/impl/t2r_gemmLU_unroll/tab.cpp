@@ -3,8 +3,7 @@
 #include "impl/tern2row_cpy/tern2row_cpy.hpp"
 #include "measure.hpp"
 
-namespace t2r_gemmLU_unroll
- {
+namespace t2r_gemmLU_unroll {
 Tensor4D<float> conv(const Tensor4D<float> &input,
                      const Tensor1D<float> &thresholds, const size_t padding_h,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
@@ -20,10 +19,11 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::END);
 
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
-  Tensor4D<float> result = gemmLU_unroll(quantized_reshaped, kernel, relu_alpha);
+  Tensor4D<float> result =
+      gemmLU_unroll(quantized_reshaped, kernel, relu_alpha);
   measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
 
   return result;
 }
 
-} // namespace t2r_gemmLU_block
+} // namespace t2r_gemmLU_unroll

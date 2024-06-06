@@ -1,9 +1,9 @@
-#include "impl/t2r_gemmLU_autoblock/tab.hpp"
-#include "impl/t2r_gemmLU_autoblock/gemmLU_autoblock.hpp"
+#include "impl/t2r_gemmLU_block_avx512/tab.hpp"
+#include "impl/t2r_gemmLU_block_avx512/gemmLU_block.hpp"
 #include "impl/tern2row_cpy/tern2row_cpy.hpp"
 #include "measure.hpp"
 
-namespace t2r_gemmLU_autoblock {
+namespace t2r_gemmLU_block_avx512 {
 Tensor4D<float> conv(const Tensor4D<float> &input,
                      const Tensor1D<float> &thresholds, const size_t padding_h,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
@@ -19,11 +19,10 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::END);
 
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
-  Tensor4D<float> result =
-      gemmLU_autoblock(quantized_reshaped, kernel, relu_alpha);
+  Tensor4D<float> result = gemmLU_block(quantized_reshaped, kernel, relu_alpha);
   measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
 
   return result;
 }
 
-} // namespace t2r_gemmLU_autoblock
+} // namespace t2r_gemmLU_block_avx512

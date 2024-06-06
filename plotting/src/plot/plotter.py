@@ -45,6 +45,7 @@ One line to the csc will be added
 def sanity_check_df(benchmark_df: pd.DataFrame):
     df_column_set = set(benchmark_df.columns)
     correct_columns_set = set(csv_columns)
+    print(f'correct_columns_set = {correct_columns_set}')
     assert correct_columns_set.issubset(df_column_set), f"The csv does not have the correct columns. Columns should be {csv_columns}"
 
 def merge_unmerged(df: pd.DataFrame) -> pd.DataFrame:

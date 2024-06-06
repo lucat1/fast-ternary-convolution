@@ -15,11 +15,22 @@
 #include "impl/nhwc_tmacro2/tab.hpp"
 #include "impl/nhwc_tmacro2_sinline/tab.hpp"
 #include "impl/original/tab.hpp"
+
+#include "impl/t2r_avx2u_gemmLU_block/tab.hpp"
+#include "impl/t2r_avx2u_permute_gemmLU_block/tab.hpp"
+#include "impl/t2r_avx2u_permute_ur_gemmLU_block/tab.hpp"
+#include "impl/t2r_avx2u_ur_gemmLU_block/tab.hpp"
+#include "impl/t2r_avx512u_gemmLU_block/tab.hpp"
+#include "impl/t2r_avx512u_ur_gemmLU_block/tab.hpp"
+
 #include "impl/t2r_gemmLU/tab.hpp"
 #include "impl/t2r_gemmLU_autoblock/tab.hpp"
 #include "impl/t2r_gemmLU_block/tab.hpp"
-#include "impl/t2r_gemmLU_unroll/tab.hpp"
+#include "impl/t2r_gemmLU_block_avx2/tab.hpp"
+#include "impl/t2r_gemmLU_block_avx512/tab.hpp"
 #include "impl/t2r_gemmLU_lord/tab.hpp"
+#include "impl/t2r_gemmLU_unroll/tab.hpp"
+#include "impl/t2r_ur_gemmLU_block/tab.hpp"
 #include "impl/tern2row/tab.hpp"
 #include "impl/tern2row_cpy/tab.hpp"
 #include "impl/tern2row_memcpy/tab.hpp"
@@ -62,12 +73,27 @@ int main(int argc, char *argv[]) {
 
   // TODO: Double check that we actually register different functions
   vector<Implementation> impls = {
-      {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
+      {"t2r_avx2u_gemmLU_block", DataOrder::NHWC, t2r_avx2u_gemmLU_block::conv},
+      {"t2r_avx2u_permute_gemmLU_block", DataOrder::NHWC,
+       t2r_avx2u_permute_gemmLU_block::conv},
+      {"t2r_avx2u_permute_ur_gemmLU_block", DataOrder::NHWC,
+       t2r_avx2u_permute_ur_gemmLU_block::conv},
+      {"t2r_avx2u_ur_gemmLU_block", DataOrder::NHWC,
+       t2r_avx2u_ur_gemmLU_block::conv},
+      {"t2r_avx512u_gemmLU_block", DataOrder::NHWC,
+       t2r_avx512u_ur_gemmLU_block::conv},
+      {"t2r_avx512u_ur_gemmLU_block", DataOrder::NHWC,
+       t2r_avx512u_ur_gemmLU_block::conv},
 
-            {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
-      {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
-      {"t2r_gemmLU_lord", DataOrder::NHWC, t2r_gemmLU_lord::conv},
+      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
+      {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
+      {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
+      {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
+      {"t2r_gemmLU_block_avx2", DataOrder::NHWC, t2r_gemmLU_block_avx2::conv},
+      {"t2r_gemmLU_block_avx512", DataOrder::NHWC,
+       t2r_gemmLU_block_avx512::conv},
+      {"t2r_gemmLU_lord", DataOrder::NHWC, t2r_gemmLU_lord::conv},
       {"tern2row_memcpy", DataOrder::NHWC, tern2row_memcpy::conv},
       {"tern2row_cpy", DataOrder::NHWC, tern2row_cpy::conv},
       {"tern2row", DataOrder::NHWC, tern2row::conv},

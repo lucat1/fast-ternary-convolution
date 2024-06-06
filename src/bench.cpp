@@ -11,7 +11,7 @@
 #include <random>
 
 // uncomment this for a detailed (visual) performance measurement
-//#define PRINT_ALL
+#define PRINT_ALL
 
 using namespace std;
 
