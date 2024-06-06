@@ -1,6 +1,5 @@
 #include "impl/all_opts_merged/quantize_im2row.hpp"
 #include "common.hpp"
-#include "tensor_macros1.hpp"
 #include <immintrin.h>
 
 // inner loop
@@ -18,6 +17,7 @@
       } else if (current_value < -cur_thres) {                                 \
         first_bits |= onebit[bit];                                             \
         second_bits |= onebit[bit];                                            \
+      }                                                                        \
     }                                                                          \
   }
 
@@ -82,11 +82,11 @@
   }
 
 namespace all_opts_merged {
-Tensor7D<int64_t>
-ternarize_im2row(const Tensor4D<float> &data, const Tensor1D<float> &thresholds,
-                 const size_t padding_h, const size_t padding_w,
-                 const size_t kernel_h, const size_t kernel_w,
-                 const size_t stride_h, const size_t stride_w) {
+Tensor7D<int64_t> tern2row_cpy(const Tensor4D<float> &data,
+                               const Tensor1D<float> &thresholds,
+                               const size_t padding_h, const size_t padding_w,
+                               const size_t kernel_h, const size_t kernel_w,
+                               const size_t stride_h, const size_t stride_w) {
   int64_t onebit[CNTBITS];
   const float *const thresholds_data = thresholds.data;
   const float *const data_data = data.data;

@@ -1,6 +1,5 @@
 #include "impl/tern2row_cpy/tern2row_cpy.hpp"
 #include "common.hpp"
-#include "tensor_macros1.hpp"
 
 // inner loop
 #define iil(data_data, height, width, channels, thresholds_data, onebit, in,   \

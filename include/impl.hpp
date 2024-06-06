@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "tensor.hpp"
-#include "tensor_macros0.hpp"
+#include "tensor_macros1.hpp"
 
 #include <cstdint>
 #include <string>

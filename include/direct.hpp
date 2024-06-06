@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tensor.hpp"
-#include "tensor_macros0.hpp"
+#include "tensor_macros1.hpp"
 #include <vector>
 
 Tensor4D<float> direct_pad(const Tensor4D<float> &x, const size_t padding_h,

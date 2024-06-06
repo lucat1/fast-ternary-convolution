@@ -15,8 +15,8 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
   // quantization + packing + reshaping
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::START);
   Tensor7D<int64_t> quantized_reshaped =
-      ternarize_im2row(input, thresholds, padding_h, padding_w, kernel.dim2,
-                       kernel.dim3, stride_h, stride_w);
+      tern2row_cpy(input, thresholds, padding_h, padding_w, kernel.dim2,
+                   kernel.dim3, stride_h, stride_w);
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::END);
 
   // gemm

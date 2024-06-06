@@ -1,5 +1,6 @@
 #pragma once
 #include "tensor.hpp"
+#include "tensor_macros1.hpp"
 
 namespace all_opts_merged {
 
