@@ -1,9 +1,9 @@
-#include "impl/t2r_gemmLU_autoblock/tab.hpp"
-#include "impl/t2r_gemmLU_autoblock/gemmLU_autoblock.hpp"
-#include "impl/tern2row_cpy/tern2row_cpy.hpp"
+#include "impl/t2r_avx2u_permute_gemmLU_block//tab.hpp"
+#include "impl/t2r_avx2u_permute_gemmLU_block/t2r_avx2.hpp"
+#include "impl/t2r_gemmLU_block/gemmLU_block.hpp"
 #include "measure.hpp"
 
-namespace t2r_gemmLU_autoblock {
+namespace t2r_avx2u_permute_gemmLU_block {
 Tensor4D<float> conv(const Tensor4D<float> &input,
                      const Tensor1D<float> &thresholds, const size_t padding_h,
                      const size_t padding_w, const Tensor5D<int64_t> &kernel,
@@ -14,16 +14,16 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
 
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::START);
   Tensor7D<int64_t> quantized_reshaped =
-      tern2row_cpy::tern2row_cpy(input, thresholds, padding_h, padding_w,
-                                 kernel_h, kernel_w, stride_h, stride_w);
+      t2r_avx2(input, thresholds, padding_h, padding_w, kernel_h, kernel_w,
+               stride_h, stride_w);
   measure_point(measurement_point::ternarize_im2row, MeasurementEvent::END);
 
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
   Tensor4D<float> result =
-      gemmLU_autoblock(quantized_reshaped, kernel, relu_alpha);
+      t2r_gemmLU_block::gemmLU_block(quantized_reshaped, kernel, relu_alpha);
   measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
 
   return result;
 }
 
-} // namespace t2r_gemmLU_autoblock
+} // namespace t2r_avx2u_permute_gemmLU_block

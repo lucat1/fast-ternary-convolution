@@ -13,7 +13,7 @@
     int cntp2 = 0;                                                             \
     size_t ik = 0;                                                             \
     for (; (int)ik <= (int)K - (int)K_BLOCK_SIZE; ik += K_BLOCK_SIZE) {        \
-      UNROLL_LOOP(K_BLOCK_SIZE) \
+      UNROLL_LOOP(K_BLOCK_SIZE)                                                \
       for (size_t ikb = 0; ikb < K_BLOCK_SIZE; ikb += BITS) {                  \
         const int64_t p1 =                                                     \
             tensor7d_get_123_4567(activation_data, kernel_height,              \
@@ -53,7 +53,7 @@
 
 namespace t2r_gemmLU_autoblock {
 Tensor4D<float> gemmLU_autoblock(const Tensor7D<int64_t> &activation,
-                             const Tensor5D<int64_t> &kernel, float alpha) {
+                                 const Tensor5D<int64_t> &kernel, float alpha) {
   const int64_t *const activation_data = activation.data;
   const size_t batch_size = activation.dim1;
   const size_t output_height = activation.dim2;

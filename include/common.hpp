@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include "libpopcnt.h"
 
 using namespace std;
 
