@@ -1,10 +1,15 @@
 # ASL TAB
 
-## Running and building
+## Running and Building
 
 To build run:
 ```
 make
+```
+
+To view help:
+```
+./tnn -h
 ```
 
 To run all tests do:
@@ -39,17 +44,17 @@ if [ $? -ne 0 ]; then
 fi
 ```
 
-## Adding new optimizations
+## Adding New Optimizations
 
 To introduce a new optimization you need to:
-1. Add a new directory under `include/impl`.
+1. Add a new directory under `include/main_impls` or `include/minor_impls`, depending on whether or not this is a major improvement or just a minor change.
 2. Add a new `tab.hpp` header file to this new directory.
-3. Add a new directory under `src/impl`.
+3. Add a new directory under `src/main_impls` or `src/minor_impls`.
 4. Add a new `tab.cpp` file to his new directory.
 5. Define a new namespace for this new optimization.
 6. To `src/main.cpp` add a new element to `vector<Implementation> impls` where you give a name to the optimization, specify the order of the tensor dimensions, and the convolution function.
 
-## Adding measurements
+## Adding Measurements
 
 To time a specific operation, for example ternary GEMM, surround the call of the procedure with a call to `measure_point` defined in `measure.hpp`:
 ```C++
@@ -58,47 +63,78 @@ auto gemm_result = ternary_gemm(reshaped, kernel);
 measure_point(MeasurementFunction::TNN_GEMM, MeasurementEvent::END);
 ```
 
-## Implementation overview
-- **original**: original implementation using vectors (nchw)
-- **nchw**: simple implementation using tensors (nchw)
-- **nhwc**: simple implementation using tensors (nhwc)
-- **ternary_nhwc**: nhwc using ternary operators for prelu/ternarize
-  - overall seems to be slightly worse
-  - seems to be slightly worse in ternarize, maybe sometimes a tiny bit faster in prelu
-- **nchw_tmacro1**: replace getters and setters of **t**ensors with simple macros
-- **nchw_tmacro2**: manually eliminate redundant computation in indicies
-- **nchw_tmacro1_sinline**: use inline keyword for **s**teps like ternarize, gemm, prelu, etc.
-- **nchw_tmacro2_sinline**: same as above, but for tmacro2
-- **nhwc_tmacro1**: nhwc order
-- **nhwc_tmacro2**: nhwc order
-- **nhwc_tmacro1_sinline**: nhwc order
-- **nhwc_tmacro2_sinline**: nhwc order
-- **indirect**: essentially merge im2row + gemm? @Luca please double check
-- **more_indirect**: @Luca please fill out
-  - possible optimization: merge with ternarize? precompute statically?
-  - does this have any benefits besides performance? mention that in report?
-- **tern2row**: naively merge ternarize and im2row
-  - leads to massive slowdown due to unnecessary recomputation
-- **tern2row_cpy**: avoid recomputation by copying already computed elements
-  - uses a loop for copying, has the edge of memcpy in daniel_plots*.csv
-  - seems to be very slightly better than not merging
-- **tern2row_memcpy**: copy using memcpy instead of a loop
-  - loses to a loop, maybe because memcpy adds overhead (and we don't copy a lot of data at once?)
+## Implementation Overview
+### Main Implementations
+- **original**: original implementation using vectors (data order: nchw)
+- **data_order_nhwc**: simple implementation using tensors (data order changed to nhwc)
+- **data_order_nchw_tensor_macro1**: replace getters and setters of tensors with simple macros
 - **t2r_gemmLU**: merge gemm and PreLU (based on tern2row_cpy)
-- **t2r_gemmLU_lord**: conditionally swaps the loop order
-  - reasoning: slides on model ATLAS: want to reuse the smaller matrix
-  - just naively switching to N-M makes it worse
-  - M<N=> N-M: whenever this branch is taken (if batch_size * oh * ow < kn according to Luca), performance seems to get a bit worse
-  - Why? Unsure. Maybe it has to do with how the second matrix is passed in? i.e. N-K instead K-N? (not sure about this)
+- **best_impl_avx2**: Overall best implementation using AVX2 vectorization.
+- **best_impl_avx512**: Overall best implementation using AVX512 vectorization.
+
+### Minor Implementations
+
+#### NCHW Data Order
+
+- **nchw**: simple implementation using tensors (data order: nchw)
+- **nchw_tmacro1**: replace getters and setters of tensors with simple macros
+- **nchw_tmacro1_sinline**: use inline keyword for **s**teps like ternarize, gemm, prelu, etc.
+- **nchw_tmacro2**: manually eliminate redundant computation in indices
+- **nchw_tmacro2_sinline**
+
+#### NHWC Data Order
+
+- **nhwc_tmacro1_sinline**
+- **nhwc_tmacro2**
+- **nhwc_tmacro2_sinline**
+
+##### Indirect Convolution
+
+- **indirect**: compute an indirection buffer instead of im2row
+- **more_indirect**: smaller indirection buffer
+
+##### ternarize+im2row
+
+- **tern2row**: naively merge ternarize and im2row
+- **tern2row_cpy**: avoid recomputation by copying already computed elements (uses a loop for copying)
+- **tern2row_memcpy**: copy using memcpy instead of a loop
+- **t2r_ur_gemmLU_block**: unrolling by 2 in ternarize+im2row, and blocking merged gemm+prelu
+
+##### gemm+prelu
+
+- **t2r_gemmLU_autoblock**: template for searching for the best blocking parameters
 - **t2r_gemmLU_block**: Block gemmLU
-  - we should ideally have autotune to find the blocking parameters
+- **t2r_gemmLU_lord**: conditionally swaps the loop order (inspired by Model ATLAS)
 - **t2r_gemmLU_unroll**: Unroll the most inner loop in SSA style
-  - seems to be worse than block
-  - hypothesis: by unrolling manually, we take away freedom from compiler to optimize it
-  - suscpicions further confirmed by disabling loop-unrolling via compiler flag: block and unroll appear to be similarly bad (although rerun this and confirm)
-  - we should check the assembly for the report
-## Running vectorized Code
-Some parts of the code have been vectorized (currently only with AVX512). To compile the code, please use the following compiler flags
-```
-OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq
-```
+
+##### AVX2: ternarize+im2row
+
+- **t2r_avx2u_gemmLU_block**: axv2 and unrolled by 2 cleanup loop in ternarize+im2row
+- **t2r_avx2u_ur_gemmLU_block**: unrolled by 2 axv2 and unrolled by 2 cleanup loop in ternarize+im2row
+- **t2r_avx2u_permute_gemmLU_block**: axv2 with permute intrinsic for reducing results and unrolled by 2 cleanup loop in ternarize+im2row
+- **t2r_avx2u_permute_ur_gemmLU_block**: unrolled by 2 axv2 with permute intrinsic for reducing results and unrolled by 2 cleanup loop in ternarize+im2row
+
+##### AVX2: gemm+prelu
+
+- **avx2**: straightforward AVX2, unrolled twice
+- **avx2_lessunpack**: same as before + more computations and less unpacks
+- **avx2_lessunpack_popout**: same as before + libpopcnt on a big vector
+- **avx2_popout**: straightforward AVX2 with libpopcnt on a big vector
+- **t2r_gemmLU_block_avx2**: avx2 used in blocked gemmLU
+
+##### AVX512: ternarize+im2row
+
+- **t2r_avx512u_gemmLU_block**: avx512 and unrolled cleanup loop in ternarize+im2row
+- **t2r_avx512u_ur_gemmLU_block**: unrolled by 2 avx512 and unrolled cleanup loop in ternarize+im2row
+
+##### AVX512: gemm+prelu
+
+- **t2r_gemmLU_block_avx512**: axv512 used in blocked gemmLU
+
+##### Miscellaneous
+
+- **ternary_nhwc**: nhwc using ternary operators for prelu/ternarize
+
+## Running Vectorized Code
+Some parts of the code have been vectorized with AVX512.
+If you do not have AVX512 on your machine, remove all code that uses AVX512 and the corresponding flags in `Makefile`.
