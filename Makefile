@@ -9,8 +9,8 @@ CXX = g++
 ##  obj file has been compiled)
 ## -MT specifies the dependency target (path qualified obj file name)
 EXTRA = -DN_BLOCK_SIZE=1 -DM_BLOCK_SIZE=512 -DK_BLOCK_SIZE=16
-OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq -Wno-uninitialized -mavx512vl 
-# TODO: Add more warn flags?
+## If you don't have an avx512 machine, please comment out all flags related to avx512
+OPTFLAGS = -march=native -O3 -fno-tree-vectorize -std=c++20 -mavx512f -mavx512vpopcntdq -Wno-uninitialized -mavx512vl
 WARNFLAGS = -Wall -Wextra -Werror
 CXXFLAGS = -Iinclude -MT $@ -MMD -MP -MF $(@:.o=.d) $(WARNFLAGS) $(OPTFLAGS) $(EXTRA)
 

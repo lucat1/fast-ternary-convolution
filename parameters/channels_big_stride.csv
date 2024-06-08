@@ -1,8 +1,0 @@
-channels,batch_size,input_height,input_width,kernel_number,kernel_height,kernel_width,padding_size,stride_size
-16,1,128,128,16,1,1,1,9
-32,1,128,128,16,1,1,1,9
-64,1,128,128,16,1,1,1,9
-128,1,128,128,16,1,1,1,9
-256,1,128,128,16,1,1,1,9
-512,1,128,128,16,1,1,1,9
-1024,1,128,128,16,1,1,1,9

@@ -1,48 +1,47 @@
 #include "bench.hpp"
 #include "common.hpp"
 #include "impl.hpp"
-#include "impl/all_opts_merged/tab.hpp"
-#include "impl/all_opts_merged_avx2/tab.hpp"
+#include "main_impls/best_impl_avx2/tab.hpp"
+#include "main_impls/best_impl_avx512/tab.hpp"
 
-#include "impl/avx2/tab.hpp"
-#include "impl/avx2_lessunpack/tab.hpp"
-#include "impl/avx2_lessunpack_popout/tab.hpp"
-#include "impl/avx2_popout/tab.hpp"
-#include "impl/avx2_test/tab.hpp"
+#include "minor_impls/avx2/tab.hpp"
+#include "minor_impls/avx2_lessunpack/tab.hpp"
+#include "minor_impls/avx2_lessunpack_popout/tab.hpp"
+#include "minor_impls/avx2_popout/tab.hpp"
 
-#include "impl/indirect/tab.hpp"
-#include "impl/more_indirect/tab.hpp"
-#include "impl/nchw/tab.hpp"
-#include "impl/nchw_tmacro1/tab.hpp"
-#include "impl/nchw_tmacro1_sinline/tab.hpp"
-#include "impl/nchw_tmacro2/tab.hpp"
-#include "impl/nchw_tmacro2_sinline/tab.hpp"
-#include "impl/nhwc/tab.hpp"
-#include "impl/nhwc_tmacro1/tab.hpp"
-#include "impl/nhwc_tmacro1_sinline/tab.hpp"
-#include "impl/nhwc_tmacro2/tab.hpp"
-#include "impl/nhwc_tmacro2_sinline/tab.hpp"
-#include "impl/original/tab.hpp"
+#include "main_impls/data_order_nhwc/tab.hpp"
+#include "main_impls/data_order_nhwc_tensor_macro1/tab.hpp"
+#include "main_impls/original/tab.hpp"
+#include "minor_impls/indirect/tab.hpp"
+#include "minor_impls/more_indirect/tab.hpp"
+#include "minor_impls/nchw/tab.hpp"
+#include "minor_impls/nchw_tmacro1/tab.hpp"
+#include "minor_impls/nchw_tmacro1_sinline/tab.hpp"
+#include "minor_impls/nchw_tmacro2/tab.hpp"
+#include "minor_impls/nchw_tmacro2_sinline/tab.hpp"
+#include "minor_impls/nhwc_tmacro1_sinline/tab.hpp"
+#include "minor_impls/nhwc_tmacro2/tab.hpp"
+#include "minor_impls/nhwc_tmacro2_sinline/tab.hpp"
 
-#include "impl/t2r_avx2u_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_permute_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_permute_ur_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx2u_ur_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx512u_gemmLU_block/tab.hpp"
-#include "impl/t2r_avx512u_ur_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx2u_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx2u_permute_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx2u_permute_ur_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx2u_ur_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx512u_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_avx512u_ur_gemmLU_block/tab.hpp"
 
-#include "impl/t2r_gemmLU/tab.hpp"
-#include "impl/t2r_gemmLU_autoblock/tab.hpp"
-#include "impl/t2r_gemmLU_block/tab.hpp"
-#include "impl/t2r_gemmLU_block_avx2/tab.hpp"
-#include "impl/t2r_gemmLU_block_avx512/tab.hpp"
-#include "impl/t2r_gemmLU_lord/tab.hpp"
-#include "impl/t2r_gemmLU_unroll/tab.hpp"
-#include "impl/t2r_ur_gemmLU_block/tab.hpp"
-#include "impl/tern2row/tab.hpp"
-#include "impl/tern2row_cpy/tab.hpp"
-#include "impl/tern2row_memcpy/tab.hpp"
-#include "impl/ternary_nhwc/tab.hpp"
+#include "main_impls/t2r_gemmLU/tab.hpp"
+#include "minor_impls/t2r_gemmLU_autoblock/tab.hpp"
+#include "minor_impls/t2r_gemmLU_block/tab.hpp"
+#include "minor_impls/t2r_gemmLU_block_avx2/tab.hpp"
+#include "minor_impls/t2r_gemmLU_block_avx512/tab.hpp"
+#include "minor_impls/t2r_gemmLU_lord/tab.hpp"
+#include "minor_impls/t2r_gemmLU_unroll/tab.hpp"
+#include "minor_impls/t2r_ur_gemmLU_block/tab.hpp"
+#include "minor_impls/tern2row/tab.hpp"
+#include "minor_impls/tern2row_cpy/tab.hpp"
+#include "minor_impls/tern2row_memcpy/tab.hpp"
+#include "minor_impls/ternary_nhwc/tab.hpp"
 #include "verify.hpp"
 
 #include <algorithm>
@@ -79,9 +78,7 @@ int main(int argc, char *argv[]) {
        << "disabled" << endl;
 #endif
 
-  // TODO: Double check that we actually register different functions
   vector<Implementation> impls = {
-      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
       {"t2r_avx2u_gemmLU_block", DataOrder::NHWC, t2r_avx2u_gemmLU_block::conv},
       {"t2r_avx2u_permute_gemmLU_block", DataOrder::NHWC,
        t2r_avx2u_permute_gemmLU_block::conv},
@@ -90,12 +87,12 @@ int main(int argc, char *argv[]) {
       {"t2r_avx2u_ur_gemmLU_block", DataOrder::NHWC,
        t2r_avx2u_ur_gemmLU_block::conv},
       {"t2r_avx512u_gemmLU_block", DataOrder::NHWC,
-       t2r_avx512u_ur_gemmLU_block::conv},
+       t2r_avx512u_gemmLU_block::conv},
       {"t2r_avx512u_ur_gemmLU_block", DataOrder::NHWC,
        t2r_avx512u_ur_gemmLU_block::conv},
 
-      {"all_opts_merged", DataOrder::NHWC, all_opts_merged::conv},
-      {"all_opts_merged_avx2", DataOrder::NHWC, all_opts_merged_avx2::conv},
+      {"best_impl_avx512", DataOrder::NHWC, best_impl_avx512::conv},
+      {"best_impl_avx2", DataOrder::NHWC, best_impl_avx2::conv},
 
       {"avx2_lessunpack_popout", DataOrder::NHWC, avx2_lessunpack_popout::conv},
       {"avx2_popout", DataOrder::NHWC, avx2_popout::conv},
@@ -105,6 +102,8 @@ int main(int argc, char *argv[]) {
       {"t2r_gemmLU_unroll", DataOrder::NHWC, t2r_gemmLU_unroll::conv},
       {"t2r_gemmLU", DataOrder::NHWC, t2r_gemmLU::conv},
       {"t2r_gemmLU_block", DataOrder::NHWC, t2r_gemmLU_block::conv},
+      {"t2r_gemmLU_autoblock", DataOrder::NHWC, t2r_gemmLU_autoblock::conv},
+      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
       {"t2r_gemmLU_block_avx2", DataOrder::NHWC, t2r_gemmLU_block_avx2::conv},
       {"t2r_gemmLU_block_avx512", DataOrder::NHWC,
        t2r_gemmLU_block_avx512::conv},
@@ -119,9 +118,10 @@ int main(int argc, char *argv[]) {
       {"nhwc_tmacro2_sinline", DataOrder::NHWC, nhwc_tmacro2_sinline::conv},
       {"nhwc_tmacro1_sinline", DataOrder::NHWC, nhwc_tmacro1_sinline::conv},
       {"nhwc_tmacro2", DataOrder::NHWC, nhwc_tmacro2::conv},
-      {"nhwc_tmacro1", DataOrder::NHWC, nhwc_tmacro1::conv},
+      {"data_order_nhwc_tensor_macro1", DataOrder::NHWC,
+       data_order_nhwc_tensor_macro1::conv},
       {"ternary_nhwc", DataOrder::NHWC, ternary_nhwc::conv},
-      {"nhwc", DataOrder::NHWC, nhwc::conv},
+      {"data_order_nhwc", DataOrder::NHWC, data_order_nhwc::conv},
 
       {"nchw_tmacro2_sinline", DataOrder::NCHW, nchw_tmacro2_sinline::conv},
       {"nchw_tmacro1_sinline", DataOrder::NCHW, nchw_tmacro1_sinline::conv},

@@ -3,8 +3,8 @@
 #include "direct.hpp"
 #include "problem_data.hpp"
 
-#include "impl/nchw/quantize.hpp"
 #include "measure.hpp"
+#include "minor_impls/nchw/quantize.hpp"
 #include "problem_data.hpp"
 #include "tensor.hpp"
 
