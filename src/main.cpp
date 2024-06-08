@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
 
   // TODO: Double check that we actually register different functions
   vector<Implementation> impls = {
+      {"t2r_ur_gemmLU_block", DataOrder::NHWC, t2r_ur_gemmLU_block::conv},
       {"t2r_avx2u_gemmLU_block", DataOrder::NHWC, t2r_avx2u_gemmLU_block::conv},
       {"t2r_avx2u_permute_gemmLU_block", DataOrder::NHWC,
        t2r_avx2u_permute_gemmLU_block::conv},
