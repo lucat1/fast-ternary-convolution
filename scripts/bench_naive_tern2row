@@ -1,0 +1,24 @@
+#!/bin/sh -ex
+
+export MAKEFLAGS="-j 9"
+make clean
+make
+
+for file in incr_c.csv incr_hw.csv; do
+  echo "running $file..."
+  taskset -a -c 0 ./tnn -t -b -p parameters/$file -o results/csvs/naive_tern2row/$file -i data_order_nhwc_tensor_macro1,tern2row
+done
+
+# Purpose: Send notification to phone - push/send message ios and android using API from my Linux box/vm/server
+# Author: Vivek Gite
+# Set API stuff 
+_token='a7gctg67jfx5w7penvj3hexk5giq6m'
+_user='umygk19bmycth1p26iokc5yr2g35yi'
+ 
+# Send message to pushover
+curl -s \
+     --form-string "token=${_token}" \
+     --form-string "user=${_user}" \
+     --form-string "title=$naive done" \
+     --form-string "message=$naive done" \
+     https://api.pushover.net/1/messages.json

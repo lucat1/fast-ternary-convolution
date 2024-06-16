@@ -34,27 +34,27 @@ class Baseline(Impl):
         # onebit[i]
         q += 8 * CNTBITS
         # currentx > quant_threshold[in]
-        flops += self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
         # p2 = p2 | onebit[bit];
-        iops += .5 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
+        iops += .5 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
         # currentx < (-quant_threshold[in])
-        flops += .5 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
+        flops += .5 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
         # p1 = p1 | onebit[bit];
         # p2 = p2 | onebit[bit];
-        iops += .25 * 2 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
+        iops += .25 * 2 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS
         # TODO: accout for assignments
         # qx[..] = p1
         # qx[..] = p2
 
         # currentx > quant_threshold[in]
-        flops += self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels
         # p2 = p2 | onebit[bit];
-        iops += .5 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels
+        iops += .5 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels
         # currentx < (-quant_threshold[in])
-        flops += .5 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels
+        flops += .5 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels
         # p1 = p1 | onebit[bit];
         # p2 = p2 | onebit[bit];
-        iops += .25 * 2 * self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels
+        iops += .25 * 2 * self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels
         # TODO: accout for assignments
         # qx[..] = p1
         # qx[..] = p2
@@ -63,13 +63,13 @@ class Baseline(Impl):
         flops = ceil(flops)
 
         # input[..], quant_threshold[..], onebit[..]
-        q += (4+4+8) * (self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS)
+        q += (4+4+8) * (self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * CNTBITS)
         # 2x qx[..]
-        q += (8+8) * (self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.pri_channels)
+        q += (8+8) * (self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels)
         # input[..], quant_threshold[..]
-        q += (4+4) * (self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels)
+        q += (4+4) * (self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels)
         # 2x qx[..]
-        q += (8+8) * (self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.rem_channels)
+        q += (8+8) * (self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.rem_channels)
 
         return Cost(iops, flops, q)
     

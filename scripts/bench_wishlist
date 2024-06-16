@@ -1,0 +1,11 @@
+#!/bin/sh -ex
+
+echo "0" | sudo tee /sys/devices/system/cpu/cpufreq/boost
+
+sh bench_fc_vs_incr_c
+sh bench_data_order
+sh bench_ternary_operator
+sh bench_tmacros
+sh bench_sinline
+sh bench_naive_tern2row
+sh bench_improved_tern2row
