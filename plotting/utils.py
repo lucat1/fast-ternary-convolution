@@ -43,7 +43,7 @@ def get_input_size(benchmark_info: pd.Series) -> int:
     #     8*benchmark_info.channels*benchmark_info.batch_size
     #         *benchmark_info.input_height*benchmark_info.input_width
     # )
-    return (benchmark_info.batch_size * benchmark_info.input_height*benchmark_info.input_width * benchmark_info.channels * benchmark_info.kernel_width * benchmark_info.kernel_height)
+    return (benchmark_info.batch_size * benchmark_info.input_height*benchmark_info.input_width * benchmark_info.channels + benchmark_info.kernel_number * benchmark_info.kernel_width * benchmark_info.kernel_height * 2)
 
 def get_batch_size(benchmark_info: pd.Series) -> int:
     return benchmark_info.batch_size
@@ -55,22 +55,15 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     #         ncol=15,
     #         borderpad=.5)
 
-    ax.set_facecolor((0.9, 0.9, 0.9))
     ax.tick_params(axis='both', which='major', pad=15)
-    ax.grid(which='major', axis='y', linewidth=2, color='white')
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    ax.grid(which='major', axis='y', linewidth=.5, dashes=(1,1))
     ax.set_xscale("log")
-    #ax.set_yscale("log")
 
     title = file
-    if file == "data_order/incr_c":
-        title = "Increasing Channels - Data Order"
+    if file == "incr_c":
+        title = "Maximum Speedup - Increasing Channels"
 
-    ax.set_title(f"{title}")
-    plt.suptitle("AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0")
-    ax.legend()
+    ax.set_title(title + "\n AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0 \n", fontsize=15)
     
     plt.savefig(sav_loc)
 

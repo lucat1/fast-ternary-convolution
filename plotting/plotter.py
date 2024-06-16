@@ -9,19 +9,26 @@ from pathlib import Path
 import pandas as pd
 import argparse
 
+import matplotlib
+matplotlib.use('pdf')
+
 REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
 PLOT_DIR = REPO_DIR / "plots"
 
-plt.rcParams['axes.labelsize'] = 10
-plt.rcParams['xtick.labelsize'] = 10
-plt.rcParams['ytick.labelsize'] = 10
-plt.rcParams['legend.fontsize'] = 8
-#plt.rcParams['font.family'] = 'New Computer Modern'
-plt.rcParams['font.family'] = 'serif'
-plt.rcParams['text.usetex'] = False
-plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['xtick.labelsize'] = 13
+plt.rcParams['ytick.labelsize'] = 13
+plt.rcParams['font.family'] = 'Computer Modern Roman'
+# plt.rcParams['font.family'] = 'serif'
+plt.rcParams['text.usetex'] = True
+# plt.rcParams['svg.fonttype'] = 'none'
 
+STYLES = [
+    # color, marker, offst
+    ('red', '^', (-70, -15)),
+    ('blue', 'x', (-50, 12))
+]
 
 conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]
@@ -91,7 +98,7 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
     machine = get_machine_info()
     machine_frequency = frequency_to_number(machine.base_frequency)
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot()
 
     for benchmark_file in benchmark_files:
@@ -131,7 +138,7 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                     print(f'Plotting data for Experiment {exp_name}, Benchmark suite {benchmark_file.name} and Function {function.value}')
                 xs, ys_runtime, ys_performance = [], [], []
                 for _, data_point in experiment_data.iterrows():
-                    xs.append(get_input_size(data_point) / 10**3) # turn input size into KB
+                    xs.append(get_input_size(data_point) / 10**6) # turn input size into MB
                     cost = Baseline(data_point).cost()
                     ys_runtime.append(data_point.cycles / machine_frequency)
                     ys_performance.append((cost.iops + cost.flops) / data_point.cycles)
@@ -143,16 +150,15 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                 performance_values.append(ys_performance)
                 runtime_values.append(ys_runtime)
             # Save to performance dir
-            for exp_name,x,y in zip(experiment_names,x_data,performance_values):
-                if len(x) < 2:
-                    ax.scatter(x,y,label=experiment_names[exp_name])
-                else:
-                    ax.plot(x, y,label=experiment_names[exp_name])
-            ax.set_xlabel("Input size [KB]")
-            ax.set_ylabel('Performance [ops/cycle]',
+            for i, (exp_name, x, y) in enumerate(zip(experiment_names,x_data,performance_values)):
+                color, marker, offst = STYLES[i]
+                ax.plot(x, y, label=experiment_names[exp_name], marker=marker, color=color)
+                ax.annotate(experiment_names[exp_name], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points')
+            ax.set_xlabel("Input size [MB]")
+            ax.set_ylabel('Performance [ops/cycle]\n',
                     rotation='horizontal',
                     loc='top',
-                    labelpad=-112)
+                    labelpad=-100)
             set_plot_params(ax, machine, conv_type_dir_performance / function.value, function.fancy(), benchmark_file.name[:-4])
             # Save to runtime dir
             plt.clf()
@@ -160,16 +166,15 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
             if legend is not None:
                 legend.remove()
             ax = fig.add_subplot()
-            for exp_name,x,y in zip(experiment_names,x_data,runtime_values):
-                if len(xs) < 2:
-                    ax.scatter(x,y,label=experiment_names[exp_name])
-                else:
-                    ax.plot(x, y,label=experiment_names[exp_name])
-            ax.set_xlabel("Input size [KB]")
-            ax.set_ylabel('Time [s]',
+            for i, (exp_name, x, y) in enumerate(zip(experiment_names,x_data,runtime_values)):
+                color, marker, offst = STYLES[i]
+                ax.plot(x, y, label=experiment_names[exp_name], marker=marker, color=color)
+                ax.annotate(experiment_names[exp_name], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points')
+            ax.set_xlabel("Input size [MB]")
+            ax.set_ylabel('Time [s]\n',
                     rotation='horizontal',
                     loc='top',
-                    labelpad=-112)
+                    labelpad=-100)
             set_plot_params(ax, machine, conv_type_dir_runtime / function.value, function.fancy(), benchmark_file.name[:-4])
 
 
