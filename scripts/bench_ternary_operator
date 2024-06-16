@@ -6,7 +6,7 @@ make
 
 for file in incr_c.csv incr_hw.csv; do
   echo "running $file..."
-  taskset -a -c 0 ./tnn -t -b -p parameters/$file -o results/csvs/ternary_operator -i data_order_nhwc,ternary_nhwc
+  taskset -a -c 0 ./tnn -t -b -p parameters/$file -o results/csvs/ternary_operator/$file -i data_order_nhwc,ternary_nhwc
 done
 
 # Purpose: Send notification to phone - push/send message ios and android using API from my Linux box/vm/server
