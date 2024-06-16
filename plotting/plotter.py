@@ -1,15 +1,15 @@
 """Makes a plot from CSV."""
 
 import matplotlib.pyplot as plt
-from plot.datatypes import ConvType,Function
-from plot.impls.baseline import Baseline
-from plot.utils import set_plot_params,unzip_data_points,get_input_size,frequency_to_number,get_experiment_names
-from plot.machine_info import get_machine_info
+from plotting.datatypes import ConvType,Function
+from plotting.impls.baseline import Baseline
+from plotting.utils import set_plot_params,unzip_data_points,get_input_size,frequency_to_number,get_experiment_names
+from plotting.machine_info import get_machine_info
 from pathlib import Path
 import pandas as pd
 import argparse
 
-REPO_DIR = Path(__file__).parent.parent.parent.parent
+REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
 PLOT_DIR = REPO_DIR / "plots"
 
@@ -131,7 +131,7 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                     print(f'Plotting data for Experiment {exp_name}, Benchmark suite {benchmark_file.name} and Function {function.value}')
                 xs, ys_runtime, ys_performance = [], [], []
                 for _, data_point in experiment_data.iterrows():
-                    xs.append(get_input_size(data_point))
+                    xs.append(get_input_size(data_point) / 10**3) # turn input size into KB
                     cost = Baseline(data_point).cost()
                     ys_runtime.append(data_point.cycles / machine_frequency)
                     ys_performance.append((cost.iops + cost.flops) / data_point.cycles)
@@ -148,7 +148,7 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                     ax.scatter(x,y,label=experiment_names[exp_name])
                 else:
                     ax.plot(x, y,label=experiment_names[exp_name])
-            ax.set_xlabel("Input size")
+            ax.set_xlabel("Input size [KB]")
             ax.set_ylabel('Performance [ops/cycle]',
                     rotation='horizontal',
                     loc='top',
@@ -165,8 +165,8 @@ def create_plots(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                     ax.scatter(x,y,label=experiment_names[exp_name])
                 else:
                     ax.plot(x, y,label=experiment_names[exp_name])
-            ax.set_xlabel("Input size")
-            ax.set_ylabel('Runtime [seconds]',
+            ax.set_xlabel("Input size [KB]")
+            ax.set_ylabel('Time [s]',
                     rotation='horizontal',
                     loc='top',
                     labelpad=-112)

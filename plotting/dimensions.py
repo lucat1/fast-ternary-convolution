@@ -1,6 +1,6 @@
 """Helper module to compute dimensions."""
 
-from plot.utils import (CNTBITS, BITS)
+from plotting.utils import (CNTBITS, BITS)
 from dataclasses import dataclass
 from typing import Optional
 import pandas as pd

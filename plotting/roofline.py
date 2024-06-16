@@ -2,10 +2,10 @@
 
 import matplotlib.pyplot as plt
 from math import log2
-from plot.datatypes import ConvType,Function
-from plot.opcount.util import get_work_for_function, get_data_movement_for_function
-from plot.utils import set_plot_params,unzip_data_points,get_batch_size,get_input_size
-from plot.machine_info import get_machine_info
+from plotting.datatypes import ConvType,Function
+from plotting.opcount.util import get_work_for_function, get_data_movement_for_function
+from plotting.utils import set_plot_params,unzip_data_points,get_batch_size,get_input_size
+from plotting.machine_info import get_machine_info
 from pathlib import Path
 import pandas as pd
 import numpy as np

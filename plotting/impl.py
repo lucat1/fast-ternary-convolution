@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from plot.datatypes import Function
+from plotting.datatypes import Function
 import pandas as pd
 
 class Cost:

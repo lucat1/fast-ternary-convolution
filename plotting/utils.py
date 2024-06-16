@@ -2,8 +2,8 @@
 
 import subprocess
 import matplotlib.pyplot as plt
-from plot.datatypes import Function
-from plot.machine_info import MachInfo
+from plotting.datatypes import Function
+from plotting.machine_info import MachInfo
 import pandas as pd
 from pathlib import Path
 
@@ -64,10 +64,13 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     ax.set_xscale("log")
     #ax.set_yscale("log")
 
-    title = f"{machine.model}"
-    ax.set_title(f"{title} ({file})")
+    title = file
+    if file == "data_order/incr_c":
+        title = "Increasing Channels - Data Order"
+
+    ax.set_title(f"{title}")
+    plt.suptitle("AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0")
     ax.legend()
-    plt.suptitle(function)
     
     plt.savefig(sav_loc)
 

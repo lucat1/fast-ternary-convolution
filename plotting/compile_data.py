@@ -1,8 +1,8 @@
 """Compile data points from csv files."""
 
 from dataclasses import dataclass
-from plot.opcount.op_counts import compute_ops
-from plot.opcount.util import get_work_for_function
+from plotting.opcount.op_counts import compute_ops
+from plotting.opcount.util import get_work_for_function
 import pandas as pd
 
 @dataclass

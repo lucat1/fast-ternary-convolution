@@ -1,5 +1,5 @@
-from plot.impl import Cost, Impl
-from plot.utils import CNTBITS, BITS, POPCNT_OPS
+from plotting.impl import Cost, Impl
+from plotting.utils import CNTBITS, BITS, POPCNT_OPS
 from math import ceil
 import pandas as pd
 
