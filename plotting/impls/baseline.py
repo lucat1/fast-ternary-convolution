@@ -21,7 +21,7 @@ class Baseline(Impl):
         # gemm takes (m x n) and (n x k), outputs (m k)
         self.m = self.p.batch_size * self.output_height * self.output_width
         self.n = self.p.kernel_number
-        self.k = self.p.kernel_height * self.p.kernel_width * self.packed_channels * BITS
+        self.k = self.p.kernel_height * self.p.kernel_width * self.packed_channels
 
     def ternarize(self) -> Cost:
         iops = 0
