@@ -1,11 +1,13 @@
+#!/bin/sh -ex
+
 # Purpose: Send notification to phone - push/send message ios and android using API from my Linux box/vm/server
 # Author: Vivek Gite
 # Set API stuff 
 _token='a7gctg67jfx5w7penvj3hexk5giq6m'
 _user='umygk19bmycth1p26iokc5yr2g35yi'
 
-title = "$1"
-message = "$2"
+title="$1"
+message="$2"
 
 # Send message to pushover
 curl -s \
