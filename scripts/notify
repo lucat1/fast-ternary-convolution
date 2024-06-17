@@ -1,0 +1,16 @@
+# Purpose: Send notification to phone - push/send message ios and android using API from my Linux box/vm/server
+# Author: Vivek Gite
+# Set API stuff 
+_token='a7gctg67jfx5w7penvj3hexk5giq6m'
+_user='umygk19bmycth1p26iokc5yr2g35yi'
+
+title = "$1"
+message = "$2"
+
+# Send message to pushover
+curl -s \
+     --form-string "token=${_token}" \
+     --form-string "user=${_user}" \
+     --form-string "title=${title}" \
+     --form-string "message=${message}" \
+     https://api.pushover.net/1/messages.json
