@@ -2,6 +2,8 @@
 
 ## Running and Building
 
+### Running TNN
+
 To build run:
 ```
 make
@@ -43,6 +45,24 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 ```
+
+### Plotting
+
+Generate benchmarks in `.csv` using any of the scripts in `scripts`.
+
+```bash
+./scripts/bench_*
+```
+
+Then to run the plotting, make sure the `.csv` file is in the `benchmarks` folder.
+
+Then to generate performance and runtime plots run:
+
+```bash
+python3 -m plotting.plotter
+```
+
+The corresponding plots will be in the `plots` folder.
 
 ## Adding New Optimizations
 
