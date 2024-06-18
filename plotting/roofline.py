@@ -3,7 +3,8 @@
 import matplotlib.pyplot as plt
 from math import log2
 from plotting.datatypes import ConvType,Function
-from plotting.opcount.util import get_work_for_function, get_data_movement_for_function
+# from plotting.opcount.util import get_work_for_function, get_data_movement_for_function
+from plotting.impls.baseline import Baseline
 from plotting.utils import set_plot_params,unzip_data_points,get_batch_size,get_input_size
 from plotting.machine_info import get_machine_info
 from pathlib import Path
@@ -11,7 +12,7 @@ import pandas as pd
 import numpy as np
 import argparse
 
-REPO_DIR = Path(__file__).parent.parent.parent.parent
+REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
 PLOT_DIR = REPO_DIR / "plots"
 
@@ -40,35 +41,43 @@ conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]
 csv_columns = ["name","ct","fn","cycles","channels",
                "batch_size","kernel_number","input_height","input_width",
-               "kernel_height","kernel_width","padding_size","stride_size"]
+               "kernel_height","kernel_width","padding_size","stride_size", "bytes"]
 
-conv_types_to_functions = {
-    ConvType.TNN : [
-        Function.TERNARIZE,Function.IM2ROW,
-        Function.GEMM,Function.ALLOC,Function.ALLOC2,
-        Function.FREE,Function.PRELU,Function.CONV
-    ],
-    ConvType.TBN: [
-        Function.TERNARIZE,Function.IM2ROW,
-        Function.TBN_GEMM,Function.ALLOC,Function.ALLOC2,
-        Function.FREE,Function.PRELU,Function.CONV
-    ],
-    ConvType.BNN: [
-        Function.BINARIZE,Function.IM2ROW,
-        Function.BNN_GEMM,Function.ALLOC,Function.ALLOC2,
-        Function.FREE,Function.PRELU,Function.CONV
-    ],
-    ConvType.BTN: [
-        Function.BINARIZE,Function.IM2ROW,
-        Function.BTN_GEMM,Function.ALLOC,Function.ALLOC2,
-        Function.FREE,Function.PRELU,Function.CONV
-    ]
+# conv_types_to_functions = {
+#     ConvType.TNN : [
+#         Function.TERNARIZE,Function.IM2ROW,
+#         Function.GEMM,Function.ALLOC,Function.ALLOC2,
+#         Function.FREE,Function.PRELU,Function.CONV
+#     ],
+#     ConvType.TBN: [
+#         Function.TERNARIZE,Function.IM2ROW,
+#         Function.TBN_GEMM,Function.ALLOC,Function.ALLOC2,
+#         Function.FREE,Function.PRELU,Function.CONV
+#     ],
+#     ConvType.BNN: [
+#         Function.BINARIZE,Function.IM2ROW,
+#         Function.BNN_GEMM,Function.ALLOC,Function.ALLOC2,
+#         Function.FREE,Function.PRELU,Function.CONV
+#     ],
+#     ConvType.BTN: [
+#         Function.BINARIZE,Function.IM2ROW,
+#         Function.BTN_GEMM,Function.ALLOC,Function.ALLOC2,
+#         Function.FREE,Function.PRELU,Function.CONV
+#     ]
+# }
+
+merged_funcs = {
+    Function.TERNA2ROW: [Function.TERNARIZE, Function.IM2ROW],
+    Function.GEMMPRELU: [Function.GEMM, Function.PRELU],
 }
+ignored_functions = [
+    Function.ALLOC, Function.TERNARIZE, Function.IM2ROW
+]
 
 def sanity_check_df(benchmark_df: pd.DataFrame):
     df_column_set = set(benchmark_df.columns)
     correct_columns_set = set(csv_columns)
-    assert df_column_set == correct_columns_set, f"The csv does not have the correct columns. Columns should be {csv_columns}"
+    assert correct_columns_set.issubset(df_column_set), f"The csv does not have the correct columns. Columns should be {csv_columns}"
 
 
 def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
@@ -92,7 +101,9 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
             continue
         conv_type_dir = PLOT_DIR / benchmark_file.name[:-4]
         conv_type_dir.mkdir(exist_ok=True)
-        functions = [Function[func.upper()] for func in benchmark_df["fn"].unique()]
+        mask = benchmark_df['fn'].isin(list(map(lambda x: x.value, ignored_functions)))
+        filtered_functions = benchmark_df[~mask]
+        functions = [Function[func.upper()] for func in filtered_functions['fn'].unique()]
         for function in functions:
             df_by_func = benchmark_df[benchmark_df["fn"] == function.value]
             if df_by_func.empty:
@@ -115,8 +126,9 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                 xs, ys = [], []
                 for _,data_point in df_by_func_and_exp.iterrows():
                     # print(data_point)
-                    iops, flops = get_work_for_function(data_point)
-                    q = get_data_movement_for_function(data_point)
+                    cost = Baseline(data_point).cost()
+                    iops, flops = cost.iops, cost.flops
+                    q = cost.q
                     cycles = data_point.cycles
 
                     I = (iops+flops)/q
@@ -152,7 +164,8 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                         rotation='horizontal',
                         loc='top',
                         labelpad=-112)
-            set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy())
+            # set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy())
+            set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy(), benchmark_file.name[:-4])
 
 
 if __name__ == "__main__":
