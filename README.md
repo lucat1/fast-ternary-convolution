@@ -64,6 +64,12 @@ python3 -m plotting.plotter
 
 The corresponding plots will be in the `plots` folder.
 
+To filter implementaion data from an existing `.csv` you can filter out the implementations into a new `.csv` via:
+
+```bash
+ python3 -m plotting.filter_csv -i results/csvs/final/fc.csv -o benchmarks/fc.csv -n original best_impl_avx512
+ ```
+
 ## Adding New Optimizations
 
 To introduce a new optimization you need to:
