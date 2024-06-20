@@ -30,9 +30,7 @@ machine = get_machine_info()
 # Specific to AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics.
 smembw = 51.5 * 10e9 # bytes/s
 
-print(f'machine.base_frequency = {machine.base_frequency}:{type(machine.base_frequency)}')
-
-cycles = machine.base_frequency * 10e9 # cycles/s
+cycles = 3.3 * 10e9 # cycles/s
 int_size = 32
 simd_size = 256
 simd_size512 = 512
