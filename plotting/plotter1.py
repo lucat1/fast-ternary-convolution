@@ -176,10 +176,11 @@ if __name__ == "__main__":
     sub_ax = inset_axes(
         parent_axes=ax,
         loc='upper left',
-        width="45%",
-        height="60%",
+        width="35%",
+        height="50%",
         borderpad=1
     )
+    sub_ax.set_facecolor('lightgrey')
 
     create_plots(ax, benchmark_file, True)
     create_plots(sub_ax, benchmark_file2, False)
