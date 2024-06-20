@@ -1,5 +1,5 @@
 from plotting.impl import Cost, Impl
-from plotting.utils import CNTBITS, BITS, POPCNT_OPS
+from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size
 from math import ceil
 import pandas as pd
 from plotting.impl.baseline import Baseline
@@ -12,22 +12,44 @@ class T2RGemmLU(Baseline):
         """Invoke Baseline for initialization."""
         super.__init__(parameters)
 
+    # @classmethod
+    # def copy_all_channels(self) -> int:
+    #     """Get bytes transferred from copy_all_channels."""
+    #     q = 0
+    #     fbcpp = self.pri_channels + (1 if self.p.channels % CNTBITS else 0)
+
+    #     # int64_t v0 = tensor7d_get(...)
+    #     q += 8 * fbcpp
+
+    #     # tensor7d_set
+    #     q += 8 * fbcpp
+
+    #     # int64_t v1 = tensor7d_get(...)
+    #     q += 8 * fbcpp
+
+    #     # tensor7d_set
+    #     q += 8 * fbcpp
+
+    #     return q
+
     @classmethod
-    def t2r(self) -> Cost:
+    def ternarize_im2row(self) -> Cost:
         """Get merged tern2row op count."""
-        iops = 0
-        flops = 0
-        q = 0
-
-        # onebit[i] = (int64_t)1 << i
-        iops += CNTBITS
-        q += 8 * CNTBITS
-
-        
-        
-        raise NotImplementedError()
+        cost_ternarize = super().ternarize()
+        q = get_input_size(self.p) + \
+            2 * self.p.channels * \
+            self.output_height * self.output_width * \
+            self.p.kernel_height * self.p.kernel_width * \
+            self.packed_channels * 2
+        return Cost(cost_ternarize.iops, cost_ternarize.flops, q)
 
     @classmethod
-    def gemmLU(self) -> Cost:
+    def gemm_prelu(self) -> Cost:
         """Get merged gemmLU op count."""
-        raise NotImplementedError()
+        cost_gemm = super().gemm()
+        cost_prelu = super().prelu()
+        iops = cost_gemm.iops + cost_prelu.iops
+        flops = cost_gemm.flops + cost_prelu.flops
+        # m * n comes from setting output_data.
+        q = cost_gemm.q + self.m * self.n
+        return Cost(iops, flops, q)
