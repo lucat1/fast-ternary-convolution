@@ -26,22 +26,22 @@ class BestImplAVX2(T2RGemmLU):
         vec_loops = CNTBITS // 16
 
         # _mm256_cmp_ps(current_values01, curr_thresh_avx, _CMP_GT_OS));
-        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # _mm256_cmp_ps(current_values01, neg_curr_thresh_avx, _CMP_LT_OS)
-        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # _mm256_or_si256(current_values01_gt_thresh, current_values01_lt_neg_thresh);
-        iops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        iops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # _mm256_cmp_ps(current_values23, curr_thresh_avx, _CMP_GT_OS));
-        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # _mm256_cmp_ps(current_values23, neg_curr_thresh_avx, _CMP_LT_OS)
-        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        flops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # _mm256_or_si256(current_values23_gt_thresh, current_values23_lt_neg_thresh);
-        iops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 4
+        iops += self.p.batch_size * self.p.kernel_height * self.p.kernel_width * self.pri_channels * vec_loops * 8
 
         # TODO: I am not sure how many ops _mm256_cvtepi32_epi64 is...?
         # I will assume a sign-extending a single integer is one iop.
