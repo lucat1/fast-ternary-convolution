@@ -22,7 +22,7 @@ Tensor4D<float> conv(const Tensor4D<float> &input,
 
   // gemm
   measure_point(measurement_point::gemmprelu, MeasurementEvent::START);
-  if (quantized_reshaped.dim6 >= 512) {
+  if (input.dim4 >= 512) {
     auto result = best_impl_avx2::gemmLU_block_avx2(quantized_reshaped, kernel,
                                                     relu_alpha);
     measure_point(measurement_point::gemmprelu, MeasurementEvent::END);
