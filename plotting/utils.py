@@ -55,6 +55,8 @@ def get_batch_size(benchmark_info: pd.Series) -> int:
 def get_kernel_size(benchmark_info: pd.Series) -> int:
     return benchmark_info.kernel_height * benchmark_info.kernel_width
 
+def get_stride_size(benchmark_info: pd.Series) -> int:
+    return benchmark_info.stride_size
 
 def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Function, file: str):
     # ax.legend(loc='upper center',

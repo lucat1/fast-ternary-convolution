@@ -6,7 +6,7 @@ from math import sqrt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from plotting.datatypes import ConvType,Function
 from plotting.impls.baseline import Baseline
-from plotting.utils import set_plot_params,unzip_data_points,get_kernel_size,frequency_to_number,get_experiment_names
+from plotting.utils import set_plot_params,unzip_data_points,get_stride_size,frequency_to_number,get_experiment_names
 from plotting.machine_info import get_machine_info
 from pathlib import Path
 import pandas as pd
@@ -27,13 +27,13 @@ plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 18
 STYLES = [
     # color, marker, offst, name
-    ('dodgerblue', 'D', (-360, 10), "AVX2", None),
-    ('deeppink', 'o', (-60, -10), "AVX512", None),
-    ('brown', 'h', (-365, -30), "Tensor macro", 11),
-    ('blueviolet', '^', (-60, -20), "Original", None),
-    ('darkcyan', 'H', (-35, -15), "Merged", None)
+    ('dodgerblue', 'D', (-60, 10), "AVX2", None),
+    ('deeppink', 'o', (-60, -15), "AVX512", None),
+    ('brown', 'h', (-380, 63), "Tensor macro", -25),
+    ('blueviolet', '^', (-190, 5), "Original", None),
+    ('darkcyan', 'H', (-45, 10), "Merged", None)
 ]
-title = "Increasing Kernel Size"
+title = "Increasing Stride"
 
 conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]
@@ -114,7 +114,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
         experiment_data = df_by_func[df_by_func["name"] == impl]
         xs, ys_runtime, ys_performance = [], [], []
         for _, data_point in experiment_data.iterrows():
-            xs.append(get_kernel_size(data_point))
+            xs.append(get_stride_size(data_point))
             cost = Baseline(data_point).cost()
             ys_runtime.append(data_point.cycles / machine_frequency)
             ys_performance.append((cost.iops + cost.flops) / data_point.cycles)
@@ -130,7 +130,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
         print(f"-- Adding line for {impls[impl]} ({name})")
         ax.plot(x, y, label=impls[impl], marker=marker, color=color)
         ax.annotate(name or impls[impl], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points', fontsize='x-large', rotation=rotation or 0)
-    ax.set_xlabel("Kernel size [$H \\times W$]")
+    ax.set_xlabel("Stride")
     ax.set_ylabel('Performance [ops/cycle]',
             rotation='horizontal',
             loc='top',
@@ -140,15 +140,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
     ax.grid(which='major', axis='y', linewidth=.5, dashes=(3,3))
     ax.yaxis.set_ticks_position('both')
     ax.xaxis.set_ticks_position('both')
-    ax.xaxis.set_ticks([1, 9, 25, 49, 81, 121])
-    ax.xaxis.set_tick_params(rotation=45)
-    def x_label(x, _):
-        if x >= 0:
-            k = sqrt(x)
-            return f"({k}, {k})"
-        else:
-            return ""
-    ax.xaxis.set_major_formatter(x_label)
+    ax.xaxis.set_ticks([1,2,3,4])
     ax.set_title(title, fontsize=15)
         
 
@@ -159,10 +151,10 @@ if __name__ == "__main__":
     parser.add_argument("-o","--output",default=str(PLOT_DIR))
     args = parser.parse_args()
 
-    output_file = Path(args.output) / "2"
+    output_file = Path(args.output) / "3"
     Path(args.output).mkdir(exist_ok=True,parents=True)
 
-    benchmark_file = Path(args.input) / "diff_kernels2.csv"
+    benchmark_file = Path(args.input) / "incr_stride2.csv"
 
     fig = plt.figure(figsize=(8, 5))
     ax = fig.add_subplot()
