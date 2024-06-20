@@ -2,6 +2,7 @@
 
 import subprocess
 import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
 from plotting.datatypes import Function
 from plotting.machine_info import MachInfo
 import pandas as pd
@@ -55,17 +56,20 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     #         ncol=15,
     #         borderpad=.5)
 
-    ax.tick_params(axis='both', which='major', pad=15)
-    ax.grid(which='major', axis='y', linewidth=.5, dashes=(1,1))
-    ax.set_xscale("log")
+    ax.tick_params(axis='both', direction='in', which='major', pad=5)
+    ax.grid(which='major', axis='y', linewidth=.5, dashes=(3,3))
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_ticks_position('both')
+    ax.set_xscale("log", base=2)
+    ax.xaxis.set_major_formatter(ScalarFormatter())
 
     title = file
     if file == "incr_c":
-        title = "Maximum Speedup - Increasing Channels"
+        title = "Increasing Channels"
 
     ax.set_title(title + "\n AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0 \n", fontsize=15)
     
-    plt.savefig(sav_loc)
+    plt.savefig(sav_loc, bbox_inches='tight')
 
 def unzip_data_points(data_x: list[int], data_y: list[int]) -> tuple[list[int],list[int]]:
     """Unzip data points."""
@@ -102,7 +106,7 @@ def get_experiment_names(experiments: pd.Series) -> dict[str,str]:
 
 
 def frequency_to_number(frequency: str) -> float:
-    number, unit = frequency.split()
+    number, unit = 3.3, 'GHz'
     number = float(number)
     if unit == "GHz":
         return number * 10**9
