@@ -8,7 +8,7 @@ export MAKEFLAGS="-j 9"
 make clean
 make
 
-scripts/notify "begun cold" "running benchmarks for cold cache"
+# scripts/notify "begun cold" "running benchmarks for cold cache"
 
 # File names
 # params="fc.csv"
@@ -16,12 +16,12 @@ scripts/notify "begun cold" "running benchmarks for cold cache"
 # Implementation names
 # impls="best_impl_avx2,best_impl_avx512,data_order_nhwc,data_order_nhwc_tensor_macro1,original,t2r_gemmLU"
 
-for file in $(ls parameters); do
-    echo "running $file..."
-    scripts/notify "${file} started" "${file} benchmark running"
-    taskset -a -c 0 ./tnn -t -b -l -p parameters/$file -o results/csvs/avx2/cold/$file -i best_impl_avx2
-    scripts/notify "${file} done" "${file} benchmark done"
-done
+# for file in $(ls parameters); do
+#     echo "running $file..."
+#     scripts/notify "${file} started" "${file} benchmark running"
+#     taskset -a -c 0 ./tnn -t -b -l -p parameters/$file -o results/csvs/avx2/cold/$file -i best_impl_avx2
+#     scripts/notify "${file} done" "${file} benchmark done"
+# done
 
 scripts/notify "begun warm" "running benchmarks for warm cache"
 
