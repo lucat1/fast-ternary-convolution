@@ -25,16 +25,24 @@ plt.rcParams['font.family'] = 'serif'
 plt.rcParams['text.usetex'] = False
 plt.rcParams['svg.fonttype'] = 'none'
 
-# change these
-smembw = 30 * 10e9 # bytes/s
-cycles = 2 * 10e9 # cycles/s
+machine = get_machine_info()
+
+# Specific to AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics.
+smembw = 51.5 * 10e9 # bytes/s
+
+print(f'machine.base_frequency = {machine.base_frequency}:{type(machine.base_frequency)}')
+
+cycles = machine.base_frequency * 10e9 # cycles/s
 int_size = 32
 simd_size = 256
+simd_size512 = 512
 
 ipi = 8 # ops/cycle
 fpi = 6 # ops/cycle
 ipi_simd = ipi*(simd_size/int_size) # ops/cycle
 fpi_simd = fpi*(simd_size/int_size) # ops/cycle
+ipi_simd512 = ipi*(simd_size512/int_size) # ops/cycle
+fpi_simd512 = fpi*(simd_size512/int_size) # ops/cycle
 beta = smembw / cycles
 
 conv_types = [conv_type for conv_type in ConvType]
@@ -42,29 +50,6 @@ functions = [function_type for function_type in Function]
 csv_columns = ["name","ct","fn","cycles","channels",
                "batch_size","kernel_number","input_height","input_width",
                "kernel_height","kernel_width","padding_size","stride_size", "bytes"]
-
-# conv_types_to_functions = {
-#     ConvType.TNN : [
-#         Function.TERNARIZE,Function.IM2ROW,
-#         Function.GEMM,Function.ALLOC,Function.ALLOC2,
-#         Function.FREE,Function.PRELU,Function.CONV
-#     ],
-#     ConvType.TBN: [
-#         Function.TERNARIZE,Function.IM2ROW,
-#         Function.TBN_GEMM,Function.ALLOC,Function.ALLOC2,
-#         Function.FREE,Function.PRELU,Function.CONV
-#     ],
-#     ConvType.BNN: [
-#         Function.BINARIZE,Function.IM2ROW,
-#         Function.BNN_GEMM,Function.ALLOC,Function.ALLOC2,
-#         Function.FREE,Function.PRELU,Function.CONV
-#     ],
-#     ConvType.BTN: [
-#         Function.BINARIZE,Function.IM2ROW,
-#         Function.BTN_GEMM,Function.ALLOC,Function.ALLOC2,
-#         Function.FREE,Function.PRELU,Function.CONV
-#     ]
-# }
 
 merged_funcs = {
     Function.TERNA2ROW: [Function.TERNARIZE, Function.IM2ROW],
@@ -142,7 +127,12 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                 # draw the rooflines
                 xmax = 5
                 rng = range(0, xmax)
-                for (name, pf, style) in [("\\pi_{is}", ipi, '-'), ("\\pi_{fs}", fpi, "-"), ("\\pi_{iv}", ipi_simd, "--"), ("\\pi_{fv}", fpi_simd, "--")]:
+                for (name, pf, style) in [("\\pi_{is}", ipi, '-'),
+                                          ("\\pi_{fs}", fpi, "-"),
+                                          ("\\pi_{iv}", ipi_simd, "--"),
+                                          ("\\pi_{fv}", fpi_simd, "--"),
+                                          ("\\pi_{iv512}", ipi_simd512, "--"),
+                                          ("\\pi_{fv512}", fpi_simd512, "--")]:
                     plt.hlines(y=pf, color='black', linestyle=style, xmin=pf/beta, xmax=xmax)
                     up = 6
                     plt.text(rng[-1], pf+log2(up), f"$P(n) \\leq {name}$", verticalalignment='bottom', horizontalalignment='right')
@@ -165,6 +155,7 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                         loc='top',
                         labelpad=-112)
             # set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy())
+            ax.legend()
             set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy(), benchmark_file.name[:-4])
 
 
