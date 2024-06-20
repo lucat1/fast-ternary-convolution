@@ -1,0 +1,27 @@
+#!/bin/sh -ex
+
+echo "0" | sudo tee /sys/devices/system/cpu/cpufreq/boost
+
+scripts/notify "make" "building files"
+
+export MAKEFLAGS="-j 9"
+make clean
+make
+
+scripts/notify "begun" "running benchmarks"
+
+# File names
+params="fc.csv"
+
+# Implementation names
+impls="best_impl_avx2,best_impl_avx512,data_order_nhwc,data_order_nhwc_tensor_macro1,original,t2r_gemmLU
+"
+
+for file in $params; do
+    echo "running $file..."
+    scripts/notify "${file} started" "${file} benchmark running"
+    taskset -a -c 0 ./tnn -t -b -p parameters/$file -o results/csvs/avx2/$file -i $impls
+    scripts/notify "${file} done" "${file} benchmark done"
+done
+
+scripts/notify "all done" "completed"
