@@ -63,9 +63,7 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     ax.set_xscale("log", base=2)
     ax.xaxis.set_major_formatter(ScalarFormatter())
 
-    title = file
-    if file == "incr_c":
-        title = "Increasing Channels"
+    title = "Increasing Channels"
 
     ax.set_title(title + "\n AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0 \n", fontsize=15)
     
