@@ -12,6 +12,9 @@ POPCNT_OPS = 3
 CNTBITS = 64
 BITS = 2
 
+N_BLOCK_SIZE = 16
+M_BLOCK_SIZE = 16
+
 EXPERIMENT_NAMES = {
     # "optmerge_im2row_ternarize": "Merge im2row+ternarize (optimized)",
     # "merge_im2row_ternarize": "Merge im2row+ternarize",

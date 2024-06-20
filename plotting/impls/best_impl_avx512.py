@@ -1,5 +1,5 @@
 from plotting.impl import Cost, Impl
-from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size
+from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size, M_BLOCK_SIZE, N_BLOCK_SIZE
 from math import ceil
 import pandas as pd
 from plotting.impl.t2r_gemmLU import T2RGemmLU
@@ -76,6 +76,129 @@ class BestImplAVX512(T2RGemmLU):
         return Cost(iops=iops, flops=flops, q=q)
 
     @classmethod
+    def gemm_kernel_512(self) -> Cost:
+        """
+        Get gemm_kernel_512 op count.
+
+        TODO: is it ok to use Q from super class?
+        """
+        iops = 0
+        flops = 0
+
+        vec_loops = self.k // (8 * BITS)
+
+        # TODO: Is this correct?
+        rem_loops = (self.k % (8 * BITS)) // (4 * BITS)
+
+        # TODO: Is this correct?
+        last_loops = ((self.k % (8 * BITS)) % (4 * BITS)) // BITS
+
+        # comp1 = (_mm512_xor_epi64(load3, load4));
+        iops += vec_loops * 8
+
+        # comp3 = (_mm512_xor_epi64(load5, load6));
+        iops += vec_loops * 8
+
+        # comp2 = (_mm512_and_epi64(load3, load4));
+        iops += vec_loops * 8
+
+        # comp4 = (_mm512_and_epi64(load5, load6));
+        iops += vec_loops * 8
+
+        # comp8 = (_mm512_popcnt_epi64(comp6));
+        iops += vec_loops * 8 * POPCNT_OPS
+
+        # comp7 = (_mm512_and_epi64(comp5, comp6));
+        iops += vec_loops * 8
+
+        # comp9 = (_mm512_popcnt_epi64(comp7));
+        iops += vec_loops * 8 * POPCNT_OPS
+
+        # comp10 = (_mm512_add_epi64(load1, comp8));
+        iops += vec_loops * 8
+
+        # comp11 = (_mm512_add_epi64(load2, comp9));
+        iops += vec_loops * 8
+
+        # comp14 = (((load9) ^ (load10)));
+        iops += rem_loops
+
+        # comp15 = (((load11) & (load12)));
+        iops += rem_loops
+
+        # comp16 = (popcnt64(comp15));
+        iops += rem_loops * POPCNT_OPS
+
+        # comp17 = (((comp14) & (comp15)));
+        iops += rem_loops
+
+        # comp18 = (popcnt64(comp17));
+        iops += rem_loops * POPCNT_OPS
+
+        # comp19 = (((load7) + (comp16)));
+        iops += rem_loops
+
+        # comp20 = (((load8) + (comp18)));
+        iops += rem_loops
+
+        # comp12 = (_mm512_reduce_add_epi64(load1));
+        iops += 3
+
+        # comp13 = (_mm512_reduce_add_epi64(load2));
+        iops += 3
+
+        # comp21 = (((comp12) + (load7)));
+        iops += 1
+
+        # comp22 = (((comp13) + (load8)));
+        iops += 1
+
+        # comp26 = (((load13) ^ (load14)));
+        iops += last_loops
+
+        # comp27 = (((load15) & (load16)));
+        iops += last_loops
+
+        # comp28 = (popcnt64(comp27));
+        iops += last_loops * POPCNT_OPS
+
+        # comp29 = (((comp26) & (comp27)));
+        iops += last_loops
+
+        # comp30 = (popcnt64(comp29));
+        iops += last_loops * POPCNT_OPS
+
+        # comp31 = (((comp21) + (comp28)));
+        iops += last_loops
+
+        # comp32 = (((comp22) + (comp30)));
+        iops += last_loops
+
+        # comp23 = (((comp21) - (comp22)));
+        iops += 1
+
+        # comp24 = (((comp23) - (comp22)));
+        iops += 1
+
+        # comp25 = (((((comp24) > (0))) ? (comp24) : (((comp24) * (alpha)))));
+        flops += 1
+        iops += .5
+
+        return Cost(iops=iops, flops=flops, q=0)
+
+    @classmethod
     def gemm_prelu(self) -> Cost:
-        """Get merged gemmLU op count."""
-        raise NotImplementedError()
+        """
+        Get merged gemmLU op count.
+
+        TODO: is it ok to use Q from super class?
+        """
+        q = super().gemm_prelu
+        cost_gemm_kernel_512 = self.gemm_kernel_512()
+
+        cost = cost_gemm_kernel_512 * (self.m // M_BLOCK_SIZE * self.n // N_BLOCK_SIZE)
+        cost += cost_gemm_kernel_512 * (self.m // M_BLOCK_SIZE * (self.n % N_BLOCK_SIZE))
+        cost += cost_gemm_kernel_512 * ((self.m % M_BLOCK_SIZE) * (self.n // N_BLOCK_SIZE))
+        cost += cost_gemm_kernel_512 * ((self.m % M_BLOCK_SIZE) * (self.n % N_BLOCK_SIZE))
+
+        return Cost(iops=ceil(cost.iops), flops=ceil(cost.flops), q=q)

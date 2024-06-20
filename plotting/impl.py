@@ -23,6 +23,23 @@ class Cost:
     def add(self, c: "Cost") -> "Cost":
         return Cost(self.iops + c.iops, self.flops + c.flops, self.q + c.q)
 
+    def __add__(self, c: "Cost") -> "Cost":
+        return self.add(c)
+
+    def __iadd__(self, c: "Cost") -> "Cost":
+        self = self.add(c)
+        return self
+
+    def scalar_mul(self, k: int) -> "Cost":
+        return Cost(self.iops * k, self.flops * k, self.q * k)
+
+    def __mul__(self, k: int) -> "Cost":
+        return self.scalar_mul(k)
+
+    def __imul__(self, k: int) -> "Cost":
+        self = self.scalar_mul(k)
+        return self
+
 class Impl(ABC):
     def __init__(self, parameters: pd.Series) -> None:
         super().__init__()
