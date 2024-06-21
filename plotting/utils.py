@@ -74,7 +74,7 @@ def set_plot_params(ax: plt.Axes, machine: MachInfo, sav_loc: Path, function: Fu
     title = "Increasing Channels"
 
     ax.set_title(title + "\n AMD Ryzen 7 PRO 7840U, \\texttt{gcc} v12.2.0 \n", fontsize=15)
-    
+    print(f'sav_loc = {sav_loc}')
     plt.savefig(sav_loc, bbox_inches='tight')
 
 def unzip_data_points(data_x: list[int], data_y: list[int]) -> tuple[list[int],list[int]]:

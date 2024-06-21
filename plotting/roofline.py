@@ -3,9 +3,12 @@
 import matplotlib.pyplot as plt
 from math import log2
 from plotting.datatypes import ConvType,Function
-# from plotting.opcount.util import get_work_for_function, get_data_movement_for_function
 from plotting.impls.baseline import Baseline
+from plotting.impls.best_impl_avx2 import BestImplAVX2
+from plotting.impls.best_impl_avx512 import BestImplAVX512
+from plotting.impls.t2r_gemmLU import T2RGemmLU
 from plotting.utils import set_plot_params,unzip_data_points,get_batch_size,get_input_size
+from plotting.impl import Cost
 from plotting.machine_info import get_machine_info
 from pathlib import Path
 import pandas as pd
@@ -14,7 +17,7 @@ import argparse
 
 REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
-PLOT_DIR = REPO_DIR / "plots"
+PLOT_DIR = REPO_DIR / "plots" / "roofline"
 
 plt.rcParams['axes.labelsize'] = 10
 plt.rcParams['xtick.labelsize'] = 10
@@ -56,6 +59,23 @@ merged_funcs = {
 ignored_functions = [
     Function.ALLOC, Function.TERNARIZE, Function.IM2ROW
 ]
+
+
+def cost_of_data_point(parameters: pd.Series) -> Cost:
+    """
+    Compute the cost of a given data point.
+
+    This depends upon the implementation.
+    """
+    match parameters.name:
+        case 'best_impl_avx512':
+            return BestImplAVX512(parameters).cost()
+        case 'best_impl_avx2':
+            return BestImplAVX2(parameters).cost()
+        case 't2r_gemmLU':
+            return T2RGemmLU(parameters).cost()
+        case _:
+            return Baseline(parameters).cost()
 
 def sanity_check_df(benchmark_df: pd.DataFrame):
     df_column_set = set(benchmark_df.columns)
@@ -109,7 +129,7 @@ def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
                 xs, ys = [], []
                 for _,data_point in df_by_func_and_exp.iterrows():
                     # print(data_point)
-                    cost = Baseline(data_point).cost()
+                    cost = cost_of_data_point(data_point)
                     iops, flops = cost.iops, cost.flops
                     q = cost.q
                     cycles = data_point.cycles

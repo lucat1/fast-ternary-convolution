@@ -2,7 +2,7 @@ from plotting.impl import Cost, Impl
 from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size, M_BLOCK_SIZE, N_BLOCK_SIZE
 from math import ceil
 import pandas as pd
-from plotting.impl.t2r_gemmLU import T2RGemmLU
+from plotting.impls.t2r_gemmLU import T2RGemmLU
 
 class BestImplAVX512(T2RGemmLU):
     """Op count for best_impl_avx2."""

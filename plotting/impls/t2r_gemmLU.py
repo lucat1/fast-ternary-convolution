@@ -2,7 +2,7 @@ from plotting.impl import Cost, Impl
 from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size
 from math import ceil
 import pandas as pd
-from plotting.impl.baseline import Baseline
+from plotting.impls.baseline import Baseline
 
 
 class T2RGemmLU(Baseline):
