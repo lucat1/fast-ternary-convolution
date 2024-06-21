@@ -60,22 +60,47 @@ public:
   }
 };
 
-vector<pair<vector<Interval>, size_t>> one_run(Implementation impl,
-                                               Data &data) {
+vector<pair<vector<Interval>, size_t>>
+one_run(Implementation impl, Data &data, bool hot_cache,
+        ConvolutionType conv_type, DataOrder data_order, InfraParameters p,
+        float relu_alpha) {
   size_t num_runs = 20;
   vector<pair<vector<Interval>, size_t>> measurement_intervals;
   auto m = Measure::get_instance();
 
-  for (size_t i = 0; i < num_runs; ++i) {
-    m->reset();
+  if (hot_cache) {
+    for (size_t i = 0; i < num_runs; ++i) {
+      m->reset();
 
-    m->track(measurement_point::conv, MeasurementEvent::START);
-    impl.fn(data.input, data.threshold, data.padding_h, data.padding_w,
-            data.kernel, data.stride_h, data.stride_w, data.relu_alpha);
-    m->track(measurement_point::conv, MeasurementEvent::END);
+      m->track(measurement_point::conv, MeasurementEvent::START);
+      impl.fn(data.input, data.threshold, data.padding_h, data.padding_w,
+              data.kernel, data.stride_h, data.stride_w, data.relu_alpha);
+      m->track(measurement_point::conv, MeasurementEvent::END);
 
-    measurement_intervals.push_back({m->intervals(), m->memory()});
-    m->reset();
+      measurement_intervals.push_back({m->intervals(), m->memory()});
+      m->reset();
+    }
+  } else {
+    for (size_t i = 0; i < num_runs; ++i) {
+      auto d = BenchData(conv_type, data_order, p, relu_alpha);
+      memcpy(d.input.data, data.input.data,
+             sizeof(float) * data.batch_size *
+                 nchw_or_nhwc(data.channels, data.input_h) *
+                 nchw_or_nhwc(data.input_h, data.input_w) *
+                 nchw_or_nhwc(data.input_w, data.channels));
+      memcpy(d.kernel.data, data.kernel.data,
+             sizeof(int64_t) * data.kernel_n * data.kernel_h * data.kernel_w *
+                 int64s_for_bits(data.channels) * 2);
+      m->reset();
+
+      m->track(measurement_point::conv, MeasurementEvent::START);
+      impl.fn(d.input, d.threshold, d.padding_h, d.padding_w, d.kernel,
+              d.stride_h, d.stride_w, d.relu_alpha);
+      m->track(measurement_point::conv, MeasurementEvent::END);
+
+      measurement_intervals.push_back({m->intervals(), m->memory()});
+      m->reset();
+    }
   }
 
   return measurement_intervals;
@@ -157,7 +182,7 @@ void print_line(ofstream &csv, bool convonly, size_t bytes, string impl_name,
 }
 
 void bench(Registry r, vector<InfraParameters> *params, string output,
-           bool convonly) {
+           bool convonly, bool hot_cache) {
   const float relu_alpha = 0.1;
   auto csv = ofstream(output);
   assert(!csv.fail());
@@ -194,7 +219,8 @@ void bench(Registry r, vector<InfraParameters> *params, string output,
       ConvolutionType conv_type = ConvolutionType::TNN;
       auto data = BenchData(conv_type, impl.data_order, bc, relu_alpha);
 
-      auto intervals = one_run(impl, data);
+      auto intervals = one_run(impl, data, hot_cache, conv_type,
+                               impl.data_order, bc, relu_alpha);
       auto averages = average(intervals);
       for (auto avg : averages.first)
         print_line(csv, convonly, averages.second, impl.name, conv_type,

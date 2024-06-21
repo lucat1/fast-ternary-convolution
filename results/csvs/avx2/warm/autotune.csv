@@ -1,0 +1,5 @@
+name,ct,fn,cycles,channels,batch_size,kernel_number,input_height,input_width,kernel_height,kernel_width,padding_size,stride_size,bytes
+best_impl_avx2,TNN,alloc,69151,144,2,77,384,384,3,3,1,1,218235024
+best_impl_avx2,TNN,conv,2749972816,144,2,77,384,384,3,3,1,1,218235024
+best_impl_avx2,TNN,gemmprelu,2646520808,144,2,77,384,384,3,3,1,1,218235024
+best_impl_avx2,TNN,terna2row,101234908,144,2,77,384,384,3,3,1,1,218235024

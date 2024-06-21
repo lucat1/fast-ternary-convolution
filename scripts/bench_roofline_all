@@ -1,0 +1,20 @@
+#!/bin/sh -ex
+
+echo "0" | sudo tee /sys/devices/system/cpu/cpufreq/boost
+
+scripts/notify "make" "building files"
+
+export MAKEFLAGS="-j 9"
+make clean
+make
+
+scripts/notify "begun" "running benchmarks"
+
+for file in $(ls parameters); do
+    echo "running $file..."
+    scripts/notify "${file} started" "${file} benchmark running"
+    taskset -a -c 0 ./tnn -t -b -l -p parameters/$file -o results/csvs/cold/$file
+    scripts/notify "${file} done" "${file} benchmark done"
+done
+
+scripts/notify "all done" "completed"

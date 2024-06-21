@@ -1,0 +1,17 @@
+name,ct,fn,cycles,channels,batch_size,kernel_number,input_height,input_width,kernel_height,kernel_width,padding_size,stride_size,bytes
+best_impl_avx2,TNN,alloc,49438,80,1,80,224,224,3,3,1,1,30507152
+best_impl_avx2,TNN,conv,358634480,80,1,80,224,224,3,3,1,1,30507152
+best_impl_avx2,TNN,gemmprelu,345394558,80,1,80,224,224,3,3,1,1,30507152
+best_impl_avx2,TNN,terna2row,13137432,80,1,80,224,224,3,3,1,1,30507152
+best_impl_avx2,TNN,alloc,3694,80,1,80,224,224,3,3,1,2,7626896
+best_impl_avx2,TNN,conv,89537122,80,1,80,224,224,3,3,1,2,7626896
+best_impl_avx2,TNN,gemmprelu,84625646,80,1,80,224,224,3,3,1,2,7626896
+best_impl_avx2,TNN,terna2row,4906721,80,1,80,224,224,3,3,1,2,7626896
+best_impl_avx2,TNN,alloc,2894,80,1,80,224,224,3,3,1,3,3420144
+best_impl_avx2,TNN,conv,42294782,80,1,80,224,224,3,3,1,3,3420144
+best_impl_avx2,TNN,gemmprelu,37986612,80,1,80,224,224,3,3,1,3,3420144
+best_impl_avx2,TNN,terna2row,4303898,80,1,80,224,224,3,3,1,3,3420144
+best_impl_avx2,TNN,alloc,2348,80,1,80,224,224,3,3,1,4,1906832
+best_impl_avx2,TNN,conv,23643928,80,1,80,224,224,3,3,1,4,1906832
+best_impl_avx2,TNN,gemmprelu,21149156,80,1,80,224,224,3,3,1,4,1906832
+best_impl_avx2,TNN,terna2row,2490575,80,1,80,224,224,3,3,1,4,1906832

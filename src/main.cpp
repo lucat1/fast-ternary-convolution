@@ -135,6 +135,7 @@ int main(int argc, char *argv[]) {
   bool test = false;
   bool measure = false;
   bool convonly = false;
+  bool hot_cache = true;
 
   stringstream f;
   fstream p;
@@ -147,7 +148,7 @@ int main(int argc, char *argv[]) {
 
   int opt;
   // : means the previous option requires an argument
-  while ((opt = getopt(argc, argv, "i:p:o:thbc")) != -1) {
+  while ((opt = getopt(argc, argv, "i:p:o:thbcl")) != -1) {
     switch (opt) {
     case 't':
       test = true;
@@ -171,6 +172,7 @@ int main(int argc, char *argv[]) {
       cerr << "\t-b\t\t\tEnable benchmarking" << endl;
       cerr << "\t-c\t\t\tOnly print benchmark data for the whole convolution"
            << endl;
+      cerr << "\t-l\t\t\tUse data that is cold in cache" << endl;
       exit(0);
       break;
     case 'i':
@@ -199,6 +201,9 @@ int main(int argc, char *argv[]) {
     case 'o':
       bench_out = string(optarg);
       break;
+    case 'l':
+      hot_cache = false;
+      break;
     default:
       break;
     }
@@ -215,7 +220,8 @@ int main(int argc, char *argv[]) {
     if (test)
       verify(r);
     if (measure)
-      bench(r, params.size() == 0 ? nullptr : &params, bench_out, convonly);
+      bench(r, params.size() == 0 ? nullptr : &params, bench_out, convonly,
+            hot_cache);
   }
   return 0;
 }

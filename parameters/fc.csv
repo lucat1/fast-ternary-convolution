@@ -1,0 +1,5 @@
+channels,batch_size,input_height,input_width,kernel_number,kernel_height,kernel_width,padding_size,stride_size
+2000, 2, 1, 1, 4000, 1, 1, 0, 1
+4000, 2, 1, 1, 8000, 1, 1, 0, 1
+8000, 2, 1, 1,16000, 1, 1, 0, 1
+16000, 2, 1, 1,32000, 1, 1, 0, 1

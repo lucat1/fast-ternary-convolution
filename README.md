@@ -2,6 +2,8 @@
 
 ## Running and Building
 
+### Running TNN
+
 To build run:
 ```
 make
@@ -43,6 +45,30 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 ```
+
+### Plotting
+
+Generate benchmarks in `.csv` using any of the scripts in `scripts`.
+
+```bash
+./scripts/bench_*
+```
+
+Then to run the plotting, make sure the `.csv` file is in the `benchmarks` folder.
+
+Then to generate performance and runtime plots run:
+
+```bash
+python3 -m plotting.plotter
+```
+
+The corresponding plots will be in the `plots` folder.
+
+To filter implementaion data from an existing `.csv` you can filter out the implementations into a new `.csv` via:
+
+```bash
+ python3 -m plotting.filter_csv -i results/csvs/final/fc.csv -o benchmarks/fc.csv -n original best_impl_avx512
+ ```
 
 ## Adding New Optimizations
 
