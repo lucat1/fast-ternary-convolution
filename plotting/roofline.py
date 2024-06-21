@@ -1,5 +1,6 @@
 """Makes a plot from CSV."""
 
+from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 from math import log2
 from plotting.datatypes import ConvType,Function
@@ -15,6 +16,9 @@ import pandas as pd
 import numpy as np
 import argparse
 
+import matplotlib
+matplotlib.use('pdf')
+
 REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
 PLOT_DIR = REPO_DIR / "plots" / "roofline"
@@ -27,6 +31,8 @@ plt.rcParams['legend.fontsize'] = 11
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['text.usetex'] = False
 plt.rcParams['svg.fonttype'] = 'none'
+
+title = "Whatever"
 
 machine = get_machine_info()
 
@@ -67,6 +73,7 @@ def cost_of_data_point(parameters: pd.Series) -> Cost:
 
     This depends upon the implementation.
     """
+    print(parameters.name)
     match parameters.name:
         case 'best_impl_avx512':
             return BestImplAVX512(parameters).cost()
@@ -83,99 +90,75 @@ def sanity_check_df(benchmark_df: pd.DataFrame):
     assert correct_columns_set.issubset(df_column_set), f"The csv does not have the correct columns. Columns should be {csv_columns}"
 
 
-def create_roofline(benchmark_dir: Path, output_dir: Path,verbose:bool) -> None:
-    if not benchmark_dir.exists() and benchmark_dir.is_dir():
-        raise ValueError(f"Benchmark directory at {benchmark_dir.absolute()} does not exist")
-    output_dir.mkdir(exist_ok=True,parents=True)
-    benchmark_files = [file for file in benchmark_dir.iterdir() if file.suffix == ".csv"]
-    
-    machine = get_machine_info()
+def create_roofline(ax: Axes, benchmark_file: Path) -> None:
+    benchmark_df = pd.read_csv(benchmark_file)
+    sanity_check_df(benchmark_df)
+    impls = benchmark_df["name"].unique()
+    if benchmark_df.empty:
+        print(f"No data found for benchmark suite {benchmark_file.name}")
+        exit(1)
+    df_by_func = benchmark_df[benchmark_df["fn"] == "conv"]
+    if df_by_func.empty:
+        print(f"No data found for function conv in benchmark suite {benchmark_file.name}")
+        exit(1)
 
-    fig = plt.figure(figsize=(10, 6))
-    ax = fig.add_subplot()
+    # draw the rooflines
+    xmax = 5
+    rng = range(0, xmax)
+    for (name, pf, style) in [("\\pi_{is}", ipi, '-'),
+                              ("\\pi_{fs}", fpi, "-"),
+                              ("\\pi_{iv}", ipi_simd, "--"),
+                              ("\\pi_{fv}", fpi_simd, "--"),
+                              ("\\pi_{iv512}", ipi_simd512, "--"),
+                              ("\\pi_{fv512}", fpi_simd512, "--")]:
+        plt.hlines(y=pf, color='black', linestyle=style, xmin=pf/beta, xmax=xmax)
+        up = 6
+        plt.text(rng[-1], pf+log2(up), f"$P(n) \\leq {name}$", verticalalignment='bottom', horizontalalignment='right')
 
-    for benchmark_file in benchmark_files:
-        benchmark_df = pd.read_csv(benchmark_file)
-        sanity_check_df(benchmark_df)
-        experiment_names = benchmark_df["name"].unique()
-        if benchmark_df.empty:
-            if verbose:
-                print(f"No data found for benchmark suite {benchmark_file.name}")
+        # print(f"memory bound range for {name}: {pf/beta}")
+        memboundrange = np.arange((1)/beta, pf/beta+0.005, step=0.0001)
+        plt.loglog(memboundrange, [beta*i for i in memboundrange], color='black', base=2, linestyle=style)
+
+    for impl in impls:
+        df_by_func_and_exp = df_by_func[df_by_func["name"] == impl]
+        if df_by_func_and_exp.empty:
+            print(f"No data found for experiment {impl}, function {function} and Benchmark suite {benchmark_file.name}")
             continue
-        conv_type_dir = PLOT_DIR / benchmark_file.name[:-4]
-        conv_type_dir.mkdir(exist_ok=True)
-        mask = benchmark_df['fn'].isin(list(map(lambda x: x.value, ignored_functions)))
-        filtered_functions = benchmark_df[~mask]
-        functions = [Function[func.upper()] for func in filtered_functions['fn'].unique()]
-        for function in functions:
-            df_by_func = benchmark_df[benchmark_df["fn"] == function.value]
-            if df_by_func.empty:
-                if verbose:
-                    print(f"No data found for function {function} in benchmark suite {benchmark_file.name}")
-                continue
-            plt.clf()
-            legend = ax.get_legend()
-            if legend is not None:
-                legend.remove()
-            ax = fig.add_subplot()
-            for exp_name in experiment_names:
-                df_by_func_and_exp = df_by_func[df_by_func["name"] == exp_name]
-                if df_by_func_and_exp.empty:
-                    if verbose:
-                        print(f"No data found for experiment {exp_name}, function {function} and Benchmark suite {benchmark_file.name}")
-                    continue
-                if verbose:
-                    print(f'Plotting data for Experiment {exp_name}, Benchmark suite {benchmark_file.name} and Function {function.value}')
-                xs, ys = [], []
-                for _,data_point in df_by_func_and_exp.iterrows():
-                    # print(data_point)
-                    cost = cost_of_data_point(data_point)
-                    iops, flops = cost.iops, cost.flops
-                    q = cost.q
-                    cycles = data_point.cycles
+        print(f'Plotting data for Experiment {impl}, Benchmark suite {benchmark_file.name}')
+        xs, ys = [], []
+        for _,data_point in df_by_func_and_exp.iterrows():
+            # print(data_point)
+            cost = cost_of_data_point(data_point)
+            iops, flops = cost.iops, cost.flops
+            q = cost.q
+            cycles = data_point.cycles
 
-                    I = (iops+flops)/q
-                    P = (iops+flops)/cycles
-                    print(f"{function.value} I = {iops+flops}/{q} = {I}")
-                    print(f"{function.value} P = {iops+flops}/{cycles} = {P}")
+            I = (iops+flops)/q
+            P = (iops+flops)/cycles
+            print(f"{impl} I = {iops+flops}/{q} = {I}")
+            print(f"{impl} P = {iops+flops}/{cycles} = {P}")
 
-                    xs.append(I)
-                    ys.append(P)
+            xs.append(I)
+            ys.append(P)
 
-                # draw the rooflines
-                xmax = 5
-                rng = range(0, xmax)
-                for (name, pf, style) in [("\\pi_{is}", ipi, '-'),
-                                          ("\\pi_{fs}", fpi, "-"),
-                                          ("\\pi_{iv}", ipi_simd, "--"),
-                                          ("\\pi_{fv}", fpi_simd, "--"),
-                                          ("\\pi_{iv512}", ipi_simd512, "--"),
-                                          ("\\pi_{fv512}", fpi_simd512, "--")]:
-                    plt.hlines(y=pf, color='black', linestyle=style, xmin=pf/beta, xmax=xmax)
-                    up = 6
-                    plt.text(rng[-1], pf+log2(up), f"$P(n) \\leq {name}$", verticalalignment='bottom', horizontalalignment='right')
+        ax.set_xscale('log', base=2)
+        ax.set_yscale('log', base=2)
+        assert(len(xs) == len(ys))
+        xs, ys = unzip_data_points(xs,ys)
+        ax.plot(xs, ys, label=impl)
+        ax.set_xlabel("Operational Intensity [ops/byte]")
+        ax.set_ylabel('Performance [ops/cycle]',
+                rotation='horizontal',
+                loc='top',
+                labelpad=-112)
+        ax.legend()
+        ax.tick_params(axis='both', direction='in', which='major', pad=5)
+        ax.grid(which='major', axis='y', linewidth=.5, dashes=(3,3))
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_ticks_position('both')
+        ax.set_xscale("log", base=2)
 
-                    print(f"memory bound range for {name}: {pf/beta}")
-                    memboundrange = np.arange((.05)/beta, pf/beta+0.005, step=0.0001)
-                    plt.loglog(memboundrange, [beta*i for i in memboundrange], color='black', base=2, linestyle=style)
-
-                ax.set_xscale('log', base=2)
-                ax.set_yscale('log', base=2)
-                assert(len(xs) == len(ys))
-                xs, ys = unzip_data_points(xs,ys)
-                if len(xs) < 2:
-                    ax.scatter(xs,ys, label=exp_name)
-                else:
-                    ax.plot(xs, ys, label=exp_name)
-                ax.set_xlabel("Operational Intensity [ops/byte]")
-                ax.set_ylabel('Performance [ops/cycle]',
-                        rotation='horizontal',
-                        loc='top',
-                        labelpad=-112)
-            # set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy())
-            ax.legend()
-            set_plot_params(ax, machine, conv_type_dir / function.value, function.fancy(), benchmark_file.name[:-4])
-
+        ax.set_title(title, fontsize=15)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Plotter",
@@ -185,5 +168,14 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',
                     action='store_true')
     args = parser.parse_args()
-    print(args)
-    create_roofline(Path(args.input), Path(args.output), args.verbose)
+
+    output_file = Path(args.output) / "roof"
+    Path(args.output).mkdir(exist_ok=True,parents=True)
+
+    benchmark_file = Path(args.input) / "incr_c.csv"
+
+    fig = plt.figure(figsize=(8, 5))
+    ax = fig.add_subplot()
+    create_roofline(ax, benchmark_file)
+    print(output_file)
+    plt.savefig(output_file, bbox_inches='tight')
