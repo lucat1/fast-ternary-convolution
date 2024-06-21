@@ -27,13 +27,13 @@ plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 18
 STYLES = {
     # color, marker, offst, name
-    'best_impl_avx2': ('dodgerblue', 'D', (-60, 10), "AVX2", None),
-    'best_impl_avx512': ('deeppink', 'o', (-60, -15), "AVX512", None),
-    'data_order_nhwc_tensor_macro1': ('brown', 'h', (-380, 51), "Tensor Macro", -23),
-    'original': ('blueviolet', '^', (-190, 5), "Original", None),
-    't2r_gemmLU': ('darkcyan', 'H', (-45, 10), "Merged", None)
+    'best_impl_avx2': ('dodgerblue', 'D', (-60, 5), "\\textsc{AVX2}", None),
+    'best_impl_avx512': ('deeppink', 'o', (-60, -25), "\\textsc{AVX512}", None),
+    'data_order_nhwc_tensor_macro1': ('brown', 'h', (-380, 43), "\\textsc{Tensor Macro}", -23),
+    'original': ('blueviolet', '^', (-190, 0), "\\textsc{Original}", None),
+    't2r_gemmLU': ('darkcyan', 'H', (-45, 10), "\\textsc{Merged}", None)
 }
-title = "Increasing Stride"
+title = "\\textbf{Increasing Stride}"
 
 conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]

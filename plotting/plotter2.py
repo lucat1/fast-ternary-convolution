@@ -27,13 +27,13 @@ plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 18
 STYLES = [
     # color, marker, offst, name
-    ('dodgerblue', 'D', (-360, 10), "AVX2", None),
-    ('deeppink', 'o', (-60, -10), "AVX512", None),
-    ('brown', 'h', (-365, -30), "Tensor Macro", 11),
-    ('blueviolet', '^', (-60, -20), "Original", None),
-    ('darkcyan', 'H', (-60, 10), "Merged", None)
+    ('dodgerblue', 'D', (-360, -5), "\\textsc{AVX2}", None),
+    ('deeppink', 'o', (-60, -15), "\\textsc{AVX512}", None),
+    ('brown', 'h', (-318, -19), "\\textsc{Tensor Macro}", None),
+    ('blueviolet', '^', (-60, -20), "\\textsc{Original}", None),
+    ('darkcyan', 'H', (-60, 10), "\\textsc{Merged}", None)
 ]
-title = "Increasing Kernel Size"
+title = "\\textbf{Increasing Kernel Size}"
 
 conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]

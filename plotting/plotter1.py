@@ -27,14 +27,14 @@ plt.rcParams['xtick.labelsize'] = 18
 plt.rcParams['ytick.labelsize'] = 18
 STYLES = [
     # color, marker, offst, name
-    ('dodgerblue', 'D', (-50, 0), "AVX2"),
-    ('deeppink', 'o', (-50, -20), "AVX512"),
-    ('goldenrod', 'h', (-60, -20), "NHWC"),
-    ('brown', '^', (-185, -90), "Tensor Macro"),
-    ('darkcyan', 'H', (-65, -15), "Merged"),
-    ('darkolivegreen', 's', (-90, -100), "Merged+Blocked"),
+    ('dodgerblue', 'D', (-50, 0), "\\textsc{AVX2}", None),
+    ('deeppink', 'o', (-50, -20), "\\textsc{AVX512}", None),
+    ('goldenrod', 'h', (-60, -20), "\\textsc{NHWC}", None),
+    ('brown', '^', (-210, -135), "\\textsc{Tensor Macro}", 26),
+    ('darkcyan', 'H', (-75, -15), "\\textsc{Merged}", None),
+    ('darkolivegreen', 's', (-120, -118), "\\textsc{Merged+Blocked}", None),
 ]
-title = "Increasing Channels - Fully Connected Layers"
+title = "\\textbf{Increasing Channels} - \\textbf{Fully Connected Layers}"
 
 conv_types = [conv_type for conv_type in ConvType]
 functions = [function_type for function_type in Function]
@@ -132,11 +132,11 @@ def create_plots(ax: Axes, benchmark_file: Path, main: bool) -> None:
     for i, (impl, x, y) in enumerate(zip(impls,x_data,runtime_values)):
         if impl == 'data_order_nhwc' or impl == 'best_impl_avx512':
             print(impl, y)
-        color, marker, offst, name = STYLES[i]
+        color, marker, offst, name, rotation = STYLES[i]
         print(f"-- Adding line for {impls[impl]} ({name})")
         ax.plot(x, y, label=impls[impl], marker=marker, color=color)
         if main:
-            ax.annotate(name or impls[impl], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points', fontsize='x-large')
+            ax.annotate(name or impls[impl], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points', fontsize='x-large', rotation=rotation or 0)
     if main:
         ax.set_xlabel("Input size [MiB]")
     else:
