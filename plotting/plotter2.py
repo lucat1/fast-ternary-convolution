@@ -104,14 +104,19 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
     mask = benchmark_df['fn'].isin(list(map(lambda x: x.value, ignored_functions)))
     filtered_functions = benchmark_df[~mask]
     functions = [Function[func.upper()] for func in filtered_functions['fn'].unique()]
-    df_by_func = benchmark_df[benchmark_df["fn"] == "conv"]
-    if df_by_func.empty:
+    impls_having_conv = benchmark_df[benchmark_df["fn"] == "conv"]
+    if impls_having_conv.empty:
         print(f"No data found for function {function} in benchmark suite {benchmark_file.name}")
     x_data = []
     performance_values = []
     runtime_values = []
     for impl in impls:
-        experiment_data = df_by_func[df_by_func["name"] == impl]
+        experiment_data = impls_having_conv[impls_having_conv["name"] == impl]
+        if impl == 'original' or impl == 'data_order_nhwc_tensor_macro1':
+            diocane = benchmark_df[benchmark_df["name"] == impl]
+            t = diocane[diocane["fn"] == "terna2row"]
+            c = diocane[diocane["fn"] == "conv"]
+            print(t["cycles"].divide(c["cycles"].values, axis='rows'))
         xs, ys_runtime, ys_performance = [], [], []
         for _, data_point in experiment_data.iterrows():
             xs.append(get_kernel_size(data_point))
@@ -126,6 +131,8 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
         performance_values.append(ys_performance)
         runtime_values.append(ys_runtime)
     for i, (impl, x, y) in enumerate(zip(impls,x_data,performance_values)):
+        if impl == 'best_impl_avx512' or impl == 'data_order_nhwc_tensor_macro1':
+            print(impl, y)
         color, marker, offst, name, rotation = STYLES[i]
         print(f"-- Adding line for {impls[impl]} ({name})")
         ax.plot(x, y, label=impls[impl], marker=marker, color=color)
@@ -144,7 +151,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
     ax.xaxis.set_tick_params(rotation=45)
     def x_label(x, _):
         if x >= 0:
-            k = sqrt(x)
+            k = int(sqrt(x))
             return f"({k}, {k})"
         else:
             return ""
