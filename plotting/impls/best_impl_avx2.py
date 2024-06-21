@@ -10,9 +10,9 @@ class BestImplAVX2(T2RGemmLU):
 
     def __init__(self, parameters: pd.Series):
         """Invoke Baseline for initialization."""
-        super.__init__(parameters)
+        self.p = parameters
+        super().__init__(parameters)
 
-    @classmethod
     def ternarize_im2row(self) -> Cost:
         """Get t2r_avx2 op count."""
         # Bytes transferred is the same as tern2row_cpy.
@@ -93,7 +93,6 @@ class BestImplAVX2(T2RGemmLU):
 
         return Cost(iops=iops, flops=flops, q=q)
 
-    @classmethod
     def gemm_kernel_256(self) -> Cost:
         """
         Get gemm_kernel_256 op count.
@@ -262,7 +261,6 @@ class BestImplAVX2(T2RGemmLU):
         # q already computed prior I believe.
         return Cost(iops=iops, flops=flops, q=0)
 
-    @classmethod
     def gemm_prelu(self) -> Cost:
         """
         Get merged gemmLU op count.
@@ -285,4 +283,5 @@ class BestImplAVX2(T2RGemmLU):
         cost += cost_gemm_kernel_256 * ((self.m % M_BLOCK_SIZE) * (self.n // N_BLOCK_SIZE))
         cost += cost_gemm_kernel_256 * ((self.m % M_BLOCK_SIZE) * (self.n % N_BLOCK_SIZE))
 
+        print(f'diocane {q}')
         return Cost(iops=ceil(cost.iops), flops=ceil(cost.flops), q=q)

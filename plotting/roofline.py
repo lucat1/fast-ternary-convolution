@@ -21,7 +21,7 @@ matplotlib.use('pdf')
 
 REPO_DIR = Path(__file__).parent.parent
 DATA_DIR = REPO_DIR / "benchmarks"
-PLOT_DIR = REPO_DIR / "plots" / "roofline"
+PLOT_DIR = REPO_DIR / "plots"
 
 plt.rcParams['axes.labelsize'] = 10
 plt.rcParams['xtick.labelsize'] = 10
@@ -73,13 +73,14 @@ def cost_of_data_point(parameters: pd.Series) -> Cost:
 
     This depends upon the implementation.
     """
-    print(parameters.name)
-    match parameters.name:
+    match parameters['name']:
         case 'best_impl_avx512':
             return BestImplAVX512(parameters).cost()
         case 'best_impl_avx2':
             return BestImplAVX2(parameters).cost()
         case 't2r_gemmLU':
+            return T2RGemmLU(parameters).cost()
+        case 't2r_gemmLU_block':
             return T2RGemmLU(parameters).cost()
         case _:
             return Baseline(parameters).cost()
@@ -127,10 +128,8 @@ def create_roofline(ax: Axes, benchmark_file: Path) -> None:
         print(f'Plotting data for Experiment {impl}, Benchmark suite {benchmark_file.name}')
         xs, ys = [], []
         for _,data_point in df_by_func_and_exp.iterrows():
-            # print(data_point)
             cost = cost_of_data_point(data_point)
-            iops, flops = cost.iops, cost.flops
-            q = cost.q
+            iops, flops, q = cost.iops, cost.flops, cost.q
             cycles = data_point.cycles
 
             I = (iops+flops)/q

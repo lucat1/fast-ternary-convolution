@@ -1,5 +1,5 @@
 from plotting.impl import Cost, Impl
-from plotting.utils import CNTBITS, BITS, POPCNT_OPS
+from plotting.utils import CNTBITS, BITS, POPCNT_OPS, get_input_size
 from math import ceil
 import pandas as pd
 
@@ -62,14 +62,12 @@ class Baseline(Impl):
         iops = ceil(iops)
         flops = ceil(flops)
 
-        # input[..], quant_threshold[..], onebit[..]
-        q += (4+4+8) * (self.p.batch_size * self.p.input_height * self.p.input_width * self.pri_channels * CNTBITS)
-        # 2x qx[..]
-        q += (8+8) * (self.p.batch_size * self.p.input_height * self.p.input_width * self.pri_channels)
-        # input[..], quant_threshold[..]
-        q += (4+4) * (self.p.batch_size * self.p.input_height * self.p.input_width * self.rem_channels)
-        # 2x qx[..]
-        q += (8+8) * (self.p.batch_size * self.p.input_height * self.p.input_width * self.rem_channels)
+        q += 4 * get_input_size(self.p) # for the input tensor
+        q += 4 * self.p.kernel_number # for threshold
+
+        # movement for writing to the output
+        count = self.p.batch_size * self.output_height * self.output_width * self.p.kernel_height * self.p.kernel_width * self.packed_channels * 2
+        q += 8*2*count
 
         return Cost(iops, flops, q)
     
@@ -77,10 +75,7 @@ class Baseline(Impl):
         iops = 0
         flops = 0
 
-        out_h = (self.packed_height - self.p.kernel_height) // self.p.stride_size + 1;
-        out_w = (self.packed_width - self.p.kernel_width) // self.p.stride_size + 1;
-
-        count = self.p.batch_size * out_h * out_w * self.p.kernel_height * self.p.kernel_width * self.packed_channels * 2
+        count = self.p.batch_size * self.output_height * self.output_width * self.p.kernel_height * self.p.kernel_width * self.packed_channels * 2
         # one i64 is read and 1 is written (counts as 2) every iteration (count)
         q = 8*3*count
 
@@ -91,6 +86,7 @@ class Baseline(Impl):
 
         iops = 0
         flops = 0
+        q = 0
 
         # p1 = a[..] ^ b[..]
         iops += self.m * self.n * (k_bits/BITS)
@@ -108,21 +104,28 @@ class Baseline(Impl):
 
         iter = self.m*self.n
         inner = iter*self.k
-        q = 8*(4*inner + 2*iter)
+
+        # for activation
+        count = self.p.batch_size * self.output_height * self.output_width * self.p.kernel_height * self.p.kernel_width * self.packed_channels * 2
+        q += 8 * count
+        # for kernel
+        q += 8 * (self.p.kernel_number * self.p.kernel_height * self.p.kernel_width * self.p.channels * 2)
+        # for output
+        q += 2 * 8 * self.p.batch_size * self.output_height * self.output_width * self.p.kernel_number
 
         return Cost(iops, flops, q)
 
     def prelu(self) -> Cost:
         iops = 0
         flops = 0
-        iter = self.p.batch_size * self.output_height * self.output_width * self.p.kernel_number
+        output_size = self.p.batch_size * self.output_height * self.output_width * self.p.kernel_number
 
         # current > 0
-        flops += iter
+        flops += output_size
         # current * alpha
-        flops += .5 * iter
+        flops += .5 * output_size
 
         flops = ceil(flops)
-        q = 4*3*iter
+        q = 4*3*output_size
 
         return Cost(iops, flops, q)
