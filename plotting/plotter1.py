@@ -30,7 +30,7 @@ STYLES = [
     ('dodgerblue', 'D', (-50, 0), "AVX2"),
     ('deeppink', 'o', (-50, -20), "AVX512"),
     ('goldenrod', 'h', (-60, -20), "NHWC"),
-    ('brown', '^', (-185, -90), "Tensor macro"),
+    ('brown', '^', (-185, -90), "Tensor Macro"),
     ('darkcyan', 'H', (-65, -15), "Merged"),
     ('darkolivegreen', 's', (-90, -100), "Merged+Blocked"),
 ]
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         height="50%",
         borderpad=1
     )
-    sub_ax.set_facecolor('lightgrey')
+    sub_ax.set_facecolor('whitesmoke')
 
     create_plots(ax, benchmark_file, True)
     create_plots(sub_ax, benchmark_file2, False)

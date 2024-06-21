@@ -29,7 +29,7 @@ STYLES = {
     # color, marker, offst, name
     'best_impl_avx2': ('dodgerblue', 'D', (-60, 10), "AVX2", None),
     'best_impl_avx512': ('deeppink', 'o', (-60, -15), "AVX512", None),
-    'data_order_nhwc_tensor_macro1': ('brown', 'h', (-380, 63), "Tensor macro", -25),
+    'data_order_nhwc_tensor_macro1': ('brown', 'h', (-380, 51), "Tensor Macro", -23),
     'original': ('blueviolet', '^', (-190, 5), "Original", None),
     't2r_gemmLU': ('darkcyan', 'H', (-45, 10), "Merged", None)
 }
