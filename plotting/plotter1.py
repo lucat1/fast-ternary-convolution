@@ -129,7 +129,7 @@ def create_plots(ax: Axes, benchmark_file: Path, main: bool) -> None:
         x_data.append(xs)
         performance_values.append(ys_performance)
         runtime_values.append(ys_runtime)
-    for i, (impl, x, y) in enumerate(zip(impls,x_data,performance_values)):
+    for i, (impl, x, y) in enumerate(zip(impls,x_data,runtime_values)):
         if impl == 'data_order_nhwc' or impl == 'best_impl_avx512':
             print(impl, y)
         color, marker, offst, name = STYLES[i]

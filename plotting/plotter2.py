@@ -31,7 +31,7 @@ STYLES = [
     ('deeppink', 'o', (-60, -10), "AVX512", None),
     ('brown', 'h', (-365, -30), "Tensor macro", 11),
     ('blueviolet', '^', (-60, -20), "Original", None),
-    ('darkcyan', 'H', (-35, -15), "Merged", None)
+    ('darkcyan', 'H', (-60, 10), "Merged", None)
 ]
 title = "Increasing Kernel Size"
 
@@ -137,7 +137,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
         print(f"-- Adding line for {impls[impl]} ({name})")
         ax.plot(x, y, label=impls[impl], marker=marker, color=color)
         ax.annotate(name or impls[impl], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points', fontsize='x-large', rotation=rotation or 0)
-    ax.set_xlabel("Kernel size [$H \\times W$]")
+    ax.set_xlabel("Kernel size $(KH \\times KW)$")
     ax.set_ylabel('Performance [ops/cycle]',
             rotation='horizontal',
             loc='top',
@@ -152,7 +152,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
     def x_label(x, _):
         if x >= 0:
             k = int(sqrt(x))
-            return f"({k}, {k})"
+            return f"$({k} \\times {k})$"
         else:
             return ""
     ax.xaxis.set_major_formatter(x_label)
