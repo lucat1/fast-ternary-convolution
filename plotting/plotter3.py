@@ -25,14 +25,14 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['axes.labelsize'] = 18
 plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 18
-STYLES = [
+STYLES = {
     # color, marker, offst, name
-    ('dodgerblue', 'D', (-60, 10), "AVX2", None),
-    ('deeppink', 'o', (-60, -15), "AVX512", None),
-    ('brown', 'h', (-380, 63), "Tensor macro", -25),
-    ('blueviolet', '^', (-190, 5), "Original", None),
-    ('darkcyan', 'H', (-45, 10), "Merged", None)
-]
+    'best_impl_avx2': ('dodgerblue', 'D', (-60, 10), "AVX2", None),
+    'best_impl_avx512': ('deeppink', 'o', (-60, -15), "AVX512", None),
+    'data_order_nhwc_tensor_macro1': ('brown', 'h', (-380, 63), "Tensor macro", -25),
+    'original': ('blueviolet', '^', (-190, 5), "Original", None),
+    't2r_gemmLU': ('darkcyan', 'H', (-45, 10), "Merged", None)
+}
 title = "Increasing Stride"
 
 conv_types = [conv_type for conv_type in ConvType]
@@ -106,7 +106,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
     functions = [Function[func.upper()] for func in filtered_functions['fn'].unique()]
     df_by_func = benchmark_df[benchmark_df["fn"] == "conv"]
     if df_by_func.empty:
-        print(f"No data found for function {function} in benchmark suite {benchmark_file.name}")
+        print(f"No data found for functions in benchmark suite {benchmark_file.name}")
     x_data = []
     performance_values = []
     runtime_values = []
@@ -126,7 +126,7 @@ def create_plots(ax: Axes, benchmark_file: Path) -> None:
         performance_values.append(ys_performance)
         runtime_values.append(ys_runtime)
     for i, (impl, x, y) in enumerate(zip(impls,x_data,performance_values)):
-        color, marker, offst, name, rotation = STYLES[i]
+        color, marker, offst, name, rotation = STYLES[impls[impl]]
         print(f"-- Adding line for {impls[impl]} ({name})")
         ax.plot(x, y, label=impls[impl], marker=marker, color=color)
         ax.annotate(name or impls[impl], (x[-1], y[-1]), color=color, xytext=offst, textcoords='offset points', fontsize='x-large', rotation=rotation or 0)
