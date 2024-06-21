@@ -1,0 +1,12 @@
+#!/bin/sh -ex
+
+
+for file in $(ls parameters); do
+    echo "transferring warm avx2 data for $file..."
+    python3 -m plotting.update_csv -s results/csvs/avx2/warm/$file -t results/csvs/final/$file -n best_impl_avx2
+done
+
+for file in $(ls parameters); do
+    echo "transferring cold avx2 data for $file..."
+    python3 -m plotting.update_csv -s results/csvs/avx2/cold/$file -t results/csvs/cold/$file -n best_impl_avx2
+done
