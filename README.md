@@ -1,5 +1,26 @@
 # ASL TAB
 
+## Abstract
+Neural Networks, and especially Convolutional Neural Networks (CNNs), have become the backbone of advances in Computer Vision over the past decade.
+While CNNs exhibit remarkable performance on a wide variety of Computer Vision tasks, they require a large amount of memory and compute resources.
+To counteract this and be able to deploy CNNs on edge devices, researchers have proposed using Binary Neural Networks (BNNs) and Ternary Neural Networks (TNNs), new forms of Neural Networks which represent weights as binary and ternary values respectively, thereby saving large amounts of storage and computation.
+
+In this report, we go one step further and present a highly optimized version of a Ternary Convolutional Layer.
+We optimize the algorithm top-down, starting off by changing the data order and merging subfunctions, and continue our optimizations by blocking, unrolling and eventually vectorizing the code where possible.
+To assess the quality of our improvements, we perform multiple benchmarks, on which we achieve a speedup of up to 29x.
+
+## Acknowledgements
+This work was done by Felix Möller (@FelixMoeller3), Daniel Nezamabadi (@dnezam), Rudy Peterson (@rudynicolop), and Luca Tagliavini (@lucat1) in the context of the [ETH Zurich course "Advanced Systems Lab" in Spring 2024](https://acl.inf.ethz.ch/teaching/fastcode/2024/).
+
+We also thank Shien Zhu for supervising us and putting no restrictions on the baseline code, which was written in the context of the paper [TAB : unified and optimized ternary, binary and mixed-precision neural network inference on the edge](https://dr.ntu.edu.sg/handle/10356/155648) by Zhu, S., Duong, L. H. K. & Liu, W., published in 2022.
+
+Finally, we also use [libpopcnt by kimwalisch](https://github.com/kimwalisch/libpopcnt).
+
+The interested reader can find our slides and report in [19.pdf](19.pdf) and [19_report.pdf](19_report.pdf) respectively.
+
+## License
+All distributed code is licensed under AGPL-3.0-or-later except for libpopcnt.h, which is licensed under BSD 2-Clause.
+
 ## Running and Building
 
 ### Running TNN
