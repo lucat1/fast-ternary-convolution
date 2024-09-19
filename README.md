@@ -1,4 +1,4 @@
-# ASL TAB
+# Fast and Efficient Ternary Convolutional Layers
 
 ## Abstract
 Neural Networks, and especially Convolutional Neural Networks (CNNs), have become the backbone of advances in Computer Vision over the past decade.
